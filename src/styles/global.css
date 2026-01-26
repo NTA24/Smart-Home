@@ -1,0 +1,95 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f0f2f5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Card hover effect */
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card {
+  transition: all 0.3s ease;
+}
+
+/* Tab bar styles */
+.ant-tabs-nav {
+  margin-bottom: 0 !important;
+}
+
+.ant-tabs-tab {
+  padding: 8px 16px !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  transition: all 0.2s ease;
+}
+
+.ant-tabs-tab:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.ant-tabs-tab-active {
+  background: #e6f7ff !important;
+  border-bottom: 2px solid #1890ff !important;
+}
+
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #1890ff !important;
+}
+
+.ant-tabs-tab .ant-tabs-tab-remove {
+  margin-left: 8px;
+  font-size: 10px;
+  color: #999;
+}
+
+.ant-tabs-tab .ant-tabs-tab-remove:hover {
+  color: #ff4d4f;
+}
+
+.ant-tabs-nav-operations {
+  display: none !important;
+}
+
+/* Make tabs scrollable */
+.ant-tabs-nav-wrap {
+  flex: 1;
+  overflow: hidden;
+}
+
+.ant-tabs-nav-list {
+  display: flex;
+  flex-wrap: nowrap;
+}

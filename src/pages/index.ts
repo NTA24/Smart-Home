@@ -1,0 +1,8 @@
+export { default as Dashboard } from './Dashboard'
+export { default as ParkingManagement } from './ParkingManagement'
+export { default as DeviceManagement } from './DeviceManagement'
+export { default as EnergyMonitor } from './EnergyMonitor'
+export { default as AlarmStatistics } from './AlarmStatistics'
+export { default as EnergyMonitoring } from './EnergyMonitoring'
+export { default as EquipmentOperation } from './EquipmentOperation'
+export { default as VisitorDistribution } from './VisitorDistribution'
