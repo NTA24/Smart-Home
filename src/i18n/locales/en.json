@@ -30,7 +30,15 @@
     "iotDevice": "IoT Device Management",
     "deviceManagement": "Device Management",
     "equipmentOperation": "Equipment Operation",
-    "energyMonitor": "Energy Monitor"
+    "energyMonitor": "Energy Monitor",
+    "smartBuilding": "Smart Building Management",
+    "smartBuildingOverview": "Overview",
+    "architecture": "Architecture",
+    "journeys": "User Journeys",
+    "solutions": "Solutions",
+    "investment": "Investment",
+    "implementation": "Implementation",
+    "contact": "Contact"
   },
   "header": {
     "notifications": "Notifications",

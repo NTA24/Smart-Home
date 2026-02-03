@@ -1,0 +1,8 @@
+export { default as SmartBuildingLanding } from './SmartBuildingLanding'
+export { default as Architecture } from './Architecture'
+export { default as Journeys } from './Journeys'
+export { default as Solutions } from './Solutions'
+export { default as SolutionDetail } from './SolutionDetail'
+export { default as Investment } from './Investment'
+export { default as Implementation } from './Implementation'
+export { default as Contact } from './Contact'

@@ -12,6 +12,16 @@ import AlarmStatistics from './pages/AlarmStatistics'
 import EnergyMonitoring from './pages/EnergyMonitoring'
 import EquipmentOperation from './pages/EquipmentOperation'
 import VisitorDistribution from './pages/VisitorDistribution'
+import {
+  SmartBuildingLanding,
+  Architecture,
+  Journeys,
+  Solutions,
+  SolutionDetail,
+  Investment,
+  Implementation,
+  Contact,
+} from './pages/smart-building'
 
 const locales = {
   en: enUS,
@@ -45,6 +55,15 @@ function App() {
             <Route path="energy-monitoring" element={<EnergyMonitoring />} />
             <Route path="equipment-operation" element={<EquipmentOperation />} />
             <Route path="visitor-distribution" element={<VisitorDistribution />} />
+            {/* Smart Building Management */}
+            <Route path="smart-building" element={<SmartBuildingLanding />} />
+            <Route path="smart-building/architecture" element={<Architecture />} />
+            <Route path="smart-building/journeys" element={<Journeys />} />
+            <Route path="smart-building/solutions" element={<Solutions />} />
+            <Route path="smart-building/solutions/:slug" element={<SolutionDetail />} />
+            <Route path="smart-building/investment" element={<Investment />} />
+            <Route path="smart-building/implementation" element={<Implementation />} />
+            <Route path="smart-building/contact" element={<Contact />} />
           </Route>
         </Routes>
       </BrowserRouter>

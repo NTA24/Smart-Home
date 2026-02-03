@@ -30,7 +30,15 @@
     "iotDevice": "Quản lý thiết bị IoT",
     "deviceManagement": "Quản lý thiết bị",
     "equipmentOperation": "Vận hành thiết bị",
-    "energyMonitor": "Giám sát điện năng"
+    "energyMonitor": "Giám sát điện năng",
+    "smartBuilding": "Quản lý nhà thông minh",
+    "smartBuildingOverview": "Tổng quan",
+    "architecture": "Kiến trúc",
+    "journeys": "Trải nghiệm",
+    "solutions": "Giải pháp",
+    "investment": "Dự toán",
+    "implementation": "Triển khai",
+    "contact": "Liên hệ"
   },
   "header": {
     "notifications": "Thông báo",

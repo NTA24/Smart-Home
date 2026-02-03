@@ -16,6 +16,7 @@ import {
   BarChartOutlined,
   HomeOutlined,
   GlobalOutlined,
+  BuildOutlined,
 } from '@ant-design/icons'
 import { TabBar } from '@/components'
 import { useTabStore, routeToLabelKey } from '@/stores'
@@ -72,6 +73,20 @@ export default function MainLayout() {
       key: '/energy',
       icon: <ThunderboltOutlined />,
       label: t('menu.energyMonitor'),
+    },
+    {
+      key: 'smart-building',
+      icon: <BuildOutlined />,
+      label: t('menu.smartBuilding'),
+      children: [
+        { key: '/smart-building', label: t('menu.smartBuildingOverview') },
+        { key: '/smart-building/architecture', label: t('menu.architecture') },
+        { key: '/smart-building/journeys', label: t('menu.journeys') },
+        { key: '/smart-building/solutions', label: t('menu.solutions') },
+        { key: '/smart-building/investment', label: t('menu.investment') },
+        { key: '/smart-building/implementation', label: t('menu.implementation') },
+        { key: '/smart-building/contact', label: t('menu.contact') },
+      ],
     },
   ]
 

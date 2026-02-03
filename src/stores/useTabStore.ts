@@ -29,11 +29,11 @@ export const useTabStore = create<TabState>((set, get) => ({
   addTab: (tab) => {
     const { tabs } = get()
     const exists = tabs.find((t) => t.key === tab.key)
-    
+
     if (!exists) {
-      set({ 
+      set({
         tabs: [...tabs, { ...tab, closable: tab.closable !== false }],
-        activeKey: tab.key 
+        activeKey: tab.key
       })
     } else {
       set({ activeKey: tab.key })
@@ -44,7 +44,7 @@ export const useTabStore = create<TabState>((set, get) => ({
     const { tabs, activeKey } = get()
     const targetIndex = tabs.findIndex((t) => t.key === key)
     const newTabs = tabs.filter((t) => t.key !== key)
-    
+
     let newActiveKey: string | null = null
     if (key === activeKey && newTabs.length > 0) {
       const newIndex = targetIndex >= newTabs.length ? newTabs.length - 1 : targetIndex
@@ -53,7 +53,7 @@ export const useTabStore = create<TabState>((set, get) => ({
     } else {
       set({ tabs: newTabs })
     }
-    
+
     return newActiveKey
   },
 
@@ -70,4 +70,11 @@ export const routeToLabelKey: Record<string, string> = {
   '/energy-monitoring': 'menu.energyMonitoring',
   '/equipment-operation': 'menu.equipmentOperation',
   '/visitor-distribution': 'menu.visitorDistribution',
+  '/smart-building': 'menu.smartBuildingOverview',
+  '/smart-building/architecture': 'menu.architecture',
+  '/smart-building/journeys': 'menu.journeys',
+  '/smart-building/solutions': 'menu.solutions',
+  '/smart-building/investment': 'menu.investment',
+  '/smart-building/implementation': 'menu.implementation',
+  '/smart-building/contact': 'menu.contact',
 }
