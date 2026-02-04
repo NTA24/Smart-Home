@@ -4,9 +4,7 @@ import { Layout, Menu, theme, Avatar, Dropdown, Badge, Select } from 'antd'
 import type { MenuProps } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
-  CarOutlined,
   ApiOutlined,
-  ThunderboltOutlined,
   BellOutlined,
   UserOutlined,
   SettingOutlined,
@@ -17,16 +15,17 @@ import {
   HomeOutlined,
   GlobalOutlined,
   BuildOutlined,
-  VideoCameraOutlined,
   EnvironmentOutlined,
   PhoneOutlined,
   MailOutlined,
   GlobalOutlined as WebOutlined,
+  TeamOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons'
 import { TabBar } from '@/components'
 import { useTabStore, routeToLabelKey } from '@/stores'
 import type { Tab } from '@/stores'
-import logoImage from '@/assets/logo.png'
+import logoImage from '@/assets/viettel-logo.png'
 
 const { Header, Sider, Content, Footer } = Layout
 
@@ -38,8 +37,9 @@ export default function MainLayout() {
   const { addTab, activeKey } = useTabStore()
   const { t, i18n } = useTranslation()
 
-  // Menu config with translations
-  const menuConfig = [
+  // Menu config with translations (supports nested children for Smart Building)
+  type MenuChild = { key: string; label: string; children?: MenuChild[] }
+  const menuConfig: { key: string; icon: React.ReactNode; label: string; children?: MenuChild[] }[] = [
     {
       key: 'home',
       icon: <HomeOutlined />,
@@ -49,22 +49,43 @@ export default function MainLayout() {
       ],
     },
     {
-      key: 'parking',
-      icon: <CarOutlined />,
-      label: t('menu.parkingManagement'),
+      key: 'smart-building',
+      icon: <BuildOutlined />,
+      label: t('menu.smartBuilding'),
       children: [
+        {
+          key: 'sb-management',
+          label: t('menu.buildingManagement'),
+          children: [
+            { key: '/smart-building', label: t('menu.smartBuildingOverview') },
+            { key: '/smart-building/architecture', label: t('menu.architecture') },
+            { key: '/smart-building/journeys', label: t('menu.journeys') },
+            { key: '/smart-building/solutions', label: t('menu.solutions') },
+            { key: '/smart-building/investment', label: t('menu.investment') },
+            { key: '/smart-building/implementation', label: t('menu.implementation') },
+            { key: '/smart-building/contact', label: t('menu.contact') },
+            { key: '/smart-building/elevator-control', label: t('menu.elevatorControl') },
+          ],
+        },
         { key: '/parking', label: t('menu.parkingList') },
-      ],
-    },
-    {
-      key: 'data-statistics',
-      icon: <BarChartOutlined />,
-      label: t('menu.dataStatistics'),
-      children: [
-        { key: '/alarm-statistics', label: t('menu.alarmStatistics') },
-        { key: '/energy-monitoring', label: t('menu.energyMonitoring') },
-        { key: '/energy-data-center', label: t('menu.energyDataCenter') },
-        { key: '/visitor-distribution', label: t('menu.visitorDistribution') },
+        {
+          key: 'sb-security',
+          label: t('menu.securityMonitoring'),
+          children: [
+            { key: '/security-monitoring', label: t('menu.securityCenter') },
+            { key: '/elevator-by-area', label: t('menu.elevatorByArea') },
+          ],
+        },
+        {
+          key: 'sb-energy',
+          label: t('menu.energyMonitor'),
+          children: [
+            { key: '/energy', label: t('menu.energyMonitor') },
+            { key: '/energy-data-center', label: t('menu.energyDataCenter') },
+            { key: '/energy-device-management', label: t('menu.energyDeviceManagement') },
+          ],
+        },
+        { key: '/luggage-control', label: t('menu.luggage') },
       ],
     },
     {
@@ -77,43 +98,53 @@ export default function MainLayout() {
       ],
     },
     {
-      key: '/energy',
-      icon: <ThunderboltOutlined />,
-      label: t('menu.energyMonitor'),
-    },
-    {
-      key: 'security',
-      icon: <VideoCameraOutlined />,
-      label: t('menu.securityMonitoring'),
+      key: 'data-statistics',
+      icon: <BarChartOutlined />,
+      label: t('menu.dataStatistics'),
       children: [
-        { key: '/security-monitoring', label: t('menu.securityCenter') },
+        { key: '/alarm-statistics', label: t('menu.alarmStatistics') },
+        { key: '/energy-monitoring', label: t('menu.energyMonitoring') },
       ],
     },
     {
-      key: 'smart-building',
-      icon: <BuildOutlined />,
-      label: t('menu.smartBuilding'),
+      key: 'robot',
+      icon: <ApiOutlined />,
+      label: t('menu.robot'),
       children: [
-        { key: '/smart-building', label: t('menu.smartBuildingOverview') },
-        { key: '/smart-building/architecture', label: t('menu.architecture') },
-        { key: '/smart-building/journeys', label: t('menu.journeys') },
-        { key: '/smart-building/solutions', label: t('menu.solutions') },
-        { key: '/smart-building/investment', label: t('menu.investment') },
-        { key: '/smart-building/implementation', label: t('menu.implementation') },
-        { key: '/smart-building/contact', label: t('menu.contact') },
+        { key: '/robot-management', label: t('menu.robotManagement') },
+      ],
+    },
+    {
+      key: 'personnel',
+      icon: <TeamOutlined />,
+      label: t('menu.personnel'),
+      children: [
+        { key: '/personnel-management', label: t('menu.personnelManagement') },
+        { key: '/visitor-distribution', label: t('menu.visitorDistribution') },
+      ],
+    },
+    {
+      key: 'user-permission',
+      icon: <SafetyCertificateOutlined />,
+      label: t('menu.userPermission'),
+      children: [
+        { key: '/user-management', label: t('menu.userManagement') },
       ],
     },
   ]
 
-  // Convert to Ant Design menu items
+  // Convert to Ant Design menu items (support nested children)
+  const mapChildren = (children: MenuChild[]): MenuProps['items'] =>
+    children.map((child) =>
+      child.children
+        ? { key: child.key, label: child.label, children: mapChildren(child.children) }
+        : { key: child.key, label: child.label }
+    )
   const menuItems: MenuProps['items'] = menuConfig.map((item) => ({
     key: item.key,
     icon: item.icon,
     label: item.label,
-    children: item.children?.map((child) => ({
-      key: child.key,
-      label: child.label,
-    })),
+    children: item.children ? mapChildren(item.children) : undefined,
   }))
 
   const userMenuItems: MenuProps['items'] = [
@@ -161,6 +192,7 @@ export default function MainLayout() {
           left: 0,
           top: 0,
           bottom: 0,
+          zIndex: 100,
         }}
         width={260}
       >
@@ -178,7 +210,7 @@ export default function MainLayout() {
         >
           <img
             src={logoImage}
-            alt="Newgen Logo"
+            alt="Viettel Logo"
             style={{
               height: '100%',
               width: '100%',
@@ -277,10 +309,6 @@ export default function MainLayout() {
             background: 'linear-gradient(180deg, #001529 0%, #00213d 100%)',
             padding: '24px 32px',
             borderTop: '1px solid rgba(0, 150, 255, 0.3)',
-            position: 'relative',
-            left: collapsed ? -80 : -260,
-            width: `calc(100% + ${collapsed ? 80 : 260}px)`,
-            transition: 'left 0.2s, width 0.2s',
           }}
         >
           <div style={{
@@ -288,15 +316,13 @@ export default function MainLayout() {
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: 24,
-            paddingLeft: collapsed ? 96 : 276,
-            transition: 'padding-left 0.2s',
           }}>
             {/* Logo & Company Info */}
             <div style={{ flex: '1 1 300px' }}>
               <div style={{ marginBottom: 16 }}>
                 <img
                   src={logoImage}
-                  alt="Newgen Logo"
+                  alt="Viettel Logo"
                   style={{
                     height: 50,
                     objectFit: 'contain',
@@ -388,8 +414,6 @@ export default function MainLayout() {
             paddingTop: 16,
             borderTop: '1px solid rgba(0, 150, 255, 0.2)',
             textAlign: 'center',
-            paddingLeft: collapsed ? 96 : 276,
-            transition: 'padding-left 0.2s',
           }}>
             <p style={{ color: '#5a9fcf', fontSize: 11, margin: 0 }}>
               © 2026 Newgen Smart Home Solutions. All rights reserved.

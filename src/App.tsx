@@ -14,6 +14,12 @@ import EnergyDataCenter from './pages/EnergyDataCenter'
 import SecurityMonitoring from './pages/SecurityMonitoring'
 import EquipmentOperation from './pages/EquipmentOperation'
 import VisitorDistribution from './pages/VisitorDistribution'
+import PersonnelManagement from './pages/PersonnelManagement'
+import RobotManagement from './pages/RobotManagement'
+import LuggageControl from './pages/LuggageControl'
+import UserManagement from './pages/UserManagement'
+import ElevatorByArea from './pages/ElevatorByArea'
+import EnergyDeviceManagement from './pages/EnergyDeviceManagement'
 import {
   SmartBuildingLanding,
   Architecture,
@@ -23,6 +29,7 @@ import {
   Investment,
   Implementation,
   Contact,
+  ElevatorControl,
 } from './pages/smart-building'
 
 const locales = {
@@ -68,6 +75,14 @@ function App() {
             <Route path="smart-building/investment" element={<Investment />} />
             <Route path="smart-building/implementation" element={<Implementation />} />
             <Route path="smart-building/contact" element={<Contact />} />
+            <Route path="smart-building/elevator-control" element={<ElevatorControl />} />
+            <Route path="elevator-by-area" element={<ElevatorByArea />} />
+            <Route path="energy-device-management" element={<EnergyDeviceManagement />} />
+            {/* Management */}
+            <Route path="personnel-management" element={<PersonnelManagement />} />
+            <Route path="robot-management" element={<RobotManagement />} />
+            <Route path="luggage-control" element={<LuggageControl />} />
+            <Route path="user-management" element={<UserManagement />} />
           </Route>
         </Routes>
       </BrowserRouter>

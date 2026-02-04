@@ -79,4 +79,11 @@ export const routeToLabelKey: Record<string, string> = {
   '/smart-building/contact': 'menu.contact',
   '/energy-data-center': 'menu.energyDataCenter',
   '/security-monitoring': 'menu.securityCenter',
+  '/personnel-management': 'menu.personnelManagement',
+  '/robot-management': 'menu.robotManagement',
+  '/luggage-control': 'menu.luggageControl',
+  '/user-management': 'menu.userManagement',
+  '/smart-building/elevator-control': 'menu.elevatorControl',
+  '/elevator-by-area': 'menu.elevatorByArea',
+  '/energy-device-management': 'menu.energyDeviceManagement',
 }
