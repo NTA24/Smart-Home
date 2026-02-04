@@ -17,12 +17,18 @@ import {
   HomeOutlined,
   GlobalOutlined,
   BuildOutlined,
+  VideoCameraOutlined,
+  EnvironmentOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  GlobalOutlined as WebOutlined,
 } from '@ant-design/icons'
 import { TabBar } from '@/components'
 import { useTabStore, routeToLabelKey } from '@/stores'
 import type { Tab } from '@/stores'
+import logoImage from '@/assets/logo.png'
 
-const { Header, Sider, Content } = Layout
+const { Header, Sider, Content, Footer } = Layout
 
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
@@ -57,6 +63,7 @@ export default function MainLayout() {
       children: [
         { key: '/alarm-statistics', label: t('menu.alarmStatistics') },
         { key: '/energy-monitoring', label: t('menu.energyMonitoring') },
+        { key: '/energy-data-center', label: t('menu.energyDataCenter') },
         { key: '/visitor-distribution', label: t('menu.visitorDistribution') },
       ],
     },
@@ -73,6 +80,14 @@ export default function MainLayout() {
       key: '/energy',
       icon: <ThunderboltOutlined />,
       label: t('menu.energyMonitor'),
+    },
+    {
+      key: 'security',
+      icon: <VideoCameraOutlined />,
+      label: t('menu.securityMonitoring'),
+      children: [
+        { key: '/security-monitoring', label: t('menu.securityCenter') },
+      ],
     },
     {
       key: 'smart-building',
@@ -154,39 +169,23 @@ export default function MainLayout() {
             height: 64,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-start',
-            padding: collapsed ? 0 : '0 16px',
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            justifyContent: 'center',
+            padding: 0,
+            borderBottom: 'none',
+            background: '#0a2744',
+            overflow: 'hidden',
           }}
         >
-          <div
+          <img
+            src={logoImage}
+            alt="Newgen Logo"
             style={{
-              width: 32,
-              height: 32,
-              background: 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 'bold',
-              fontSize: 16,
+              height: '100%',
+              width: '100%',
+              objectFit: 'cover',
+              transition: 'all 0.2s ease',
             }}
-          >
-            S
-          </div>
-          {!collapsed && (
-            <span
-              style={{
-                marginLeft: 12,
-                fontSize: 16,
-                fontWeight: 600,
-                color: token.colorTextHeading,
-              }}
-            >
-              Smart Home
-            </span>
-          )}
+          />
         </div>
 
         <Menu
@@ -272,6 +271,131 @@ export default function MainLayout() {
         >
           <Outlet />
         </Content>
+
+        <Footer
+          style={{
+            background: 'linear-gradient(180deg, #001529 0%, #00213d 100%)',
+            padding: '24px 32px',
+            borderTop: '1px solid rgba(0, 150, 255, 0.3)',
+            position: 'relative',
+            left: collapsed ? -80 : -260,
+            width: `calc(100% + ${collapsed ? 80 : 260}px)`,
+            transition: 'left 0.2s, width 0.2s',
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 24,
+            paddingLeft: collapsed ? 96 : 276,
+            transition: 'padding-left 0.2s',
+          }}>
+            {/* Logo & Company Info */}
+            <div style={{ flex: '1 1 300px' }}>
+              <div style={{ marginBottom: 16 }}>
+                <img
+                  src={logoImage}
+                  alt="Newgen Logo"
+                  style={{
+                    height: 50,
+                    objectFit: 'contain',
+                    filter: 'brightness(1.1)',
+                  }}
+                />
+              </div>
+              <p style={{ color: '#ffffff', fontSize: 14, fontWeight: 500, marginBottom: 8 }}>
+                Newgen Smart Home Solutions
+              </p>
+              <p style={{ color: '#8ecae6', fontSize: 12, lineHeight: 1.8 }}>
+                {t('footer.companyDesc', 'Leading provider of smart home and building management solutions in Vietnam. We deliver innovative IoT technologies for modern living and sustainable energy management.')}
+              </p>
+            </div>
+
+            {/* Contact Info */}
+            <div style={{ flex: '1 1 250px' }}>
+              <h3 style={{
+                color: '#00d4ff',
+                fontSize: 16,
+                fontWeight: 600,
+                marginBottom: 12,
+                borderBottom: '2px solid #00d4ff',
+                paddingBottom: 8,
+                display: 'inline-block',
+              }}>
+                {t('footer.contactInfo', 'Contact Information')}
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <EnvironmentOutlined style={{ color: '#00d4ff', fontSize: 14, marginTop: 2 }} />
+                  <span style={{ color: '#8ecae6', fontSize: 12 }}>
+                    {t('footer.address', 'Viettel Tower, 285 Cach Mang Thang 8 Street, Ward 12, District 10, Ho Chi Minh City, Vietnam')}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <PhoneOutlined style={{ color: '#00d4ff', fontSize: 14 }} />
+                  <span style={{ color: '#8ecae6', fontSize: 12 }}>+84 (024) 123456789</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <MailOutlined style={{ color: '#00d4ff', fontSize: 14 }} />
+                  <span style={{ color: '#8ecae6', fontSize: 12 }}>contact@newgen.vn</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <WebOutlined style={{ color: '#00d4ff', fontSize: 14 }} />
+                  <span style={{ color: '#8ecae6', fontSize: 12 }}>www.newgen.vn</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Working Hours */}
+            <div style={{ flex: '1 1 200px' }}>
+              <h3 style={{
+                color: '#00d4ff',
+                fontSize: 16,
+                fontWeight: 600,
+                marginBottom: 12,
+                borderBottom: '2px solid #00d4ff',
+                paddingBottom: 8,
+                display: 'inline-block',
+              }}>
+                {t('footer.workingHours', 'Working Hours')}
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#8ecae6', fontSize: 12 }}>{t('footer.mondayFriday', 'Monday - Friday')}:</span>
+                  <span style={{ color: '#ffffff', fontSize: 12 }}>8:00 - 17:30</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#8ecae6', fontSize: 12 }}>{t('footer.saturday', 'Saturday')}:</span>
+                  <span style={{ color: '#ffffff', fontSize: 12 }}>8:00 - 12:00</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#8ecae6', fontSize: 12 }}>{t('footer.sunday', 'Sunday')}:</span>
+                  <span style={{ color: '#ff6b6b', fontSize: 12 }}>{t('footer.closed', 'Closed')}</span>
+                </div>
+                <div style={{ marginTop: 8, padding: '8px 12px', background: 'rgba(0, 150, 255, 0.15)', borderRadius: 4 }}>
+                  <span style={{ color: '#00ff88', fontSize: 11 }}>
+                    🔧 {t('footer.support247', '24/7 Technical Support Hotline')}: 1800 8098
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div style={{
+            marginTop: 24,
+            paddingTop: 16,
+            borderTop: '1px solid rgba(0, 150, 255, 0.2)',
+            textAlign: 'center',
+            paddingLeft: collapsed ? 96 : 276,
+            transition: 'padding-left 0.2s',
+          }}>
+            <p style={{ color: '#5a9fcf', fontSize: 11, margin: 0 }}>
+              © 2026 Newgen Smart Home Solutions. All rights reserved.
+            </p>
+          </div>
+        </Footer>
       </Layout>
     </Layout>
   )

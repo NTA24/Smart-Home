@@ -185,8 +185,8 @@ export default function Dashboard() {
             bordered={false}
           >
             <div style={{ textAlign: 'center' }}>
-              <div style={{ 
-                width: 140, height: 140, borderRadius: '50%', 
+              <div style={{
+                width: 140, height: 140, borderRadius: '50%',
                 border: '12px solid #e8e8e8', borderTopColor: '#1890ff', borderRightColor: '#1890ff', borderBottomColor: '#1890ff',
                 margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
               }}>
@@ -323,8 +323,8 @@ export default function Dashboard() {
             <Row gutter={24}>
               <Col span={10}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ 
-                    width: 160, height: 160, borderRadius: '50%', 
+                  <div style={{
+                    width: 160, height: 160, borderRadius: '50%',
                     border: '20px solid #e8e8e8', borderTopColor: '#1890ff', borderRightColor: '#52c41a',
                     margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
                   }}>
@@ -339,11 +339,11 @@ export default function Dashboard() {
                   <div style={{ marginTop: 16, marginBottom: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                       <div style={{ width: 12, height: 12, background: '#1890ff' }} />
-                      <Text>In 2025: <strong>481380.75kWh</strong></Text>
+                      <Text>{t('dashboard.inYear', { year: 2025 })}: <strong>481380.75kWh</strong></Text>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 12, height: 12, background: '#52c41a' }} />
-                      <Text>In 2026: <strong>2050.6kWh</strong></Text>
+                      <Text>{t('dashboard.inYear', { year: 2026 })}: <strong>2050.6kWh</strong></Text>
                     </div>
                   </div>
                   <div>

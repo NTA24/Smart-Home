@@ -10,6 +10,8 @@ import DeviceManagement from './pages/DeviceManagement'
 import EnergyMonitor from './pages/EnergyMonitor'
 import AlarmStatistics from './pages/AlarmStatistics'
 import EnergyMonitoring from './pages/EnergyMonitoring'
+import EnergyDataCenter from './pages/EnergyDataCenter'
+import SecurityMonitoring from './pages/SecurityMonitoring'
 import EquipmentOperation from './pages/EquipmentOperation'
 import VisitorDistribution from './pages/VisitorDistribution'
 import {
@@ -53,6 +55,8 @@ function App() {
             {/* Detail pages from Dashboard */}
             <Route path="alarm-statistics" element={<AlarmStatistics />} />
             <Route path="energy-monitoring" element={<EnergyMonitoring />} />
+            <Route path="energy-data-center" element={<EnergyDataCenter />} />
+            <Route path="security-monitoring" element={<SecurityMonitoring />} />
             <Route path="equipment-operation" element={<EquipmentOperation />} />
             <Route path="visitor-distribution" element={<VisitorDistribution />} />
             {/* Smart Building Management */}
