@@ -1,3 +1,5 @@
 export { useAppStore } from './useAppStore'
 export { useTabStore, routeToLabelKey } from './useTabStore'
 export type { Tab } from './useTabStore'
+export { useBuildingStore, buildings } from './useBuildingStore'
+export type { Building } from './useBuildingStore'

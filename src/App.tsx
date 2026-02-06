@@ -4,6 +4,7 @@ import enUS from 'antd/locale/en_US'
 import viVN from 'antd/locale/vi_VN'
 import { useTranslation } from 'react-i18next'
 import MainLayout from './layouts/MainLayout'
+import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import ParkingManagement from './pages/ParkingManagement'
 import DeviceManagement from './pages/DeviceManagement'
@@ -18,6 +19,8 @@ import PersonnelManagement from './pages/PersonnelManagement'
 import RobotManagement from './pages/RobotManagement'
 import LuggageControl from './pages/LuggageControl'
 import UserManagement from './pages/UserManagement'
+import SmartMeetingRoom from './pages/SmartMeetingRoom'
+import SmartWorkspace from './pages/SmartWorkspace'
 import ElevatorByArea from './pages/ElevatorByArea'
 import EnergyDeviceManagement from './pages/EnergyDeviceManagement'
 import {
@@ -54,7 +57,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<MainLayout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<Navigate to="/home" replace />} />
+            <Route path="home" element={<Home />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="parking" element={<ParkingManagement />} />
             <Route path="devices" element={<DeviceManagement />} />
@@ -83,6 +87,8 @@ function App() {
             <Route path="robot-management" element={<RobotManagement />} />
             <Route path="luggage-control" element={<LuggageControl />} />
             <Route path="user-management" element={<UserManagement />} />
+            <Route path="smart-meeting-room/meeting-room" element={<SmartMeetingRoom />} />
+            <Route path="smart-workspace/workspace" element={<SmartWorkspace />} />
           </Route>
         </Routes>
       </BrowserRouter>

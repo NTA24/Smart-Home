@@ -86,4 +86,6 @@ export const routeToLabelKey: Record<string, string> = {
   '/smart-building/elevator-control': 'menu.elevatorControl',
   '/elevator-by-area': 'menu.elevatorByArea',
   '/energy-device-management': 'menu.energyDeviceManagement',
+  '/smart-meeting-room/meeting-room': 'menu.smartMeetingRoom',
+  '/smart-workspace/workspace': 'menu.smartWorkspace',
 }
