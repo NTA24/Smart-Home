@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export interface Building {
   id: number
@@ -64,18 +65,40 @@ interface BuildingState {
   selectBuildingById: (id: number) => void
 }
 
-export const useBuildingStore = create<BuildingState>((set) => ({
-  selectedBuilding: null,
-  buildings: buildings,
-  
-  setSelectedBuilding: (building) => {
-    set({ selectedBuilding: building })
-  },
-  
-  selectBuildingById: (id) => {
-    const building = buildings.find(b => b.id === id)
-    if (building) {
-      set({ selectedBuilding: building })
+export const useBuildingStore = create<BuildingState>()(
+  persist(
+    (set) => ({
+      selectedBuilding: null,
+      buildings: buildings,
+      
+      setSelectedBuilding: (building) => {
+        set({ selectedBuilding: building })
+      },
+      
+      selectBuildingById: (id) => {
+        const building = buildings.find(b => b.id === id)
+        if (building) {
+          set({ selectedBuilding: building })
+        }
+      },
+    }),
+    {
+      name: 'building-store',
+      storage: {
+        getItem: (name) => {
+          const str = sessionStorage.getItem(name)
+          return str ? JSON.parse(str) : null
+        },
+        setItem: (name, value) => {
+          sessionStorage.setItem(name, JSON.stringify(value))
+        },
+        removeItem: (name) => {
+          sessionStorage.removeItem(name)
+        },
+      },
+      partialize: (state) => ({
+        selectedBuilding: state.selectedBuilding,
+      }),
     }
-  },
-}))
+  )
+)

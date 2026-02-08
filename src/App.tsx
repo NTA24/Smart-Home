@@ -18,6 +18,8 @@ import VisitorDistribution from './pages/VisitorDistribution'
 import PersonnelManagement from './pages/PersonnelManagement'
 import RobotManagement from './pages/RobotManagement'
 import LuggageControl from './pages/LuggageControl'
+import ItemControl from './pages/ItemControl'
+import LockerMap from './pages/LockerMap'
 import UserManagement from './pages/UserManagement'
 import SmartMeetingRoom from './pages/SmartMeetingRoom'
 import SmartWorkspace from './pages/SmartWorkspace'
@@ -86,6 +88,8 @@ function App() {
             <Route path="personnel-management" element={<PersonnelManagement />} />
             <Route path="robot-management" element={<RobotManagement />} />
             <Route path="luggage-control" element={<LuggageControl />} />
+            <Route path="item-control" element={<ItemControl />} />
+            <Route path="locker-map" element={<LockerMap />} />
             <Route path="user-management" element={<UserManagement />} />
             <Route path="smart-meeting-room/meeting-room" element={<SmartMeetingRoom />} />
             <Route path="smart-workspace/workspace" element={<SmartWorkspace />} />

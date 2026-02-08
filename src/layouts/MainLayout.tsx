@@ -45,9 +45,18 @@ const { Header, Sider, Content, Footer } = Layout
 const { Text } = Typography
 
 export default function MainLayout() {
-  const [collapsed, setCollapsed] = useState(false)
-  const [openKeys, setOpenKeys] = useState<string[]>(['home'])
-  const [useNewgenLogo, setUseNewgenLogo] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = sessionStorage.getItem('sidebar-collapsed')
+    return saved ? JSON.parse(saved) : false
+  })
+  const [openKeys, setOpenKeys] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem('menu-open-keys')
+    return saved ? JSON.parse(saved) : ['home']
+  })
+  const [useNewgenLogo, setUseNewgenLogo] = useState(() => {
+    const saved = sessionStorage.getItem('use-newgen-logo')
+    return saved ? JSON.parse(saved) : false
+  })
   
   // Current logo based on toggle state
   const currentLogo = useNewgenLogo ? newgenLogo : viettelLogo
@@ -109,9 +118,13 @@ export default function MainLayout() {
       ],
     },
     {
-      key: '/item-control',
+      key: 'item-control',
       icon: <InboxOutlined />,
       label: t('menu.itemControl'),
+      children: [
+        { key: '/item-control', label: t('menu.itemControlDashboard') },
+        { key: '/locker-map', label: t('menu.lockerMap') },
+      ],
     },
     {
       key: 'energy-management',
@@ -267,6 +280,7 @@ export default function MainLayout() {
 
   const handleOpenChange = (keys: string[]) => {
     setOpenKeys(keys)
+    sessionStorage.setItem('menu-open-keys', JSON.stringify(keys))
   }
 
   const handleLanguageChange = (lang: string) => {
@@ -320,7 +334,7 @@ export default function MainLayout() {
             cursor: 'pointer',
             transition: 'all 0.3s ease',
           }}
-          onClick={() => setUseNewgenLogo(!useNewgenLogo)}
+          onClick={() => { const next = !useNewgenLogo; setUseNewgenLogo(next); sessionStorage.setItem('use-newgen-logo', JSON.stringify(next)) }}
           title="Click to switch logo"
         >
           <img
@@ -748,12 +762,12 @@ export default function MainLayout() {
             {!isHomePage && (
               collapsed ? (
                 <MenuUnfoldOutlined
-                  onClick={() => setCollapsed(false)}
+                  onClick={() => { setCollapsed(false); sessionStorage.setItem('sidebar-collapsed', 'false') }}
                   style={{ fontSize: 18, cursor: 'pointer' }}
                 />
               ) : (
                 <MenuFoldOutlined
-                  onClick={() => setCollapsed(true)}
+                  onClick={() => { setCollapsed(true); sessionStorage.setItem('sidebar-collapsed', 'true') }}
                   style={{ fontSize: 18, cursor: 'pointer' }}
                 />
               )
@@ -834,7 +848,7 @@ export default function MainLayout() {
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                 }}
-                onClick={() => setUseNewgenLogo(!useNewgenLogo)}
+                onClick={() => { const next = !useNewgenLogo; setUseNewgenLogo(next); sessionStorage.setItem('use-newgen-logo', JSON.stringify(next)) }}
                 title="Click to switch logo"
               >
                 <img

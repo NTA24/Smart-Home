@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export interface Tab {
   key: string
@@ -22,43 +23,62 @@ const defaultTab: Tab = {
   closable: false,
 }
 
-export const useTabStore = create<TabState>((set, get) => ({
-  tabs: [defaultTab],
-  activeKey: '/dashboard',
+export const useTabStore = create<TabState>()(
+  persist(
+    (set, get) => ({
+      tabs: [defaultTab],
+      activeKey: '/dashboard',
 
-  addTab: (tab) => {
-    const { tabs } = get()
-    const exists = tabs.find((t) => t.key === tab.key)
+      addTab: (tab) => {
+        const { tabs } = get()
+        const exists = tabs.find((t) => t.key === tab.key)
 
-    if (!exists) {
-      set({
-        tabs: [...tabs, { ...tab, closable: tab.closable !== false }],
-        activeKey: tab.key
-      })
-    } else {
-      set({ activeKey: tab.key })
+        if (!exists) {
+          set({
+            tabs: [...tabs, { ...tab, closable: tab.closable !== false }],
+            activeKey: tab.key
+          })
+        } else {
+          set({ activeKey: tab.key })
+        }
+      },
+
+      removeTab: (key) => {
+        const { tabs, activeKey } = get()
+        const targetIndex = tabs.findIndex((t) => t.key === key)
+        const newTabs = tabs.filter((t) => t.key !== key)
+
+        let newActiveKey: string | null = null
+        if (key === activeKey && newTabs.length > 0) {
+          const newIndex = targetIndex >= newTabs.length ? newTabs.length - 1 : targetIndex
+          newActiveKey = newTabs[newIndex].key
+          set({ tabs: newTabs, activeKey: newActiveKey })
+        } else {
+          set({ tabs: newTabs })
+        }
+
+        return newActiveKey
+      },
+
+      setActiveKey: (key) => set({ activeKey: key }),
+    }),
+    {
+      name: 'tab-store',
+      storage: {
+        getItem: (name) => {
+          const str = sessionStorage.getItem(name)
+          return str ? JSON.parse(str) : null
+        },
+        setItem: (name, value) => {
+          sessionStorage.setItem(name, JSON.stringify(value))
+        },
+        removeItem: (name) => {
+          sessionStorage.removeItem(name)
+        },
+      },
     }
-  },
-
-  removeTab: (key) => {
-    const { tabs, activeKey } = get()
-    const targetIndex = tabs.findIndex((t) => t.key === key)
-    const newTabs = tabs.filter((t) => t.key !== key)
-
-    let newActiveKey: string | null = null
-    if (key === activeKey && newTabs.length > 0) {
-      const newIndex = targetIndex >= newTabs.length ? newTabs.length - 1 : targetIndex
-      newActiveKey = newTabs[newIndex].key
-      set({ tabs: newTabs, activeKey: newActiveKey })
-    } else {
-      set({ tabs: newTabs })
-    }
-
-    return newActiveKey
-  },
-
-  setActiveKey: (key) => set({ activeKey: key }),
-}))
+  )
+)
 
 // Map route key to translation key
 export const routeToLabelKey: Record<string, string> = {
@@ -82,6 +102,8 @@ export const routeToLabelKey: Record<string, string> = {
   '/personnel-management': 'menu.personnelManagement',
   '/robot-management': 'menu.robotManagement',
   '/luggage-control': 'menu.luggageControl',
+  '/item-control': 'menu.itemControlDashboard',
+  '/locker-map': 'menu.lockerMap',
   '/user-management': 'menu.userManagement',
   '/smart-building/elevator-control': 'menu.elevatorControl',
   '/elevator-by-area': 'menu.elevatorByArea',
