@@ -98,6 +98,8 @@ export default function MainLayout() {
       label: t('menu.securityCamera'),
       children: [
         { key: '/security-monitoring', label: t('menu.securityCenter') },
+        { key: '/camera-live', label: t('menu.cameraLive') },
+        { key: '/camera-playback', label: t('menu.cameraPlayback') },
       ],
     },
     {

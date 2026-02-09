@@ -13,6 +13,8 @@ import AlarmStatistics from './pages/AlarmStatistics'
 import EnergyMonitoring from './pages/EnergyMonitoring'
 import EnergyDataCenter from './pages/EnergyDataCenter'
 import SecurityMonitoring from './pages/SecurityMonitoring'
+import CameraLiveView from './pages/CameraLiveView'
+import CameraPlayback from './pages/CameraPlayback'
 import EquipmentOperation from './pages/EquipmentOperation'
 import VisitorDistribution from './pages/VisitorDistribution'
 import PersonnelManagement from './pages/PersonnelManagement'
@@ -70,6 +72,8 @@ function App() {
             <Route path="energy-monitoring" element={<EnergyMonitoring />} />
             <Route path="energy-data-center" element={<EnergyDataCenter />} />
             <Route path="security-monitoring" element={<SecurityMonitoring />} />
+            <Route path="camera-live" element={<CameraLiveView />} />
+            <Route path="camera-playback" element={<CameraPlayback />} />
             <Route path="equipment-operation" element={<EquipmentOperation />} />
             <Route path="visitor-distribution" element={<VisitorDistribution />} />
             {/* Smart Building Management */}
