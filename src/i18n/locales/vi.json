@@ -678,7 +678,7 @@
     "inactive": "Không hoạt động",
     "actions": "Thao tác",
     "total": "Tổng",
-    "noData": "Nhấn \"Tải dữ liệu\" để lấy dữ liệu từ API",
+    "noData": "Không có dữ liệu",
     "timezone": "Múi giờ",
     "enterTimezone": "VD: Asia/Ho_Chi_Minh",
     "latitude": "Vĩ độ",
