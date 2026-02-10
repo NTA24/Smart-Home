@@ -27,6 +27,9 @@ import SmartMeetingRoom from './pages/SmartMeetingRoom'
 import SmartWorkspace from './pages/SmartWorkspace'
 import ElevatorByArea from './pages/ElevatorByArea'
 import EnergyDeviceManagement from './pages/EnergyDeviceManagement'
+import ApiTest from './pages/ApiTest'
+import CampusTest from './pages/CampusTest'
+import BuildingTest from './pages/BuildingTest'
 import {
   SmartBuildingLanding,
   Architecture,
@@ -97,6 +100,11 @@ function App() {
             <Route path="user-management" element={<UserManagement />} />
             <Route path="smart-meeting-room/meeting-room" element={<SmartMeetingRoom />} />
             <Route path="smart-workspace/workspace" element={<SmartWorkspace />} />
+            {/* API Testing */}
+            <Route path="api-test" element={<Navigate to="/test-api" replace />} />
+            <Route path="test-api" element={<ApiTest />} />
+            <Route path="test-api/campuses/:tenantId" element={<CampusTest />} />
+            <Route path="test-api/buildings/:campusId" element={<BuildingTest />} />
           </Route>
         </Routes>
       </BrowserRouter>
