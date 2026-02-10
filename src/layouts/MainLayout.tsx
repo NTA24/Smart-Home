@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, theme, Avatar, Dropdown, Badge, Select, Typography, Tag, Tooltip } from 'antd'
 import type { MenuProps } from 'antd'
@@ -36,8 +36,9 @@ import {
   CalendarOutlined,
 } from '@ant-design/icons'
 import { TabBar } from '@/components'
-import { useTabStore, routeToLabelKey, useBuildingStore } from '@/stores'
+import { useTabStore, routeToLabelKey, useBuildingStore, useHomeNavigationStore } from '@/stores'
 import type { Tab } from '@/stores'
+import { tenantApi, campusApi, buildingApi } from '@/services'
 import viettelLogo from '@/assets/viettel-logo.png'
 import newgenLogo from '@/assets/newgen-logo.png'
 
@@ -67,7 +68,19 @@ export default function MainLayout() {
   const { t, i18n } = useTranslation()
   
   // Building store
-  const { buildings, selectedBuilding, selectBuildingById } = useBuildingStore()
+  const { selectedBuilding, selectBuildingById, setSelectedBuilding: setBuildingStoreSelected } = useBuildingStore()
+
+  // Home navigation store (shared with Home page)
+  const navStore = useHomeNavigationStore()
+
+  // Fetch tenants on mount so the sidebar always has data
+  useEffect(() => {
+    if (navStore.tenants.length === 0) {
+      tenantApi.getList({ limit: 50, offset: 0 }).then(res => {
+        navStore.setTenants(res?.items || [])
+      }).catch(() => {})
+    }
+  }, [])
 
   // Check if on home page (hide middle navbar)
   const isHomePage = location.pathname === '/home'
@@ -77,11 +90,19 @@ export default function MainLayout() {
   const [middleDropdownOpen, setMiddleDropdownOpen] = useState(false)
   
   // Determine active left nav based on route
-  const activeLeftNav = isHomePage ? 'home' : 'building-list'
+  const activeLeftNav = isHomePage ? 'home' : 'nav-list'
+
+  // Dynamic label & icon based on navigation step
+  const navListConfig = {
+    tenants: { icon: <TeamOutlined />, label: t('menu.tenantList') },
+    campuses: { icon: <EnvironmentOutlined />, label: t('menu.campusList') },
+    buildings: { icon: <BankOutlined />, label: t('menu.buildingList') },
+  }
+  const currentNavConfig = navListConfig[navStore.step]
   
   const leftNavItems = [
     { key: 'home', icon: <HomeOutlined />, label: t('menu.home') },
-    { key: 'building-list', icon: <BankOutlined />, label: t('menu.buildingList'), hasDropdown: true },
+    { key: 'nav-list', icon: currentNavConfig.icon, label: currentNavConfig.label, hasDropdown: true },
   ]
 
   // Menu config with translations (supports nested children for Smart Building)
@@ -174,7 +195,6 @@ export default function MainLayout() {
       key: 'others',
       icon: <SettingOutlined />,
       label: t('menu.others'),
-      disabled: true,
       children: [
         {
           key: 'smart-building',
@@ -234,6 +254,13 @@ export default function MainLayout() {
             { key: '/user-management', label: t('menu.userManagement') },
           ],
         },
+        {
+          key: 'api-testing',
+          label: t('menu.apiTest'),
+          children: [
+            { key: '/test-api', label: t('menu.apiTest') },
+          ],
+        },
       ],
     },
   ]
@@ -290,14 +317,77 @@ export default function MainLayout() {
     localStorage.setItem('language', lang)
   }
 
-  const handleBuildingChange = (buildingId: number) => {
-    selectBuildingById(buildingId)
+  // Handle item click in the sidebar dropdown (Tenant / Campus / Building)
+  const handleDropdownItemClick = async (id: string) => {
     setBuildingDropdownOpen(false)
     setMiddleDropdownOpen(false)
-    // Navigate to dashboard if on home page
-    if (isHomePage) {
+
+    if (navStore.step === 'tenants') {
+      // Clicked a tenant → load campuses, advance to campuses step
+      const tenant = navStore.tenants.find(t => t.id === id)
+      if (tenant) {
+        navStore.setSelectedTenant(tenant)
+        navStore.setStep('campuses')
+        try {
+          const res = await campusApi.getList({ limit: 50, offset: 0 })
+          navStore.setCampuses(res?.items || [])
+        } catch { /* ignore */ }
+      }
+      navigate('/home')
+    } else if (navStore.step === 'campuses') {
+      // Clicked a campus → load buildings, advance to buildings step
+      const campus = navStore.campuses.find(c => c.id === id)
+      if (campus) {
+        navStore.setSelectedCampus(campus)
+        navStore.setStep('buildings')
+        try {
+          const res = await buildingApi.getList({ limit: 50, offset: 0 })
+          navStore.setBuildings(res?.items || [])
+        } catch { /* ignore */ }
+      }
+      navigate('/home')
+    } else {
+      // Clicked a building → select it and go to dashboard
+      const building = navStore.buildings.find(b => b.id === id)
+      if (building) {
+        setBuildingStoreSelected({
+          id: building.id,
+          name: building.name,
+          code: building.code,
+          campus_id: building.campus_id,
+          building_type: building.building_type,
+          status: building.status,
+          created_at: building.created_at,
+          updated_at: building.updated_at,
+        })
+        selectBuildingById(building.id)
+      }
+      const tab: Tab = { key: '/dashboard', labelKey: 'menu.dashboard', closable: false }
+      addTab(tab)
       navigate('/dashboard')
     }
+  }
+
+  // Legacy handler for middle dropdown (always building-level)
+  const handleBuildingChange = (buildingId: string) => {
+    const building = navStore.buildings.find(b => b.id === buildingId)
+    if (building) {
+      setBuildingStoreSelected({
+        id: building.id,
+        name: building.name,
+        code: building.code,
+        campus_id: building.campus_id,
+        building_type: building.building_type,
+        status: building.status,
+        created_at: building.created_at,
+        updated_at: building.updated_at,
+      })
+    }
+    setBuildingDropdownOpen(false)
+    setMiddleDropdownOpen(false)
+    const tab: Tab = { key: '/dashboard', labelKey: 'menu.dashboard', closable: false }
+    addTab(tab)
+    navigate('/dashboard')
   }
 
   // Calculate left margin based on both sidebars
@@ -357,13 +447,27 @@ export default function MainLayout() {
             const isActive = activeLeftNav === item.key
             const hasDropdown = (item as { hasDropdown?: boolean }).hasDropdown
             
-            // Building list item with dropdown
+            // Dynamic list item with dropdown (Tenants / Campuses / Buildings)
             if (hasDropdown) {
+              // Get the list items for the current step
+              const dropdownItems = navStore.step === 'tenants'
+                ? navStore.tenants.map(t => ({ id: t.id, name: t.name, status: t.status }))
+                : navStore.step === 'campuses'
+                  ? navStore.campuses.map(c => ({ id: c.id, name: c.name, status: c.status }))
+                  : navStore.buildings.map(b => ({ id: b.id, name: b.name, status: b.status }))
+
+              // Determine which item is "selected" for highlighting
+              const selectedItemId = navStore.step === 'tenants'
+                ? navStore.selectedTenant?.id
+                : navStore.step === 'campuses'
+                  ? navStore.selectedCampus?.id
+                  : selectedBuilding?.id
+
               return (
                 <Dropdown
                   key={item.key}
                   trigger={['click']}
-                  placement="rightTop"
+                  placement="topRight"
                   open={buildingDropdownOpen}
                   onOpenChange={setBuildingDropdownOpen}
                   dropdownRender={() => (
@@ -374,68 +478,77 @@ export default function MainLayout() {
                         boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
                         padding: '12px 0',
                         minWidth: 240,
+                        maxHeight: 400,
                         border: '1px solid #e8e8e8',
+                        display: 'flex',
+                        flexDirection: 'column',
                       }}
                     >
                       {/* Header */}
                       <div style={{ padding: '8px 20px 16px', borderBottom: '1px solid #f0f0f0' }}>
                         <Text strong style={{ fontSize: 14, color: '#1a1a1a' }}>
-                          {t('menu.buildingList')}
+                          {currentNavConfig.label}
                         </Text>
                       </div>
                       
-                      {/* Building list */}
-                      <div style={{ padding: '8px 0' }}>
-                        {buildings.map(b => (
-                          <div
-                            key={b.id}
-                            onClick={() => handleBuildingChange(b.id)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 12,
-                              padding: '12px 20px',
-                              cursor: 'pointer',
-                              background: selectedBuilding?.id === b.id ? 'linear-gradient(90deg, #e0f2fe 0%, #f0f9ff 100%)' : 'transparent',
-                              transition: 'all 0.2s ease',
-                              borderLeft: selectedBuilding?.id === b.id ? '3px solid #0ea5e9' : '3px solid transparent',
-                            }}
-                            onMouseEnter={(e) => {
-                              if (selectedBuilding.id !== b.id) {
-                                e.currentTarget.style.background = '#f8fafc'
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (selectedBuilding.id !== b.id) {
-                                e.currentTarget.style.background = 'transparent'
-                              }
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: '50%',
-                                background: selectedBuilding?.id === b.id ? '#0ea5e9' : '#cbd5e1',
-                                boxShadow: selectedBuilding?.id === b.id ? '0 0 0 3px rgba(14, 165, 233, 0.2)' : 'none',
-                              }}
-                            />
-                            <div style={{ flex: 1 }}>
-                              <div style={{ 
-                                fontWeight: selectedBuilding?.id === b.id ? 600 : 400,
-                                color: selectedBuilding?.id === b.id ? '#0369a1' : '#334155',
-                                fontSize: 13,
-                              }}>
-                                {b.name}
-                              </div>
-                            </div>
-                            {selectedBuilding?.id === b.id && (
-                              <Tag color="cyan" style={{ margin: 0, fontSize: 10, borderRadius: 4, border: 'none' }}>
-                                Đang chọn
-                              </Tag>
-                            )}
+                      {/* Item list */}
+                      <div style={{ padding: '8px 0', overflow: 'auto', flex: 1 }}>
+                        {dropdownItems.length === 0 ? (
+                          <div style={{ padding: '16px 20px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                            {t('common.noData')}
                           </div>
-                        ))}
+                        ) : dropdownItems.map(item => {
+                          const isSelected = selectedItemId === item.id
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => handleDropdownItemClick(item.id)}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 12,
+                                padding: '12px 20px',
+                                cursor: 'pointer',
+                                background: isSelected ? 'linear-gradient(90deg, #e0f2fe 0%, #f0f9ff 100%)' : 'transparent',
+                                transition: 'all 0.2s ease',
+                                borderLeft: isSelected ? '3px solid #0ea5e9' : '3px solid transparent',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isSelected) e.currentTarget.style.background = '#f8fafc'
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isSelected) e.currentTarget.style.background = 'transparent'
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  borderRadius: '50%',
+                                  background: isSelected ? '#0ea5e9' : '#cbd5e1',
+                                  boxShadow: isSelected ? '0 0 0 3px rgba(14, 165, 233, 0.2)' : 'none',
+                                }}
+                              />
+                              <div style={{ flex: 1 }}>
+                                <div style={{ 
+                                  fontWeight: isSelected ? 600 : 400,
+                                  color: isSelected ? '#0369a1' : '#334155',
+                                  fontSize: 13,
+                                }}>
+                                  {item.name}
+                                </div>
+                              </div>
+                              {item.status && (
+                                <Tag
+                                  color={item.status === 'ACTIVE' ? 'green' : 'red'}
+                                  style={{ margin: 0, fontSize: 10, borderRadius: 4, border: 'none' }}
+                                >
+                                  {item.status}
+                                </Tag>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                       
                       {/* View all link */}
@@ -452,7 +565,7 @@ export default function MainLayout() {
                             navigate('/home')
                           }}
                         >
-                          Xem tất cả tòa nhà →
+                          {t('menu.viewAll')} →
                         </a>
                       </div>
                     </div>
@@ -604,6 +717,9 @@ export default function MainLayout() {
                   boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
                   padding: '8px 0',
                   minWidth: 220,
+                  maxHeight: 360,
+                  display: 'flex',
+                  flexDirection: 'column',
                 }}
               >
                 {/* Header */}
@@ -612,51 +728,59 @@ export default function MainLayout() {
                 </div>
                 
                 {/* Building list */}
-                {buildings.map(b => (
-                  <div
-                    key={b.id}
-                    onClick={() => handleBuildingChange(b.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
-                      padding: '10px 16px',
-                      cursor: 'pointer',
-                      background: selectedBuilding?.id === b.id ? '#f0f5ff' : 'transparent',
-                      transition: 'background 0.2s',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (selectedBuilding.id !== b.id) {
-                        e.currentTarget.style.background = '#fafafa'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedBuilding.id !== b.id) {
-                        e.currentTarget.style.background = 'transparent'
-                      }
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: selectedBuilding?.id === b.id ? '#1890ff' : '#d9d9d9',
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ 
-                        fontWeight: selectedBuilding?.id === b.id ? 600 : 400,
-                        color: selectedBuilding?.id === b.id ? '#1890ff' : '#000',
-                      }}>
-                        {b.name}
-                      </div>
+                <div style={{ overflow: 'auto', flex: 1 }}>
+                  {navStore.buildings.length === 0 ? (
+                    <div style={{ padding: '16px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                      {t('common.noData')}
                     </div>
-                    {selectedBuilding?.id === b.id && (
-                      <Tag color="blue" style={{ margin: 0, fontSize: 10 }}>Đang chọn</Tag>
-                    )}
-                  </div>
-                ))}
+                  ) : navStore.buildings.map(b => (
+                    <div
+                      key={b.id}
+                      onClick={() => handleBuildingChange(b.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '10px 16px',
+                        cursor: 'pointer',
+                        background: selectedBuilding?.id === b.id ? '#f0f5ff' : 'transparent',
+                        transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedBuilding?.id !== b.id) {
+                          e.currentTarget.style.background = '#fafafa'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedBuilding?.id !== b.id) {
+                          e.currentTarget.style.background = 'transparent'
+                        }
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          background: selectedBuilding?.id === b.id ? '#1890ff' : '#d9d9d9',
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ 
+                          fontWeight: selectedBuilding?.id === b.id ? 600 : 400,
+                          color: selectedBuilding?.id === b.id ? '#1890ff' : '#000',
+                        }}>
+                          {b.name}
+                        </div>
+                      </div>
+                      {selectedBuilding?.id === b.id && (
+                        <Tag color="blue" style={{ margin: 0, fontSize: 10 }}>
+                          {t('common.selected')}
+                        </Tag>
+                      )}
+                    </div>
+                  ))}
+                </div>
                 
                 {/* View all link */}
                 <div
@@ -673,7 +797,7 @@ export default function MainLayout() {
                       navigate('/home')
                     }}
                   >
-                    Xem tất cả tòa nhà →
+                    {t('menu.viewAll')} →
                   </a>
                 </div>
               </div>
@@ -720,18 +844,26 @@ export default function MainLayout() {
                 <DownOutlined style={{ fontSize: 12 }} />
               </div>
               <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 12, opacity: 0.9 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <BuildOutlined />
-                  <span>{selectedBuilding?.floors || 0}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <ThunderboltOutlined />
-                  <span>{selectedBuilding?.power || 0} kW</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <TeamOutlined />
-                  <span>{selectedBuilding?.people || 0} {t('menu.people')}</span>
-                </div>
+                {selectedBuilding?.code && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <BuildOutlined />
+                    <span>{selectedBuilding.code}</span>
+                  </div>
+                )}
+                {selectedBuilding?.building_type && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <AppstoreOutlined />
+                    <span>{selectedBuilding.building_type}</span>
+                  </div>
+                )}
+                {selectedBuilding?.status && (
+                  <Tag
+                    color={selectedBuilding.status === 'ACTIVE' ? 'green' : 'red'}
+                    style={{ margin: 0, fontSize: 10, borderRadius: 4 }}
+                  >
+                    {selectedBuilding.status}
+                  </Tag>
+                )}
               </div>
             </div>
           </Dropdown>

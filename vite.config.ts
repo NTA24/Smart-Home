@@ -9,4 +9,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      '/api/': {
+        target: 'https://campus.iot-platform.io.vn',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
 })

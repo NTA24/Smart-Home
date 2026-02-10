@@ -1,84 +1,75 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { buildingApi } from '@/services'
+import type { Building as ApiBuilding } from '@/services'
 
 export interface Building {
-  id: number
+  id: string
   name: string
-  address: string
-  floors: number
-  people: number
-  power: number
-  energy?: number
-  alerts?: number
-  energyPercent?: number
+  code?: string
+  campus_id?: string
+  building_type?: string
   status: string
-  image?: string
+  created_at?: string
+  updated_at?: string
 }
 
-// Mock data for buildings
-export const buildings: Building[] = [
-  {
-    id: 1,
-    name: 'Viettel Tower',
-    address: '255 Cách Mạng Tháng 8, Q.10, TP-HCM',
-    floors: 35,
-    people: 7,
-    power: 152,
-    energy: 1520,
-    alerts: 2,
-    energyPercent: 80,
-    status: 'active',
-    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop',
-  },
-  {
-    id: 2,
-    name: 'Viettel Complex',
-    address: '255 Cách Mạng Tháng 8, Q.10, TP-HCM',
-    floors: 35,
-    people: 5,
-    power: 120,
-    energy: 1520,
-    alerts: 2,
-    energyPercent: 61,
-    status: 'active',
-    image: 'https://images.unsplash.com/photo-1554435493-93422e8220c8?w=400&h=300&fit=crop',
-  },
-  {
-    id: 3,
-    name: 'Viettel Đà Nẵng',
-    address: '78 Ngũ Gia Tự, Q.3, Đà Nẵng',
-    floors: 18,
-    people: 3,
-    power: 85,
-    energy: 850,
-    alerts: 1,
-    energyPercent: 45,
-    status: 'active',
-    image: 'https://images.unsplash.com/photo-1577985043696-8bd54d9f093f?w=400&h=300&fit=crop',
-  },
-]
+/**
+ * Convert API Building to store Building
+ */
+function toStoreBuilding(b: ApiBuilding): Building {
+  return {
+    id: b.id,
+    name: b.name,
+    code: b.code,
+    campus_id: b.campus_id,
+    building_type: b.building_type,
+    status: b.status,
+    created_at: b.created_at,
+    updated_at: b.updated_at,
+  }
+}
 
 interface BuildingState {
   selectedBuilding: Building | null
   buildings: Building[]
+  loading: boolean
   setSelectedBuilding: (building: Building) => void
-  selectBuildingById: (id: number) => void
+  setBuildings: (buildings: Building[]) => void
+  selectBuildingById: (id: string) => void
+  fetchBuildings: () => Promise<void>
 }
 
 export const useBuildingStore = create<BuildingState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       selectedBuilding: null,
-      buildings: buildings,
+      buildings: [],
+      loading: false,
       
       setSelectedBuilding: (building) => {
         set({ selectedBuilding: building })
       },
+
+      setBuildings: (buildings) => {
+        set({ buildings })
+      },
       
       selectBuildingById: (id) => {
-        const building = buildings.find(b => b.id === id)
+        const building = get().buildings.find(b => b.id === id)
         if (building) {
           set({ selectedBuilding: building })
+        }
+      },
+
+      fetchBuildings: async () => {
+        set({ loading: true })
+        try {
+          const res = await buildingApi.getList({ limit: 100, offset: 0 })
+          const buildings = (res?.items || []).map(toStoreBuilding)
+          set({ buildings, loading: false })
+        } catch {
+          set({ loading: false })
         }
       },
     }),
