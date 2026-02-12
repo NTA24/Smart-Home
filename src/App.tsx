@@ -4,68 +4,57 @@ import enUS from 'antd/locale/en_US'
 import viVN from 'antd/locale/vi_VN'
 import { useTranslation } from 'react-i18next'
 import MainLayout from './layouts/MainLayout'
-import Home from './pages/Home'
-import Dashboard from './pages/Dashboard'
-import ParkingManagement from './pages/ParkingManagement'
-import DeviceManagement from './pages/DeviceManagement'
-import EnergyMonitor from './pages/EnergyMonitor'
-import AlarmStatistics from './pages/AlarmStatistics'
-import EnergyMonitoring from './pages/EnergyMonitoring'
-import EnergyDataCenter from './pages/EnergyDataCenter'
-import SecurityMonitoring from './pages/SecurityMonitoring'
-import CameraLiveView from './pages/CameraLiveView'
-import CameraPlayback from './pages/CameraPlayback'
-import EquipmentOperation from './pages/EquipmentOperation'
-import VisitorDistribution from './pages/VisitorDistribution'
-import PersonnelManagement from './pages/PersonnelManagement'
-import RobotManagement from './pages/RobotManagement'
-import LuggageControl from './pages/LuggageControl'
-import ItemControl from './pages/ItemControl'
-import LockerMap from './pages/LockerMap'
-import UserManagement from './pages/UserManagement'
-import SmartMeetingRoom from './pages/SmartMeetingRoom'
-import SmartWorkspace from './pages/SmartWorkspace'
-import ElevatorByArea from './pages/ElevatorByArea'
-import ElevatorDashboard from './pages/ElevatorDashboard'
-import ElevatorLive from './pages/ElevatorLive'
-import ElevatorDetail from './pages/ElevatorDetail'
-import ElevatorAlarms from './pages/ElevatorAlarms'
-import ElevatorAccessControl from './pages/ElevatorAccessControl'
-import ElevatorMaintenance from './pages/ElevatorMaintenance'
-import RobotDashboard from './pages/RobotDashboard'
-import RobotLiveFleet from './pages/RobotLiveFleet'
-import RobotDetail from './pages/RobotDetail'
-import RobotCreateMission from './pages/RobotCreateMission'
-import RobotAlerts from './pages/RobotAlerts'
-import RobotMaintenance from './pages/RobotMaintenance'
-import EnergyDeviceManagement from './pages/EnergyDeviceManagement'
-import ApiTest from './pages/ApiTest'
-import CampusTest from './pages/CampusTest'
-import BuildingTest from './pages/BuildingTest'
-import LiveEntrance from './pages/LiveEntrance'
-import LiveExit from './pages/LiveExit'
-import EnergyMeterPage from './pages/EnergyMeterPage'
-import HvacAssetPage from './pages/HvacAssetPage'
-import IaqSensorPage from './pages/IaqSensorPage'
-import EnergyAggregatePage from './pages/EnergyAggregatePage'
-import EnergyTelemetryPage from './pages/EnergyTelemetryPage'
-import IaqTelemetryPage from './pages/IaqTelemetryPage'
-import HvacTelemetryPage from './pages/HvacTelemetryPage'
-import ParkingMap from './pages/ParkingMap'
-import ParkingTickets from './pages/ParkingTickets'
-import ParkingSubscription from './pages/ParkingSubscription'
-import ParkingDevices from './pages/ParkingDevices'
+
+// Dashboard
+import { Home, Dashboard } from './pages/Dashboard'
+
+// Security
+import { SecurityMonitoring, CameraLiveView, CameraPlayback } from './pages/Security'
+
+// Vehicle / Parking
 import {
-  SmartBuildingLanding,
-  Architecture,
-  Journeys,
-  Solutions,
-  SolutionDetail,
-  Investment,
-  Implementation,
-  Contact,
-  ElevatorControl,
-} from './pages/smart-building'
+  ParkingManagement, LiveEntrance, LiveExit,
+  ParkingMap, ParkingTickets, ParkingSubscription, ParkingDevices,
+} from './pages/Vehicle'
+
+// People
+import { PersonnelManagement, VisitorDistribution } from './pages/People'
+
+// Item / Locker
+import { ItemControl, LockerMap, LuggageControl } from './pages/Item'
+
+// Energy
+import {
+  AlarmStatistics, EnergyMonitoring, EnergyDataCenter,
+  EnergyMeterPage, HvacAssetPage, IaqSensorPage, EnergyAggregatePage,
+  EnergyTelemetryPage, IaqTelemetryPage, HvacTelemetryPage,
+  EnergyDeviceManagement,
+} from './pages/Energy'
+
+// Elevator
+import {
+  ElevatorDashboard, ElevatorLive, ElevatorDetail,
+  ElevatorAlarms, ElevatorAccessControl, ElevatorMaintenance, ElevatorByArea,
+} from './pages/Elevator'
+
+// Robot
+import {
+  RobotDashboard, RobotLiveFleet, RobotDetail,
+  RobotCreateMission, RobotAlerts, RobotMaintenance, RobotManagement,
+} from './pages/Robot'
+
+// Workspace
+import { WorkspaceDashboard, SmartWorkspace, WorkspaceRoomDetail, WorkspaceBookingCalendar, WorkspaceCreateBooking, WorkspaceKiosk, WorkspaceReportIssue, SmartMeetingRoom } from './pages/Workspace'
+
+// Admin
+import { UserManagement, DeviceManagement } from './pages/Admin'
+
+// Other
+import { EquipmentOperation, EnergyMonitor } from './pages/Other'
+
+// Test
+import { ApiTest, CampusTest, BuildingTest } from './pages/Test'
+
 
 const locales = {
   en: enUS,
@@ -117,16 +106,7 @@ function App() {
             <Route path="camera-playback" element={<CameraPlayback />} />
             <Route path="equipment-operation" element={<EquipmentOperation />} />
             <Route path="visitor-distribution" element={<VisitorDistribution />} />
-            {/* Smart Building Management */}
-            <Route path="smart-building" element={<SmartBuildingLanding />} />
-            <Route path="smart-building/architecture" element={<Architecture />} />
-            <Route path="smart-building/journeys" element={<Journeys />} />
-            <Route path="smart-building/solutions" element={<Solutions />} />
-            <Route path="smart-building/solutions/:slug" element={<SolutionDetail />} />
-            <Route path="smart-building/investment" element={<Investment />} />
-            <Route path="smart-building/implementation" element={<Implementation />} />
-            <Route path="smart-building/contact" element={<Contact />} />
-            <Route path="smart-building/elevator-control" element={<ElevatorControl />} />
+
             <Route path="elevator-by-area" element={<ElevatorByArea />} />
             <Route path="elevator-dashboard" element={<ElevatorDashboard />} />
             <Route path="elevator-live" element={<ElevatorLive />} />
@@ -149,7 +129,13 @@ function App() {
             <Route path="locker-map" element={<LockerMap />} />
             <Route path="user-management" element={<UserManagement />} />
             <Route path="smart-meeting-room/meeting-room" element={<SmartMeetingRoom />} />
+            <Route path="smart-workspace/dashboard" element={<WorkspaceDashboard />} />
             <Route path="smart-workspace/workspace" element={<SmartWorkspace />} />
+            <Route path="smart-workspace/room-detail" element={<WorkspaceRoomDetail />} />
+            <Route path="smart-workspace/booking-calendar" element={<WorkspaceBookingCalendar />} />
+            <Route path="smart-workspace/create-booking" element={<WorkspaceCreateBooking />} />
+            <Route path="smart-workspace/kiosk" element={<WorkspaceKiosk />} />
+            <Route path="smart-workspace/report-issue" element={<WorkspaceReportIssue />} />
             {/* API Testing */}
             <Route path="api-test" element={<Navigate to="/test-api" replace />} />
             <Route path="test-api" element={<ApiTest />} />

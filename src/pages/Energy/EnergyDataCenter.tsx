@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Row, Col, Table, Typography } from 'antd'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
-import buildingImage from '../assets/building.png'
-import backgroundImage from '../assets/background.png'
+import buildingImage from '../../assets/building.png'
+import backgroundImage from '../../assets/background.png'
 
 const { Text } = Typography
 

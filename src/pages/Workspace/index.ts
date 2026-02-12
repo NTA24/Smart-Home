@@ -1,0 +1,8 @@
+export { default as WorkspaceDashboard } from './WorkspaceDashboard'
+export { default as SmartWorkspace } from './SmartWorkspace'
+export { default as WorkspaceRoomDetail } from './WorkspaceRoomDetail'
+export { default as WorkspaceBookingCalendar } from './WorkspaceBookingCalendar'
+export { default as WorkspaceCreateBooking } from './WorkspaceCreateBooking'
+export { default as WorkspaceKiosk } from './WorkspaceKiosk'
+export { default as WorkspaceReportIssue } from './WorkspaceReportIssue'
+export { default as SmartMeetingRoom } from './SmartMeetingRoom'

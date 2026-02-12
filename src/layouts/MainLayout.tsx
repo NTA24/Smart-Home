@@ -26,6 +26,7 @@ import {
   InboxOutlined,
   RobotOutlined,
   AppstoreOutlined,
+  LaptopOutlined,
 } from '@ant-design/icons'
 import { useTabStore, routeToLabelKey, useBuildingStore, useHomeNavigationStore } from '@/stores'
 import type { Tab } from '@/stores'
@@ -49,6 +50,8 @@ export default function MainLayout() {
     '/item-control': 'item-control', '/locker-map': 'item-control',
     '/alarm-statistics': 'energy-management', '/energy-monitoring': 'energy-management', '/energy-data-center': 'energy-management', '/energy-meters': 'energy-management', '/hvac-assets': 'energy-management', '/iaq-sensors': 'energy-management', '/energy-aggregates': 'energy-management', '/energy-telemetry': 'energy-management', '/iaq-telemetry': 'energy-management', '/hvac-telemetry': 'energy-management',
     '/robot-dashboard': 'robot-management', '/robot-live-fleet': 'robot-management', '/robot-detail': 'robot-management', '/robot-create-mission': 'robot-management', '/robot-alerts': 'robot-management', '/robot-maintenance': 'robot-management',
+    '/smart-workspace/dashboard': 'smart-workspace', '/smart-workspace/workspace': 'smart-workspace', '/smart-workspace/room-detail': 'smart-workspace', '/smart-workspace/booking-calendar': 'smart-workspace', '/smart-workspace/create-booking': 'smart-workspace', '/smart-workspace/kiosk': 'smart-workspace', '/smart-workspace/report-issue': 'smart-workspace',
+    '/smart-meeting-room/meeting-room': 'smart-meeting-room',
   }
   const [openKeys, setOpenKeys] = useState<string[]>(() => {
     const saved = sessionStorage.getItem('menu-open-keys')
@@ -215,6 +218,28 @@ export default function MainLayout() {
         { key: '/robot-create-mission', label: t('menu.robotCreateMission') },
         { key: '/robot-alerts', label: t('menu.robotAlerts') },
         { key: '/robot-maintenance', label: t('menu.robotMaintenance') },
+      ],
+    },
+    {
+      key: 'smart-workspace',
+      icon: <LaptopOutlined />,
+      label: groupLabel('smart-workspace', '/smart-workspace/dashboard', t('menu.smartWorkspace')),
+      children: [
+        { key: '/smart-workspace/dashboard', label: t('menu.dashboard') },
+        { key: '/smart-workspace/workspace', label: t('menu.workspaceRoomList') },
+        { key: '/smart-workspace/room-detail', label: t('menu.roomDetail') },
+        { key: '/smart-workspace/booking-calendar', label: t('menu.bookingCalendar') },
+        { key: '/smart-workspace/create-booking', label: t('menu.createBooking') },
+        { key: '/smart-workspace/kiosk', label: t('menu.kiosk') },
+        { key: '/smart-workspace/report-issue', label: t('menu.reportIssue') },
+      ],
+    },
+    {
+      key: 'smart-meeting-room',
+      icon: <TeamOutlined />,
+      label: groupLabel('smart-meeting-room', '/smart-meeting-room/meeting-room', t('menu.smartMeetingRoom')),
+      children: [
+        { key: '/smart-meeting-room/meeting-room', label: t('menu.dashboard') },
       ],
     },
     {

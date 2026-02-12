@@ -136,6 +136,12 @@ export const routeToLabelKey: Record<string, string> = {
   '/robot-maintenance': 'menu.robotMaintenance',
   '/energy-device-management': 'menu.energyDeviceManagement',
   '/smart-meeting-room/meeting-room': 'menu.smartMeetingRoom',
-  '/smart-workspace/workspace': 'menu.smartWorkspace',
+  '/smart-workspace/dashboard': 'menu.dashboard',
+  '/smart-workspace/workspace': 'menu.workspaceRoomList',
+  '/smart-workspace/room-detail': 'menu.roomDetail',
+  '/smart-workspace/booking-calendar': 'menu.bookingCalendar',
+  '/smart-workspace/create-booking': 'menu.createBooking',
+  '/smart-workspace/kiosk': 'menu.kiosk',
+  '/smart-workspace/report-issue': 'menu.reportIssue',
   '/test-api': 'menu.apiTest',
 }

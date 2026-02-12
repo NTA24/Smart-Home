@@ -9,11 +9,11 @@ import {
   CloseOutlined,
   PlayCircleOutlined
 } from '@ant-design/icons'
-import securityBg from '../assets/security-bg-2.png'
-import alertIcon from '../assets/alert-icon.png'
-import cameraItemIcon from '../assets/camera-item.png'
-import cameraIcon from '../assets/camera-icon.png'
-import cameraPreview from '../assets/camera-preview.png'
+import securityBg from '../../assets/security-bg-2.png'
+import alertIcon from '../../assets/alert-icon.png'
+import cameraItemIcon from '../../assets/camera-item.png'
+import cameraIcon from '../../assets/camera-icon.png'
+import cameraPreview from '../../assets/camera-preview.png'
 
 const { Text } = Typography
 
