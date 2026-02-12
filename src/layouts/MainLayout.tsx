@@ -4,14 +4,12 @@ import { Layout, Menu, theme, Avatar, Dropdown, Badge, Select, Typography, Tag, 
 import type { MenuProps } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
-  ApiOutlined,
   BellOutlined,
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  BarChartOutlined,
   HomeOutlined,
   GlobalOutlined,
   BuildOutlined,
@@ -20,22 +18,15 @@ import {
   MailOutlined,
   GlobalOutlined as WebOutlined,
   TeamOutlined,
-  SafetyCertificateOutlined,
   BankOutlined,
-  FileTextOutlined,
-  ToolOutlined,
   DownOutlined,
   ThunderboltOutlined,
-  PieChartOutlined,
   VideoCameraOutlined,
   CarOutlined,
   InboxOutlined,
   RobotOutlined,
   AppstoreOutlined,
-  LaptopOutlined,
-  CalendarOutlined,
 } from '@ant-design/icons'
-import { TabBar } from '@/components'
 import { useTabStore, routeToLabelKey, useBuildingStore, useHomeNavigationStore } from '@/stores'
 import type { Tab } from '@/stores'
 import { tenantApi, campusApi, buildingApi } from '@/services'
@@ -50,10 +41,22 @@ export default function MainLayout() {
     const saved = sessionStorage.getItem('sidebar-collapsed')
     return saved ? JSON.parse(saved) : false
   })
+  // Map routes to parent menu group keys for auto-open
+  const routeToParentKey: Record<string, string> = {
+    '/security-monitoring': 'security-camera', '/camera-live': 'security-camera', '/camera-playback': 'security-camera',
+    '/parking': 'vehicle-control', '/live-entrance': 'vehicle-control', '/live-exit': 'vehicle-control', '/parking-map': 'vehicle-control', '/parking-tickets': 'vehicle-control', '/parking-subscription': 'vehicle-control', '/parking-devices': 'vehicle-control',
+    '/personnel-management': 'people-control', '/visitor-distribution': 'people-control',
+    '/item-control': 'item-control', '/locker-map': 'item-control',
+    '/alarm-statistics': 'energy-management', '/energy-monitoring': 'energy-management', '/energy-data-center': 'energy-management', '/energy-meters': 'energy-management', '/hvac-assets': 'energy-management', '/iaq-sensors': 'energy-management', '/energy-aggregates': 'energy-management', '/energy-telemetry': 'energy-management', '/iaq-telemetry': 'energy-management', '/hvac-telemetry': 'energy-management',
+    '/robot-dashboard': 'robot-management', '/robot-live-fleet': 'robot-management', '/robot-detail': 'robot-management', '/robot-create-mission': 'robot-management', '/robot-alerts': 'robot-management', '/robot-maintenance': 'robot-management',
+  }
   const [openKeys, setOpenKeys] = useState<string[]>(() => {
     const saved = sessionStorage.getItem('menu-open-keys')
-    return saved ? JSON.parse(saved) : ['home']
+    if (saved) return JSON.parse(saved)
+    return ['home']
   })
+
+  
   const [useNewgenLogo, setUseNewgenLogo] = useState(() => {
     const saved = sessionStorage.getItem('use-newgen-logo')
     return saved ? JSON.parse(saved) : false
@@ -64,8 +67,18 @@ export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { token } = theme.useToken()
-  const { addTab, activeKey } = useTabStore()
+  const { addTab } = useTabStore()
   const { t, i18n } = useTranslation()
+
+  // Auto-open parent group on route change
+  useEffect(() => {
+    const parentKey = routeToParentKey[location.pathname]
+    if (parentKey && !openKeys.includes(parentKey)) {
+      const newKeys = [...openKeys, parentKey]
+      setOpenKeys(newKeys)
+      sessionStorage.setItem('menu-open-keys', JSON.stringify(newKeys))
+    }
+  }, [location.pathname])
   
   // Building store
   const { selectedBuilding, selectBuildingById, setSelectedBuilding: setBuildingStoreSelected } = useBuildingStore()
@@ -105,9 +118,22 @@ export default function MainLayout() {
     { key: 'nav-list', icon: currentNavConfig.icon, label: currentNavConfig.label, hasDropdown: true },
   ]
 
+  // Current group key based on pathname
+  const currentGroupKey = routeToParentKey[location.pathname] || ''
+
+  // Helper: navigate to first child only when clicking a DIFFERENT group
+  const groupLabel = (groupKey: string, defaultRoute: string, text: string) => (
+    <span onClick={(e) => {
+      e.stopPropagation()
+      if (currentGroupKey !== groupKey) {
+        navigate(defaultRoute)
+      }
+    }}>{text}</span>
+  )
+
   // Menu config with translations (supports nested children for Smart Building)
-  type MenuChild = { key: string; label: string; children?: MenuChild[]; disabled?: boolean }
-  const menuConfig: { key: string; icon: React.ReactNode; label: string; children?: MenuChild[]; disabled?: boolean }[] = [
+  type MenuChild = { key: string; label: React.ReactNode; children?: MenuChild[]; disabled?: boolean }
+  const menuConfig: { key: string; icon: React.ReactNode; label: React.ReactNode; children?: MenuChild[]; disabled?: boolean }[] = [
     {
       key: '/dashboard',
       icon: <HomeOutlined />,
@@ -116,7 +142,7 @@ export default function MainLayout() {
     {
       key: 'security-camera',
       icon: <VideoCameraOutlined />,
-      label: t('menu.securityCamera'),
+      label: groupLabel('security-camera', '/security-monitoring', t('menu.securityCamera')),
       children: [
         { key: '/security-monitoring', label: t('menu.securityCenter') },
         { key: '/camera-live', label: t('menu.cameraLive') },
@@ -126,15 +152,21 @@ export default function MainLayout() {
     {
       key: 'vehicle-control',
       icon: <CarOutlined />,
-      label: t('menu.vehicleControl'),
+      label: groupLabel('vehicle-control', '/parking', t('menu.vehicleControl')),
       children: [
         { key: '/parking', label: t('menu.parkingList') },
+        { key: '/live-entrance', label: t('menu.liveEntrance') },
+        { key: '/live-exit', label: t('menu.liveExit') },
+        { key: '/parking-map', label: t('menu.parkingMap') },
+        { key: '/parking-tickets', label: t('menu.parkingTickets') },
+        { key: '/parking-subscription', label: t('menu.parkingSubscription') },
+        { key: '/parking-devices', label: t('menu.parkingDevices') },
       ],
     },
     {
       key: 'people-control',
       icon: <TeamOutlined />,
-      label: t('menu.peopleControl'),
+      label: groupLabel('people-control', '/personnel-management', t('menu.peopleControl')),
       children: [
         { key: '/personnel-management', label: t('menu.personnelManagement') },
         { key: '/visitor-distribution', label: t('menu.visitorDistribution') },
@@ -143,7 +175,7 @@ export default function MainLayout() {
     {
       key: 'item-control',
       icon: <InboxOutlined />,
-      label: t('menu.itemControl'),
+      label: groupLabel('item-control', '/item-control', t('menu.itemControl')),
       children: [
         { key: '/item-control', label: t('menu.itemControlDashboard') },
         { key: '/locker-map', label: t('menu.lockerMap') },
@@ -152,117 +184,46 @@ export default function MainLayout() {
     {
       key: 'energy-management',
       icon: <ThunderboltOutlined />,
-      label: t('menu.energyManagement'),
+      label: groupLabel('energy-management', '/energy-meters', t('menu.energyManagement')),
       children: [
         { key: '/alarm-statistics', label: t('menu.alarmStatistics') },
         { key: '/energy-monitoring', label: t('menu.energyMonitoring') },
         { key: '/energy-data-center', label: t('menu.energyDataCenter') },
+        { key: '/energy-meters', label: t('menu.energyMeters') },
+        { key: '/hvac-assets', label: t('menu.hvacAssets') },
+        { key: '/iaq-sensors', label: t('menu.iaqSensors') },
+        { key: '/energy-aggregates', label: t('menu.energyAggregates') },
+        {
+          key: 'remote-monitoring',
+          label: t('menu.remoteMonitoring'),
+          children: [
+            { key: '/energy-telemetry', label: t('menu.energyTelemetry') },
+            { key: '/iaq-telemetry', label: t('menu.iaqTelemetry') },
+            { key: '/hvac-telemetry', label: t('menu.hvacTelemetry') },
+          ],
+        },
       ],
     },
     {
-      key: '/robot-management',
+      key: 'robot-management',
       icon: <RobotOutlined />,
-      label: t('menu.robotManagement'),
-    },
-    {
-      key: '/elevator-management',
-      icon: <AppstoreOutlined />,
-      label: t('menu.elevatorManagement'),
-    },
-    {
-      key: 'smart-workspace',
-      icon: <LaptopOutlined />,
-      label: t('menu.smartWorkspace'),
+      label: groupLabel('robot-management', '/robot-dashboard', t('menu.robotManagement')),
       children: [
-        {
-          key: '/smart-workspace/workspace',
-          label: t('menu.smartWorkspace'),
-        },
+        { key: '/robot-dashboard', label: t('menu.robotDashboard') },
+        { key: '/robot-live-fleet', label: t('menu.robotLiveFleet') },
+        { key: '/robot-detail', label: t('menu.robotDetail') },
+        { key: '/robot-create-mission', label: t('menu.robotCreateMission') },
+        { key: '/robot-alerts', label: t('menu.robotAlerts') },
+        { key: '/robot-maintenance', label: t('menu.robotMaintenance') },
       ],
     },
     {
-      key: 'smart-meeting-room',
-      icon: <CalendarOutlined />,
-      label: t('menu.smartMeetingRoom'),
-      children: [
-        {
-          key: '/smart-meeting-room/meeting-room',
-          label: t('menu.smartMeetingRoom'),
-        },
-      ],
+      key: 'elevator-management',
+      icon: <AppstoreOutlined style={{ opacity: 0.4 }} />,
+      label: <Tooltip title={t('menu.inDevelopment')} placement="right"><span style={{ opacity: 0.4, cursor: 'not-allowed' }}>{t('menu.elevatorManagement')}</span></Tooltip>,
+      disabled: true,
     },
-    {
-      key: 'others',
-      icon: <SettingOutlined />,
-      label: t('menu.others'),
-      children: [
-        {
-          key: 'smart-building',
-          label: t('menu.smartBuilding'),
-          children: [
-            {
-              key: 'sb-management',
-              label: t('menu.buildingManagement'),
-              children: [
-                { key: '/smart-building', label: t('menu.smartBuildingOverview') },
-                { key: '/smart-building/architecture', label: t('menu.architecture') },
-                { key: '/smart-building/journeys', label: t('menu.journeys') },
-                { key: '/smart-building/solutions', label: t('menu.solutions') },
-                { key: '/smart-building/investment', label: t('menu.investment') },
-                { key: '/smart-building/implementation', label: t('menu.implementation') },
-                { key: '/smart-building/contact', label: t('menu.contact') },
-                { key: '/smart-building/elevator-control', label: t('menu.elevatorControl') },
-              ],
-            },
-            {
-              key: 'sb-security',
-              label: t('menu.securityMonitoring'),
-              children: [
-                { key: '/elevator-by-area', label: t('menu.elevatorByArea') },
-              ],
-            },
-            {
-              key: 'sb-energy',
-              label: t('menu.energyMonitor'),
-              children: [
-                { key: '/energy', label: t('menu.energyMonitor') },
-                { key: '/energy-device-management', label: t('menu.energyDeviceManagement') },
-              ],
-            },
-            { key: '/luggage-control', label: t('menu.luggage') },
-          ],
-        },
-        {
-          key: 'iot-device',
-          label: t('menu.iotDevice'),
-          children: [
-            { key: '/devices', label: t('menu.deviceManagement') },
-            { key: '/equipment-operation', label: t('menu.equipmentOperation') },
-          ],
-        },
-        {
-          key: 'robot',
-          label: t('menu.robot'),
-          children: [
-            { key: '/robot-management', label: t('menu.robotManagement') },
-          ],
-        },
-        {
-          key: 'user-permission',
-          label: t('menu.userPermission'),
-          children: [
-            { key: '/user-management', label: t('menu.userManagement') },
-          ],
-        },
-        {
-          key: 'api-testing',
-          label: t('menu.apiTest'),
-          children: [
-            { key: '/test-api', label: t('menu.apiTest') },
-          ],
-        },
-      ],
-    },
+  
   ]
 
   // Convert to Ant Design menu items (support nested children)
@@ -289,6 +250,12 @@ export default function MainLayout() {
 
   const handleLeftNavClick = (key: string) => {
     if (key === 'home') {
+      // Reset navigation back to tenant selection
+      navStore.setStep('tenants')
+      navStore.setCampuses([])
+      navStore.setBuildings([])
+      navStore.setSelectedTenant(null)
+      navStore.setSelectedCampus(null)
       navigate('/home')
     }
   }
@@ -871,7 +838,7 @@ export default function MainLayout() {
 
         <Menu
           mode="inline"
-          selectedKeys={[activeKey]}
+          selectedKeys={[location.pathname]}
           openKeys={collapsed ? [] : openKeys}
           onOpenChange={handleOpenChange}
           items={menuItems}
@@ -892,7 +859,7 @@ export default function MainLayout() {
             borderBottom: `1px solid ${token.colorBorderSecondary}`,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {!isHomePage && (
               collapsed ? (
                 <MenuUnfoldOutlined
@@ -905,6 +872,48 @@ export default function MainLayout() {
                   style={{ fontSize: 18, cursor: 'pointer' }}
                 />
               )
+            )}
+            {/* Breadcrumb: Tenant / Campus / Building */}
+            {!isHomePage && (navStore.selectedTenant || selectedBuilding) && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 0, fontSize: 13 }}>
+                {navStore.selectedTenant && (
+                  <span
+                    style={{ cursor: 'pointer', color: token.colorTextSecondary, transition: 'color .2s' }}
+                    onClick={() => { navStore.reset(); navigate('/home') }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = token.colorPrimary }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = token.colorTextSecondary }}
+                  >
+                    <TeamOutlined style={{ marginRight: 4, fontSize: 12 }} />
+                    {navStore.selectedTenant.name}
+                  </span>
+                )}
+                {navStore.selectedCampus && (
+                  <>
+                    <span style={{ margin: '0 6px', color: token.colorTextQuaternary }}>/</span>
+                    <span
+                      style={{ cursor: 'pointer', color: token.colorTextSecondary, transition: 'color .2s' }}
+                      onClick={() => {
+                        navStore.setStep('campuses')
+                        navigate('/home')
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = token.colorPrimary }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = token.colorTextSecondary }}
+                    >
+                      <EnvironmentOutlined style={{ marginRight: 4, fontSize: 12 }} />
+                      {navStore.selectedCampus.name}
+                    </span>
+                  </>
+                )}
+                {selectedBuilding && (
+                  <>
+                    <span style={{ margin: '0 6px', color: token.colorTextQuaternary }}>/</span>
+                    <span style={{ color: token.colorText, fontWeight: 600 }}>
+                      <BankOutlined style={{ marginRight: 4, fontSize: 12 }} />
+                      {selectedBuilding.name}
+                    </span>
+                  </>
+                )}
+              </div>
             )}
           </div>
 
@@ -946,7 +955,6 @@ export default function MainLayout() {
           </div>
         </Header>
 
-        {!isHomePage && <TabBar />}
 
         <Content
           style={{
