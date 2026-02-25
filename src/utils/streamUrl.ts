@@ -4,7 +4,6 @@ const DEFAULT_RTSP_PROXY_BASE = 'wss://yuanqu.smartmk.cn:19993/proxy'
 const DEFAULT_HLS_PORT = 8888
 const CAMERA_GLOBAL_STORAGE_KEY = 'securityCamera.globalConfig'
 const DEFAULT_CAMERA_STREAM_BASE = '/camera-stream'
-const DEFAULT_CAMERA_STREAM_BASE_PROD = 'https://camera.iot-platform.io.vn'
 
 interface RtspConversionConfig {
   rtspConversionMode?: RtspConversionMode
@@ -51,8 +50,7 @@ export function resolveCameraStreamUrl(rawUrl?: string): string {
   }
 
   const envBase = (import.meta.env.VITE_CAMERA_STREAM_BASE || '').trim()
-  const fallbackBase = import.meta.env.DEV ? DEFAULT_CAMERA_STREAM_BASE : DEFAULT_CAMERA_STREAM_BASE_PROD
-  const base = (envBase || fallbackBase).replace(/\/+$/, '')
+  const base = (envBase || DEFAULT_CAMERA_STREAM_BASE).replace(/\/+$/, '')
   const path = input.startsWith('/') ? input : `/${input}`
   return `${base}${path}`
 }

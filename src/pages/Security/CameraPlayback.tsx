@@ -11,6 +11,7 @@ import {
   Slider,
   Timeline,
   Badge,
+  Input,
 } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
@@ -27,6 +28,7 @@ import {
   ClockCircleOutlined,
   HistoryOutlined,
   CameraOutlined,
+  SearchOutlined,
 } from '@ant-design/icons'
 import { PageContainer, PageHeader, ContentCard } from '@/components'
 import { useBuildingStore } from '@/stores'
@@ -99,6 +101,20 @@ export default function CameraPlayback() {
         subtitle={`${selectedBuilding?.name || t('cameraPlayback.allSites', 'All sites')} — ${t('cameraPlayback.reviewRecordings', 'Review camera recordings')}`}
         actions={
           <>
+            <Tooltip title="Tìm kiếm nội dung dựa trên AI">
+              <Input
+                prefix={<SearchOutlined style={{ color: '#1677ff' }} />}
+                placeholder="Tìm kiếm nội dung dựa trên AI"
+                allowClear
+                size="small"
+                style={{
+                  width: 240,
+                  border: '1.5px solid #1677ff',
+                  borderRadius: 6,
+                  boxShadow: '0 0 6px rgba(22,119,255,0.15)',
+                }}
+              />
+            </Tooltip>
             <Select
               value={selectedCamera}
               style={{ width: 200 }}
