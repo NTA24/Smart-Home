@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Row, Col, Typography, Progress, DatePicker } from 'antd'
+import { useState } from 'react'
+import { Row, Col, Typography, Progress, Segmented } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
   CarOutlined,
@@ -9,19 +9,19 @@ import {
   LoginOutlined,
   LogoutOutlined,
   WarningOutlined,
+  RiseOutlined,
+  CalendarOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons'
 import {
   ContentCard,
   StatCard,
-  PieChart,
   BarChart,
 } from '@/components'
 import { useBuildingStore } from '@/stores'
 import dayjs from 'dayjs'
 import {
-  getVehicleManagementFilters,
   getVehicleRecentVehicles,
-  saveVehicleManagementFilters,
 } from '@/services/mockPersistence'
 
 const { Title, Text } = Typography
@@ -29,21 +29,6 @@ const { Title, Text } = Typography
 export default function ParkingManagement() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
-  const persistedFilters = getVehicleManagementFilters<{
-    dateRange: [string, string] | null
-  }>({
-    dateRange: null,
-  })
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
-    persistedFilters.dateRange?.[0] && persistedFilters.dateRange?.[1]
-      ? [dayjs(persistedFilters.dateRange[0]), dayjs(persistedFilters.dateRange[1])]
-      : null,
-  )
-
-  const parkingData = [
-    { name: t('parking.usedSpots'), value: 45 },
-    { name: t('parking.availableSpots'), value: 16 },
-  ]
 
   const recentVehicleSeed = [
     { key: '1', plate: '30A-123.45', type: 'car', time: '08:30:25', date: dayjs().format('YYYY-MM-DD'), status: 'in', zone: 'Zone A', fee: 0 },
@@ -58,18 +43,6 @@ export default function ParkingManagement() {
 
   const [recentVehicles] = useState(() => getVehicleRecentVehicles(recentVehicleSeed))
 
-  useEffect(() => {
-    saveVehicleManagementFilters({
-      dateRange: dateRange ? [dateRange[0].toISOString(), dateRange[1].toISOString()] : null,
-    })
-  }, [dateRange])
-
-  const filteredVehicles = useMemo(() => recentVehicles.filter((vehicle) => {
-    if (!dateRange) return true
-    const d = dayjs(vehicle.date)
-    return !(d.isBefore(dateRange[0], 'day') || d.isAfter(dateRange[1], 'day'))
-  }), [recentVehicles, dateRange])
-
   const parkingZones = [
     { name: 'Zone A', total: 20, used: 18, color: '#f5222d' },
     { name: 'Zone B', total: 15, used: 12, color: '#1890ff' },
@@ -81,19 +54,37 @@ export default function ParkingManagement() {
   const usedSpots = parkingZones.reduce((acc, z) => acc + z.used, 0)
   const availableSpots = totalSpots - usedSpots
   const usageRate = ((usedSpots / totalSpots) * 100).toFixed(1)
-  const selectedDate = dateRange?.[1] ?? dayjs()
+  const selectedDate = dayjs()
   const hourlyData = Array.from({ length: 25 }, (_, hour) => `${hour}h`)
   const isInSelectedDay = (date: string) => dayjs(date).isSame(selectedDate, 'day')
   const isInSelectedMonth = (date: string) => dayjs(date).isSame(selectedDate, 'month')
   const hourlyVehicles = [4, 3, 2, 1, 1, 2, 6, 12, 20, 26, 31, 28, 24, 22, 27, 33, 38, 30, 23, 18, 12, 9, 7, 5, 3]
-  const revenueCategories = ['00-06', '06-12', '12-18', '18-24']
-  const revenueValues = [180000, 320000, 280000, 240000]
-  const dayInCount = filteredVehicles.filter(v => v.status === 'in' && isInSelectedDay(v.date)).length
-  const dayOutCount = filteredVehicles.filter(v => v.status === 'out' && isInSelectedDay(v.date)).length
-  const monthInCount = filteredVehicles.filter(v => v.status === 'in' && isInSelectedMonth(v.date)).length
-  const monthOutCount = filteredVehicles.filter(v => v.status === 'out' && isInSelectedMonth(v.date)).length
-  const dayRevenue = revenueValues.reduce((sum, value) => sum + value, 0)
-  const monthRevenue = 18450000
+  const dayInCount = recentVehicles.filter(v => v.status === 'in' && isInSelectedDay(v.date)).length
+  const dayOutCount = recentVehicles.filter(v => v.status === 'out' && isInSelectedDay(v.date)).length
+  const monthInCount = recentVehicles.filter(v => v.status === 'in' && isInSelectedMonth(v.date)).length
+  const monthOutCount = recentVehicles.filter(v => v.status === 'out' && isInSelectedMonth(v.date)).length
+
+  const [revenueMode, setRevenueMode] = useState<'day' | 'month'>('day')
+
+  const revenueDayCategories = Array.from({ length: 24 }, (_, i) => `${i}h`)
+  const revenueDayValues = [
+    12000, 8000, 5000, 3000, 2000, 4000,
+    18000, 45000, 72000, 85000, 68000, 55000,
+    62000, 58000, 71000, 89000, 95000, 78000,
+    52000, 38000, 28000, 22000, 18000, 15000,
+  ]
+
+  const revenueMonthCategories = Array.from({ length: 30 }, (_, i) => `${i + 1}`)
+  const revenueMonthValues = [
+    620000, 580000, 710000, 850000, 920000, 780000, 430000,
+    650000, 590000, 730000, 880000, 950000, 810000, 460000,
+    680000, 620000, 760000, 910000, 980000, 840000, 490000,
+    700000, 640000, 780000, 930000, 1020000, 870000, 510000,
+    720000, 660000,
+  ]
+
+  const dayRevenue = revenueDayValues.reduce((sum, v) => sum + v, 0)
+  const monthRevenue = revenueMonthValues.reduce((sum, v) => sum + v, 0)
 
   return (
     <div className="page-container">
@@ -109,9 +100,6 @@ export default function ParkingManagement() {
           </Text>
         </div>
 
-        <div className="flex items-center gap-10 flex-wrap">
-          <DatePicker.RangePicker value={dateRange} onChange={(value) => setDateRange(value as [dayjs.Dayjs, dayjs.Dayjs] | null)} />
-        </div>
       </div>
 
       {/* Stat Cards */}
@@ -189,57 +177,7 @@ export default function ParkingManagement() {
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]} className="mb-20" align="stretch">
-        <Col xs={24} lg={8} style={{ display: 'flex' }}>
-          <PieChart
-            title={t('parking.parkingStatus')}
-            data={parkingData}
-            height={360}
-            innerRadius="50%"
-            outerRadius="75%"
-            centerText={`${usageRate}%`}
-            cardStyle={{ width: '100%', height: '100%' }}
-          />
-        </Col>
-        <Col xs={24} lg={16} style={{ display: 'flex' }}>
-          <ContentCard
-            title={t('parking.revenueTitle', 'Doanh thu')}
-            titleIcon={<DollarOutlined />}
-            titleIconColor="#52c41a"
-            style={{ width: '100%', height: '100%' }}
-          >
-            <Row gutter={[12, 12]} className="mb-12">
-              <Col xs={24} md={12}>
-                <StatCard
-                  title={t('parking.dayRevenue', 'Doanh thu ngày')}
-                  value={dayRevenue.toLocaleString('vi-VN')}
-                  suffix="VND"
-                  icon={<DollarOutlined />}
-                  iconBgColor="#52c41a"
-                />
-              </Col>
-              <Col xs={24} md={12}>
-                <StatCard
-                  title={t('parking.monthRevenue', 'Doanh thu tháng')}
-                  value={monthRevenue.toLocaleString('vi-VN')}
-                  suffix="VND"
-                  icon={<DollarOutlined />}
-                  iconBgColor="#389e0d"
-                />
-              </Col>
-            </Row>
-            <BarChart
-              title={t('parking.revenueByDay', 'Doanh thu theo khung giờ')}
-              categories={revenueCategories}
-              data={revenueValues}
-              color="#52c41a"
-              height={260}
-            />
-          </ContentCard>
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} className="mb-20">
         <Col xs={24} lg={12}>
           <BarChart
             title={t('parking.hourlyTraffic')}
@@ -278,6 +216,56 @@ export default function ParkingManagement() {
           </ContentCard>
         </Col>
       </Row>
+
+      <ContentCard
+        title={t('parking.revenueTitle', 'Doanh thu')}
+        titleIcon={<DollarOutlined />}
+        titleIconColor="#52c41a"
+      >
+        <Row gutter={[12, 12]} className="mb-12">
+          <Col xs={24} md={12}>
+            <StatCard
+              title={t('parking.dayRevenue', 'Doanh thu ngày')}
+              value={dayRevenue.toLocaleString('vi-VN')}
+              suffix="VND"
+              icon={<RiseOutlined />}
+              iconBgColor="#52c41a"
+            />
+          </Col>
+          <Col xs={24} md={12}>
+            <StatCard
+              title={t('parking.monthRevenue', 'Doanh thu tháng')}
+              value={monthRevenue.toLocaleString('vi-VN')}
+              suffix="VND"
+              icon={<CalendarOutlined />}
+              iconBgColor="#389e0d"
+            />
+          </Col>
+        </Row>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <Text strong style={{ fontSize: 15 }}>
+            <BarChartOutlined style={{ marginRight: 6 }} />
+            {revenueMode === 'day'
+              ? t('parking.revenueByHour', 'Doanh thu theo giờ (hôm nay)')
+              : t('parking.revenueByDayOfMonth', 'Doanh thu theo ngày (tháng này)')}
+          </Text>
+          <Segmented
+            value={revenueMode}
+            onChange={(val) => setRevenueMode(val as 'day' | 'month')}
+            options={[
+              { label: t('parking.viewDay', 'Ngày'), value: 'day' },
+              { label: t('parking.viewMonth', 'Tháng'), value: 'month' },
+            ]}
+          />
+        </div>
+        <BarChart
+          title=""
+          categories={revenueMode === 'day' ? revenueDayCategories : revenueMonthCategories}
+          data={revenueMode === 'day' ? revenueDayValues : revenueMonthValues}
+          color={revenueMode === 'day' ? '#52c41a' : '#1890ff'}
+          height={280}
+        />
+      </ContentCard>
     </div>
   )
 }

@@ -449,6 +449,23 @@
   position: relative;
 }
 
+@keyframes vehicle_slot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 6px 2px #1677ff88;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 16px 6px #1677ffcc;
+    transform: scale(1.15);
+  }
+}
+
+.vehicle_slot-blink {
+  animation: vehicle_slot-pulse 1s ease-in-out infinite;
+  z-index: 10;
+  border-color: #1677ff !important;
+}
+
 .vehicle_filter-select-w100 {
   width: 100px;
 }

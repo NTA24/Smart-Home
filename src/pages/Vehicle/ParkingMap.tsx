@@ -118,18 +118,18 @@ export default function ParkingMap() {
   }
 
   const filteredSlots = allSlots.filter(s => {
-    const plateKeyword = (plateSearchApplied || '').trim().toLowerCase()
     if (vehicleFilter === 'car' && s.vehicleType !== 'car') return false
     if (vehicleFilter === 'motorbike' && s.vehicleType !== 'motorbike') return false
-    if (plateKeyword && !(s.plate || '').toLowerCase().replace(/\s/g, '').includes(plateKeyword.replace(/\s/g, ''))) return false
     return true
   })
 
   const searchResultSlots = plateSearchApplied.trim()
-    ? filteredSlots.filter(s => (s.plate || '').toLowerCase().replace(/\s/g, '').includes(plateSearchApplied.trim().toLowerCase().replace(/\s/g, '')))
+    ? allSlots.filter(s => (s.plate || '').toLowerCase().replace(/\s/g, '').includes(plateSearchApplied.trim().toLowerCase().replace(/\s/g, '')))
     : []
 
-  const mapSlots = filteredSlots.slice(0, 100)
+  const highlightedIds = new Set(searchResultSlots.map(s => s.id))
+
+  const mapSlots = allSlots.slice(0, 100)
   const topRow = mapSlots.slice(0, 16)
   const bottomRow = mapSlots.slice(16, 32)
   const leftCol = mapSlots.slice(32, 44)
@@ -140,9 +140,9 @@ export default function ParkingMap() {
   const innerBottom = mapSlots.slice(90, 100)
 
   const stats = {
-    free: filteredSlots.filter(s => s.status === 'free').length,
-    occupied: filteredSlots.filter(s => s.status === 'occupied').length,
-    reserved: filteredSlots.filter(s => s.status === 'reserved').length,
+    free: allSlots.filter(s => s.status === 'free').length,
+    occupied: allSlots.filter(s => s.status === 'occupied').length,
+    reserved: allSlots.filter(s => s.status === 'reserved').length,
   }
 
   const handleSlotClick = (slot: ParkingSlot) => {
@@ -180,11 +180,12 @@ export default function ParkingMap() {
     const cfg = STATUS_CONFIG[slot.status]
     const w = vertical ? 34 : 48
     const h = vertical ? 48 : 34
+    const isHighlighted = highlightedIds.has(slot.id)
     return (
       <button
         key={slot.id}
         type="button"
-        className="vehicle_slot-cell"
+        className={`vehicle_slot-cell${isHighlighted ? ' vehicle_slot-blink' : ''}`}
         onClick={() => handleSlotClick(slot)}
         style={{
           width: w,
@@ -385,7 +386,7 @@ export default function ParkingMap() {
           </div>
           <div style={{ marginLeft: 'auto' }}>
             <Text type="secondary" className="text-sm">
-              {t('common.total')}: <Text strong>{filteredSlots.length}</Text> {t('parkingMap.slots')}
+              {t('common.total')}: <Text strong>{allSlots.length}</Text> {t('parkingMap.slots')}
             </Text>
           </div>
         </div>

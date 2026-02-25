@@ -22,6 +22,8 @@ import { getPeopleGateHistory, savePeopleGateHistory } from '@/services/mockPers
 
 const { Text } = Typography
 
+export type PersonType = 'resident' | 'stranger'
+
 export interface PeopleGateRecord {
   key: string
   gateId: string
@@ -31,6 +33,7 @@ export interface PeopleGateRecord {
   personId: string
   direction: 'in' | 'out'
   method: 'FaceID' | 'card' | 'manual'
+  personType?: PersonType
 }
 
 const GATES = [
@@ -39,27 +42,60 @@ const GATES = [
   { id: 'gate-3', name: 'Cổng 3 - Cửa quay' },
 ]
 
+const RESIDENTS = [
+  { name: 'Nguyễn Văn A', id: 'NV001' },
+  { name: 'Trần Thị B', id: 'NV002' },
+  { name: 'Lê Văn C', id: 'NV003' },
+  { name: 'Phạm Thị D', id: 'NV004' },
+  { name: 'Hoàng Văn E', id: 'NV005' },
+  { name: 'Vũ Thị F', id: 'NV006' },
+  { name: 'Đặng Văn G', id: 'NV007' },
+]
+
+const STRANGERS = [
+  { name: 'Bùi Minh Tuấn', id: 'KL001' },
+  { name: 'Đỗ Thị Hương', id: 'KL002' },
+  { name: 'Trương Quốc Bảo', id: 'KL003' },
+  { name: 'Lý Thị Mai', id: 'KL004' },
+]
+
 function seedGateHistory(): PeopleGateRecord[] {
   const today = dayjs().format('YYYY-MM-DD')
   const records: PeopleGateRecord[] = []
-  const names = ['Nguyễn Văn A', 'Trần Thị B', 'Lê Văn C', 'Phạm Thị D', 'Hoàng Văn E', 'Vũ Thị F', 'Đặng Văn G']
-  const ids = ['NV001', 'NV002', 'NV003', 'NV004', 'NV005', 'NV006', 'NV007']
   let key = 1
+
   for (let h = 7; h <= 18; h++) {
-    const count = 2 + Math.floor(Math.random() * 4)
-    for (let i = 0; i < count; i++) {
+    const residentCount = 2 + Math.floor(Math.random() * 3)
+    for (let i = 0; i < residentCount; i++) {
       const gate = GATES[Math.floor(Math.random() * GATES.length)]
-      const dir = Math.random() > 0.5 ? 'in' : 'out'
-      const idx = Math.floor(Math.random() * names.length)
+      const p = RESIDENTS[Math.floor(Math.random() * RESIDENTS.length)]
       records.push({
         key: `seed-${key++}`,
         gateId: gate.id,
         gateName: gate.name,
         occurredAt: `${today} ${String(h).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`,
-        personName: names[idx],
-        personId: ids[idx],
-        direction: dir as 'in' | 'out',
+        personName: p.name,
+        personId: p.id,
+        direction: Math.random() > 0.5 ? 'in' : 'out',
         method: Math.random() > 0.2 ? 'FaceID' : 'card',
+        personType: 'resident',
+      })
+    }
+
+    const strangerCount = 1 + Math.floor(Math.random() * 2)
+    for (let i = 0; i < strangerCount; i++) {
+      const gate = GATES[Math.floor(Math.random() * GATES.length)]
+      const p = STRANGERS[Math.floor(Math.random() * STRANGERS.length)]
+      records.push({
+        key: `seed-${key++}`,
+        gateId: gate.id,
+        gateName: gate.name,
+        occurredAt: `${today} ${String(h).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`,
+        personName: p.name,
+        personId: p.id,
+        direction: Math.random() > 0.5 ? 'in' : 'out',
+        method: Math.random() > 0.3 ? 'manual' : 'card',
+        personType: 'stranger',
       })
     }
   }
@@ -69,9 +105,11 @@ function seedGateHistory(): PeopleGateRecord[] {
 export default function PeopleReportOverview() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
-  const [history, setHistory] = useState<PeopleGateRecord[]>(() =>
-    getPeopleGateHistory<PeopleGateRecord[]>(seedGateHistory()),
-  )
+  const [history, setHistory] = useState<PeopleGateRecord[]>(() => {
+    const cached = getPeopleGateHistory<PeopleGateRecord[]>(seedGateHistory())
+    const hasTypes = cached.some((r) => r.personType === 'stranger')
+    return hasTypes ? cached : seedGateHistory()
+  })
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>([
     dayjs().startOf('day'),
     dayjs().endOf('day'),
@@ -111,27 +149,25 @@ export default function PeopleReportOverview() {
   )
 
   const hourlyCategories = Array.from({ length: 24 }, (_, i) => `${i}h`)
-  const hourlyIn = useMemo(() => {
-    const arr = new Array(24).fill(0)
-    filteredHistory
-      .filter((r) => r.direction === 'in')
-      .forEach((r) => {
-        const h = dayjs(r.occurredAt).hour()
-        arr[h] += 1
-      })
-    return arr
+
+  const hourlyByDirectionAndType = useMemo(() => {
+    const inResident = new Array(24).fill(0)
+    const inStranger = new Array(24).fill(0)
+    const outResident = new Array(24).fill(0)
+    const outStranger = new Array(24).fill(0)
+    filteredHistory.forEach((r) => {
+      const h = dayjs(r.occurredAt).hour()
+      const type = r.personType === 'stranger' ? 'stranger' : 'resident'
+      if (r.direction === 'in') {
+        if (type === 'resident') inResident[h] += 1
+        else inStranger[h] += 1
+      } else {
+        if (type === 'resident') outResident[h] += 1
+        else outStranger[h] += 1
+      }
+    })
+    return { inResident, inStranger, outResident, outStranger }
   }, [filteredHistory])
-  const hourlyOut = useMemo(() => {
-    const arr = new Array(24).fill(0)
-    filteredHistory
-      .filter((r) => r.direction === 'out')
-      .forEach((r) => {
-        const h = dayjs(r.occurredAt).hour()
-        arr[h] += 1
-      })
-    return arr
-  }, [filteredHistory])
-  const hourlyTotal = hourlyIn.map((a, i) => a + hourlyOut[i])
 
   const setQuickDateRange = (preset: 'today' | 'last7' | 'last30') => {
     const end = dayjs().endOf('day')
@@ -203,6 +239,17 @@ export default function PeopleReportOverview() {
       width: 120,
       render: (v: string) => (v === 'FaceID' ? 'FaceID' : v === 'card' ? t('peopleReport.card', 'Thẻ') : t('peopleReport.manual', 'Thủ công')),
     },
+    {
+      title: t('peopleReport.personType', 'Loại'),
+      dataIndex: 'personType',
+      key: 'personType',
+      width: 120,
+      render: (v: PersonType) => (
+        <Tag color={v === 'resident' ? 'blue' : 'red'}>
+          {v === 'resident' ? t('peopleReport.resident', 'Cư dân') : t('peopleReport.stranger', 'Khách lạ')}
+        </Tag>
+      ),
+    },
   ]
 
   return (
@@ -240,18 +287,44 @@ export default function PeopleReportOverview() {
         </Col>
       </Row>
 
-      <ContentCard
-        title={t('peopleReport.trafficByHour', 'Lưu lượng theo giờ')}
-        className="mb-16"
-      >
-        <BarChart
-          title=""
-          categories={hourlyCategories}
-          data={hourlyTotal}
-          height={260}
-          color="#722ed1"
-        />
-      </ContentCard>
+      <Row gutter={[16, 16]} className="mb-16">
+        <Col xs={24} lg={12}>
+          <ContentCard
+            title={t('peopleReport.trafficIn', 'Lưu lượng vào')}
+            titleIcon={<LoginOutlined />}
+            titleIconColor="#1890ff"
+            className="people-traffic-card mb-0"
+          >
+            <BarChart
+              title=""
+              categories={hourlyCategories}
+              height={260}
+              series={[
+                { name: t('peopleReport.resident', 'Cư dân'), data: hourlyByDirectionAndType.inResident, color: '#1890ff' },
+                { name: t('peopleReport.stranger', 'Khách lạ'), data: hourlyByDirectionAndType.inStranger, color: '#ff4d4f' },
+              ]}
+            />
+          </ContentCard>
+        </Col>
+        <Col xs={24} lg={12}>
+          <ContentCard
+            title={t('peopleReport.trafficOut', 'Lưu lượng ra')}
+            titleIcon={<LogoutOutlined />}
+            titleIconColor="#fa8c16"
+            className="people-traffic-card mb-0"
+          >
+            <BarChart
+              title=""
+              categories={hourlyCategories}
+              height={260}
+              series={[
+                { name: t('peopleReport.resident', 'Cư dân'), data: hourlyByDirectionAndType.outResident, color: '#1890ff' },
+                { name: t('peopleReport.stranger', 'Khách lạ'), data: hourlyByDirectionAndType.outStranger, color: '#ff4d4f' },
+              ]}
+            />
+          </ContentCard>
+        </Col>
+      </Row>
 
       <ContentCard
         title={t('peopleReport.historyTitle', 'Lịch sử vào ra')}

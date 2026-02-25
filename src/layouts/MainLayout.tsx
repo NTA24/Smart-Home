@@ -155,6 +155,20 @@ export default function MainLayout() {
       ],
     },
     {
+      key: 'elevator-management',
+      icon: <AppstoreOutlined />,
+      label: groupLabel('elevator-management', '/elevator-dashboard', t('menu.elevatorManagement')),
+      children: [
+        { key: '/elevator-dashboard', label: t('menu.elevatorDashboard') },
+        { key: '/elevator-live', label: t('menu.elevatorLive') },
+        { key: '/elevator-detail', label: t('menu.elevatorDetail') },
+        { key: '/elevator-alarms', label: t('menu.elevatorAlarms') },
+        { key: '/elevator-access', label: t('menu.elevatorAccess') },
+        { key: '/elevator-maintenance', label: t('menu.elevatorMaintenance') },
+        { key: '/elevator-by-area', label: t('menu.elevatorByArea') },
+      ],
+    },
+    {
       key: 'item-control', icon: <InboxOutlined />,
       label: groupLabel('item-control', '/item-control', t('menu.itemControl')),
       children: [
@@ -174,7 +188,7 @@ export default function MainLayout() {
     },
     {
       key: 'remote-monitoring',
-      icon: <ThunderboltOutlined />,
+      icon: <EnvironmentOutlined />,
       label: groupLabel('remote-monitoring', '/hvac-assets', t('menu.remoteMonitoring')),
       children: [
         { key: '/hvac-assets', label: t('menu.hvacAssets') },
@@ -220,20 +234,6 @@ export default function MainLayout() {
         { key: '/smart-meeting-room/kiosk', label: t('menu.kiosk') },
         { key: '/smart-meeting-room/report-issue', label: t('menu.reportIssue') },
         { key: '/smart-meeting-room/issue-tickets', label: t('menu.issueTickets', 'Issue Tickets') },
-      ],
-    },
-    {
-      key: 'elevator-management',
-      icon: <AppstoreOutlined />,
-      label: groupLabel('elevator-management', '/elevator-dashboard', t('menu.elevatorManagement')),
-      children: [
-        { key: '/elevator-dashboard', label: t('menu.elevatorDashboard') },
-        { key: '/elevator-live', label: t('menu.elevatorLive') },
-        { key: '/elevator-detail', label: t('menu.elevatorDetail') },
-        { key: '/elevator-alarms', label: t('menu.elevatorAlarms') },
-        { key: '/elevator-access', label: t('menu.elevatorAccess') },
-        { key: '/elevator-maintenance', label: t('menu.elevatorMaintenance') },
-        { key: '/elevator-by-area', label: t('menu.elevatorByArea') },
       ],
     },
   ]
