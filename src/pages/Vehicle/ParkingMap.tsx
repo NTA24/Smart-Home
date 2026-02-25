@@ -6,24 +6,24 @@ import {
   Descriptions,
   Input,
   Button,
+  Modal,
 } from 'antd'
 import {
   CarOutlined,
   EnvironmentOutlined,
   FilterOutlined,
   ReloadOutlined,
+  SearchOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import {
   PageContainer,
   PageHeader,
   ContentCard,
-  FilterBar,
   DetailDrawer,
 } from '@/components'
 import { useBuildingStore } from '@/stores'
 import {
-  getVehicleMapFilters,
   getVehicleSlots,
   saveVehicleMapFilters,
   saveVehicleSlots,
@@ -84,23 +84,18 @@ function normalizeSlotStatus(status: unknown): SlotStatus {
 export default function ParkingMap() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
-  const persistedFilters = getVehicleMapFilters<{
-    vehicleFilter: string
-    plateQuery: string
-  }>({
-    vehicleFilter: 'all',
-    plateQuery: '',
-  })
   const [allSlots] = useState<ParkingSlot[]>(() =>
     getVehicleSlots<any>(generateSlots()).map((slot: any) => ({
       ...slot,
       status: normalizeSlotStatus(slot?.status),
     })),
   )
-  const [vehicleFilter, setVehicleFilter] = useState<string>(persistedFilters.vehicleFilter)
-  const [plateQuery, setPlateQuery] = useState<string>(persistedFilters.plateQuery || '')
+  const [vehicleFilter, setVehicleFilter] = useState<string>('all')
+  const [plateInput, setPlateInput] = useState<string>('')
+  const [plateSearchApplied, setPlateSearchApplied] = useState<string>('')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<ParkingSlot | null>(null)
+  const [spotImageModalOpen, setSpotImageModalOpen] = useState(false)
 
   useEffect(() => {
     saveVehicleSlots(allSlots)
@@ -109,17 +104,31 @@ export default function ParkingMap() {
   useEffect(() => {
     saveVehicleMapFilters({
       vehicleFilter,
-      plateQuery,
+      plateQuery: plateSearchApplied,
     })
-  }, [vehicleFilter, plateQuery])
+  }, [vehicleFilter, plateSearchApplied])
+
+
+  const applyPlateSearch = () => {
+    const q = plateInput.trim()
+    setPlateSearchApplied(q)
+    saveVehicleMapFilters({
+      vehicleFilter,
+      plateQuery: q,
+    })
+  }
 
   const filteredSlots = allSlots.filter(s => {
-    const plateKeyword = (plateQuery || '').trim().toLowerCase()
+    const plateKeyword = (plateSearchApplied || '').trim().toLowerCase()
     if (vehicleFilter === 'car' && s.vehicleType !== 'car') return false
     if (vehicleFilter === 'motorbike' && s.vehicleType !== 'motorbike') return false
-    if (plateKeyword && !(s.plate || '').toLowerCase().includes(plateKeyword)) return false
+    if (plateKeyword && !(s.plate || '').toLowerCase().replace(/\s/g, '').includes(plateKeyword.replace(/\s/g, ''))) return false
     return true
   })
+
+  const searchResultSlots = plateSearchApplied.trim()
+    ? filteredSlots.filter(s => (s.plate || '').toLowerCase().replace(/\s/g, '').includes(plateSearchApplied.trim().toLowerCase().replace(/\s/g, '')))
+    : []
 
   const mapSlots = filteredSlots.slice(0, 100)
   const topRow = mapSlots.slice(0, 16)
@@ -140,6 +149,14 @@ export default function ParkingMap() {
   const handleSlotClick = (slot: ParkingSlot) => {
     setSelectedSlot(slot)
     setDrawerOpen(true)
+    if (plateSearchApplied.trim() && searchResultSlots.some(s => s.id === slot.id)) {
+      setSpotImageModalOpen(true)
+    }
+  }
+
+  const closeDetailAndModal = () => {
+    setDrawerOpen(false)
+    setSpotImageModalOpen(false)
   }
 
   const getParkedDuration = (entryTime?: string) => {
@@ -168,6 +185,7 @@ export default function ParkingMap() {
       <button
         key={slot.id}
         type="button"
+        className="vehicle_slot-cell"
         onClick={() => handleSlotClick(slot)}
         style={{
           width: w,
@@ -247,13 +265,17 @@ export default function ParkingMap() {
         actions={<Button icon={<ReloadOutlined />}>{t('parkingMap.refresh')}</Button>}
       />
 
-      {/* Filters */}
+      {/* Filters - một hàng thẳng */}
       <ContentCard className="mb-16" bodyStyle={{ padding: '12px 20px' }}>
-        <FilterBar className="gap-16">
-          <FilterOutlined className="text-muted" />
-          <div>
-            <Text type="secondary" className="text-11">{t('parkingMap.vehicle')}</Text>
-            <Select value={vehicleFilter} onChange={setVehicleFilter} className="vehicle_filter-select-w130 vehicle_filter-select-ml"
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+          <FilterOutlined className="text-muted" style={{ fontSize: 16 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Text type="secondary" className="text-11" style={{ width: 72, flexShrink: 0 }}>{t('parkingMap.vehicle')}</Text>
+            <Select
+              value={vehicleFilter}
+              onChange={setVehicleFilter}
+              size="small"
+              style={{ width: 140 }}
               options={[
                 { value: 'all', label: t('parkingMap.allVehicles') },
                 { value: 'car', label: `🚗 ${t('parking.car')}` },
@@ -261,26 +283,120 @@ export default function ParkingMap() {
               ]}
             />
           </div>
-          <div>
-            <Text type="secondary" className="text-11">{t('parking.plateNumber')}</Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Text type="secondary" className="text-11" style={{ width: 72, flexShrink: 0 }}>{t('parking.plateNumber')}</Text>
             <Input
-              value={plateQuery}
-              onChange={(e) => setPlateQuery(e.target.value.toUpperCase())}
+              value={plateInput}
+              onChange={(e) => setPlateInput(e.target.value.toUpperCase())}
+              onPressEnter={applyPlateSearch}
               placeholder="51A-123.45"
-              className="vehicle_filter-select-w130 vehicle_filter-select-ml"
+              size="small"
+              style={{ width: 140 }}
               allowClear
+              onClear={() => { setPlateInput(''); setPlateSearchApplied('') }}
             />
+            <Button type="primary" size="small" icon={<SearchOutlined />} onClick={applyPlateSearch}>
+              {t('parkingMap.search', 'Tìm kiếm')}
+            </Button>
           </div>
-        </FilterBar>
+        </div>
       </ContentCard>
 
+      {/* Kết quả tìm kiếm biển số */}
+      {plateSearchApplied.trim() && searchResultSlots.length > 0 && (
+        <ContentCard className="mb-16" bodyStyle={{ padding: '12px 20px' }}>
+          <Text type="secondary" className="text-11 block mb-8">
+            {t('parkingMap.searchResults', 'Kết quả tìm kiếm')} ({searchResultSlots.length})
+          </Text>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {searchResultSlots.map((slot) => (
+              <button
+                key={slot.id}
+                type="button"
+                onClick={() => handleSlotClick(slot)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 14px',
+                  borderRadius: 8,
+                  border: `2px solid ${STATUS_CONFIG[slot.status].color}`,
+                  background: STATUS_CONFIG[slot.status].bg,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = `0 2px 12px ${STATUS_CONFIG[slot.status].color}40`
+                  e.currentTarget.style.transform = 'translateY(-1px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                <span style={{ fontWeight: 700, fontFamily: 'monospace', color: STATUS_CONFIG[slot.status].color }}>
+                  {slot.code}
+                </span>
+                {slot.plate && (
+                  <span style={{ fontFamily: 'monospace', color: '#333' }}>{slot.plate}</span>
+                )}
+                <Tag color={STATUS_CONFIG[slot.status].color} className="vehicle_tag-rounded-8">
+                  {t(`parkingMap.${STATUS_CONFIG[slot.status].label}`)}
+                </Tag>
+              </button>
+            ))}
+          </div>
+          <Text type="secondary" className="text-11 block mt-8">
+            {t('parkingMap.clickToViewImage', 'Bấm vào ô để xem ảnh chỗ đỗ')}
+          </Text>
+        </ContentCard>
+      )}
 
-      {/* Parking Map */}
-      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }} className="mb-16">
-        {/* Map floor */}
+      {plateSearchApplied.trim() && searchResultSlots.length === 0 && (
+        <ContentCard className="mb-16" bodyStyle={{ padding: '12px 20px' }}>
+          <Text type="secondary">{t('parkingMap.noPlateResult', 'Không tìm thấy xe với biển số này.')}</Text>
+        </ContentCard>
+      )}
+
+      {/* Thông tin đỗ xe - trên cùng */}
+      <ContentCard className="mb-16" bodyStyle={{ padding: '12px 20px' }}>
+        <Text strong className="block mb-10">
+          {t('parkingMap.infoPanel', 'Thông tin đỗ xe')}
+        </Text>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {(Object.entries(STATUS_CONFIG) as [SlotStatus, typeof STATUS_CONFIG[SlotStatus]][]).map(([key, cfg]) => (
+              <div
+                key={key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  background: cfg.bg,
+                  border: `1px solid ${cfg.color}33`,
+                }}
+              >
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: cfg.color }} />
+                <Text className="text-sm">{t(`parkingMap.${cfg.label}`)}</Text>
+                <Text strong style={{ color: cfg.color, fontSize: 16 }}>{stats[key]}</Text>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginLeft: 'auto' }}>
+            <Text type="secondary" className="text-sm">
+              {t('common.total')}: <Text strong>{filteredSlots.length}</Text> {t('parkingMap.slots')}
+            </Text>
+          </div>
+        </div>
+      </ContentCard>
+
+      {/* Parking Map - full width */}
+      <div className="mb-16">
         <div
           style={{
-            flex: 1,
+            width: '100%',
             background: '#3a3f47',
             borderRadius: 10,
             padding: 16,
@@ -413,86 +529,6 @@ export default function ParkingMap() {
             </div>
           )}
         </div>
-
-        {/* Info panel */}
-        <div
-          style={{
-            width: 230,
-            borderRadius: 10,
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            padding: 14,
-            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          }}
-        >
-          <Text strong className="block mb-10">
-            {t('parkingMap.infoPanel', 'Thông tin đỗ xe')}
-          </Text>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {(Object.entries(STATUS_CONFIG) as [SlotStatus, typeof STATUS_CONFIG[SlotStatus]][]).map(([key, cfg]) => (
-              <div
-                key={key}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '5px 10px',
-                  borderRadius: 6,
-                  background: cfg.bg,
-                  border: `1px solid ${cfg.color}33`,
-                }}
-              >
-                <div className="flex items-center gap-6">
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: cfg.color }} />
-                  <Text className="text-sm">{t(`parkingMap.${cfg.label}`)}</Text>
-                </div>
-                <Text strong style={{ color: cfg.color, fontSize: 16 }}>{stats[key]}</Text>
-              </div>
-            ))}
-          </div>
-
-          <div
-            style={{
-              marginTop: 14,
-              padding: 10,
-              borderRadius: 8,
-              background: '#fafafa',
-              border: '1px solid #f0f0f0',
-            }}
-          >
-            <Text type="secondary" className="text-11 block mb-6">
-              {t('parkingMap.selectedSlot', 'Ô đang chọn')}
-            </Text>
-            {selectedSlot ? (
-              <>
-                <div className="flex items-center gap-8">
-                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: STATUS_CONFIG[selectedSlot.status].color, boxShadow: `0 0 6px ${STATUS_CONFIG[selectedSlot.status].color}80` }} />
-                  <Text strong>{selectedSlot.id}</Text>
-                  <Tag color={STATUS_CONFIG[selectedSlot.status].color} className="vehicle_tag-rounded-8" style={{ marginLeft: 'auto' }}>
-                    {t(`parkingMap.${STATUS_CONFIG[selectedSlot.status].label}`)}
-                  </Tag>
-                </div>
-                {selectedSlot.plate && (
-                  <Text className="block mt-8 font-mono text-primary">{selectedSlot.plate}</Text>
-                )}
-                {selectedSlot.entryTime && (
-                  <Text type="secondary" className="block text-11 mt-4">
-                    {t('parkingMap.parkedDuration', 'Đã đỗ')}: {getParkedDuration(selectedSlot.entryTime)}
-                  </Text>
-                )}
-              </>
-            ) : (
-              <Text type="secondary" className="text-12">{t('parkingMap.clickSlotHint', 'Bấm vào ô để xem chi tiết')}</Text>
-            )}
-          </div>
-
-          <div style={{ marginTop: 10, textAlign: 'center' }}>
-            <Text type="secondary" className="text-11">
-              {t('common.total')}: <Text strong>{filteredSlots.length}</Text> {t('parkingMap.slots')}
-            </Text>
-          </div>
-        </div>
       </div>
 
       {/* Detail Drawer */}
@@ -506,7 +542,7 @@ export default function ParkingMap() {
           ) : undefined
         }
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={closeDetailAndModal}
         width={380}
       >
         {selectedSlot && (
@@ -547,6 +583,24 @@ export default function ParkingMap() {
           </div>
         )}
       </DetailDrawer>
+
+      {/* Modal ảnh chỗ đỗ (khi bấm vào ô kết quả tìm kiếm) */}
+      <Modal
+        title={selectedSlot ? `${selectedSlot.id} — ${selectedSlot.plate || ''}` : t('parkingMap.spotPreview', 'Ảnh chỗ đỗ')}
+        open={spotImageModalOpen}
+        onCancel={closeDetailAndModal}
+        footer={null}
+        width={720}
+        destroyOnClose
+      >
+        <div style={{ textAlign: 'center', padding: '8px 0' }}>
+          <img
+            src="/parking-spot-preview.png"
+            alt={t('parkingMap.spotPreview', 'Ảnh chỗ đỗ')}
+            style={{ maxWidth: '100%', height: 'auto', borderRadius: 8, border: '1px solid #eee' }}
+          />
+        </div>
+      </Modal>
     </PageContainer>
   )
 }
