@@ -27,7 +27,7 @@ import { ContentCard } from '@/components'
 import { useBuildingStore } from '@/stores'
 import mpegts from 'mpegts.js'
 import Hls from 'hls.js'
-import { getWebPlayableStreamCandidates, resolveCameraStreamUrl } from '@/utils/streamUrl'
+import { getWebPlayableStreamCandidates, getYoutubeEmbedUrl, resolveCameraStreamUrl } from '@/utils/streamUrl'
 
 const { Title, Text } = Typography
 
@@ -71,7 +71,7 @@ const cameras: Camera[] = [
     resolution: '4K',
     streamUrl: resolveCameraStreamUrl('/hls/699e639f021a61a13ee1ce32/index.m3u8'),
   },
-  { id: 'CAM-03', name: 'Elevator Hall 1F', location: 'Elevator', floor: '1F', status: 'online', type: 'indoor', resolution: '1080p' },
+  { id: 'CAM-03', name: 'Elevator Hall 1F', location: 'Elevator', floor: '1F', status: 'online', type: 'indoor', resolution: '1080p', streamUrl: 'https://www.youtube.com/watch?v=SCpZOgLKVfY' },
   { id: 'CAM-04', name: 'Office Floor 3', location: 'Office', floor: '3F', status: 'recording', type: 'indoor', resolution: '1080p' },
   { id: 'CAM-05', name: 'Rooftop', location: 'Rooftop', floor: 'RF', status: 'online', type: 'outdoor', resolution: '4K' },
   { id: 'CAM-06', name: 'Server Room', location: 'Server', floor: 'B1', status: 'recording', type: 'indoor', resolution: '1080p' },
@@ -115,6 +115,20 @@ function CameraStreamPlayer({
   const videoRef = useRef<HTMLVideoElement>(null)
   const [streamError, setStreamError] = useState<string | null>(null)
   const [activeSource, setActiveSource] = useState('')
+
+  const youtubeEmbed = getYoutubeEmbedUrl(streamUrl)
+  if (youtubeEmbed) {
+    return (
+      <div className="security_yt-crop-wrap" style={{ width: '100%', height: '100%' }}>
+        <iframe
+          src={youtubeEmbed}
+          title={cameraId}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    )
+  }
 
   useEffect(() => {
     const videoEl = videoRef.current
@@ -467,24 +481,53 @@ export default function CameraLiveView() {
         </div>
       </div>
 
-      {/* Camera Grid */}
+      {/* Camera Grid – grouped by floor */}
       {filteredCameras.length === 0 ? (
         <Card className="camera_empty-card">
           <Empty description={t('cameraLive.noCameras', 'No cameras found')} />
         </Card>
       ) : (
         <>
-          <Row gutter={[12, 12]}>
-            {visibleCameras.map((camera) => (
-            <Col xs={24} sm={12} lg={colSpan} key={camera.id}>
-              <CameraFeed
-                camera={camera}
-                t={t}
-                compact={gridLayout === '4x4'}
-              />
-            </Col>
-            ))}
-          </Row>
+          {(() => {
+            const paged = filteredCameras.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+            const totalByFloor: Record<string, number> = {}
+            for (const cam of filteredCameras) {
+              totalByFloor[cam.floor] = (totalByFloor[cam.floor] || 0) + 1
+            }
+            const floorOrder: string[] = []
+            const byFloor: Record<string, Camera[]> = {}
+            for (const cam of paged) {
+              if (!byFloor[cam.floor]) {
+                byFloor[cam.floor] = []
+                floorOrder.push(cam.floor)
+              }
+              byFloor[cam.floor].push(cam)
+            }
+            return floorOrder.map(floor => (
+              <div key={floor} className="camera_floor-group">
+                <div className="camera_floor-label">
+                  <EnvironmentOutlined />
+                  <Text strong className="text-sm">
+                    {t('cameraLive.floor', 'Tầng')} {floor}
+                  </Text>
+                  <Text type="secondary" className="text-12">
+                    — {totalByFloor[floor]} camera
+                  </Text>
+                </div>
+                <Row gutter={[12, 12]}>
+                  {byFloor[floor].map((camera) => (
+                    <Col xs={24} sm={12} lg={colSpan} key={camera.id}>
+                      <CameraFeed
+                        camera={camera}
+                        t={t}
+                        compact={gridLayout === '4x4'}
+                      />
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            ))
+          })()}
           {filteredCameras.length > pageSize && (
             <div className="mt-12 flex justify-end">
               <Pagination

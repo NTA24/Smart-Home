@@ -508,6 +508,12 @@
   transition: opacity 0.3s ease;
 }
 
+/* ── Sidebar submenu group headers – bolder text ── */
+.ant-menu-submenu > .ant-menu-submenu-title {
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
 /* ── Inline Tag helpers (no-margin) ── */
 .tag--no-margin {
   margin: 0;

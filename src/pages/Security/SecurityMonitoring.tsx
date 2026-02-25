@@ -15,7 +15,7 @@ import cameraIcon from '../../assets/camera-icon.png'
 import cameraPreview from '../../assets/camera-preview.png'
 import Hls from 'hls.js'
 import mpegts from 'mpegts.js'
-import { getWebPlayableStreamCandidates, resolveCameraStreamUrl } from '@/utils/streamUrl'
+import { getWebPlayableStreamCandidates, getYoutubeEmbedUrl, isYoutubeUrl, resolveCameraStreamUrl } from '@/utils/streamUrl'
 
 const { Text } = Typography
 
@@ -80,8 +80,10 @@ const CameraVideoModal: React.FC<{
   onClose: () => void
 }> = ({ visible, camera, streamUrl, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const youtubeEmbed = getYoutubeEmbedUrl(streamUrl)
 
   useEffect(() => {
+    if (isYoutubeUrl(streamUrl)) return
     const videoEl = videoRef.current
     const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
     if (!visible || !videoEl || playableCandidates.length === 0) return
@@ -209,7 +211,16 @@ const CameraVideoModal: React.FC<{
           />
         </div>
         <div className="security_modal-video-area">
-          {streamUrl ? (
+          {youtubeEmbed ? (
+            <div className="security_yt-crop-wrap">
+              <iframe
+                src={youtubeEmbed}
+                title={camera}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          ) : streamUrl ? (
             <video
               ref={videoRef}
               className="camera_feed-video-element"
@@ -221,9 +232,11 @@ const CameraVideoModal: React.FC<{
           ) : (
             <PlayCircleOutlined className="security_play-icon cursor-pointer transition-all text-4xl opacity-90" />
           )}
+          {!youtubeEmbed && (
           <div className="security_camera-name-overlay">
             <Text className="text-white text-11">{camera}</Text>
           </div>
+          )}
         </div>
       </div>
     </Modal>
@@ -275,8 +288,10 @@ const CameraThumbnail: React.FC<{
   onClick?: () => void
 }> = ({ label, sublabel, isLive, camId, streamUrl, onClick }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const youtubeEmbed = getYoutubeEmbedUrl(streamUrl)
 
   useEffect(() => {
+    if (isYoutubeUrl(streamUrl)) return
     const videoEl = videoRef.current
     const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
     if (!videoEl || playableCandidates.length === 0) return
@@ -394,7 +409,15 @@ const CameraThumbnail: React.FC<{
         className="security_thumbnail-preview"
         style={!streamUrl ? { backgroundImage: `url(${cameraPreview})` } : undefined}
       >
-        {streamUrl ? (
+        {youtubeEmbed ? (
+          <iframe
+            src={youtubeEmbed}
+            title={label}
+            className="camera_feed-video-element security_thumbnail-iframe"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : streamUrl ? (
           <video
             ref={videoRef}
             className="camera_feed-video-element"
@@ -663,12 +686,19 @@ export default function SecurityMonitoring() {
     { camera: 'CAM-D2-22 (Parking)', location: 'Viettel Headquarters Building Park', time: '2026-02-04 09:08:18', type: 'Access violation' },
   ]
 
-  const captures = [
-    { tag: 'Strangers', tagColor: '#1890ff', location: 'Area, Building 2, 2F', time: '2026-02-04 09:18:41' },
-    { tag: 'Strangers', tagColor: '#1890ff', location: 'Office Area, Building 2, 3F', time: '2026-02-04 09:18:36' },
-    { tag: 'Strangers', tagColor: '#1890ff', location: 'Office Area, Building 2, 2F', time: '2026-02-04 09:18:31' },
-    { tag: 'Strangers', tagColor: '#ff4d4f', location: 'Office Area, Building 2, 2F', time: '2026-02-04 09:18:28' },
+  const captureColors = { strangers: '#ff4d4f', familiar: '#1890ff' } as const
+  const captureRows = [
+    { tagKey: 'strangers' as const, location: 'Area, Building 2, 2F', time: '2026-02-04 09:18:41' },
+    { tagKey: 'familiar' as const, location: 'Office Area, Building 2, 3F', time: '2026-02-04 09:18:36' },
+    { tagKey: 'strangers' as const, location: 'Office Area, Building 2, 2F', time: '2026-02-04 09:18:31' },
+    { tagKey: 'familiar' as const, location: 'Office Area, Building 2, 2F', time: '2026-02-04 09:18:28' },
   ]
+  const captures = captureRows.map(row => ({
+    tag: t(`security.${row.tagKey}`),
+    tagColor: captureColors[row.tagKey],
+    location: row.location,
+    time: row.time,
+  }))
 
   const cameras = [
     {
@@ -683,7 +713,12 @@ export default function SecurityMonitoring() {
       camId: '1-2F-05',
       streamUrl: resolveCameraStreamUrl('/hls/699e639f021a61a13ee1ce32/index.m3u8'),
     },
-    { label: 'Parking B1 - CAM-03', sublabel: 'Underground parking exit', camId: 'B1-P-12' },
+    {
+      label: 'Parking B1 - CAM-03',
+      sublabel: 'Underground parking exit',
+      camId: 'B1-P-12',
+      streamUrl: 'https://www.youtube.com/watch?v=SCpZOgLKVfY',
+    },
   ]
 
   return (
@@ -709,7 +744,10 @@ export default function SecurityMonitoring() {
             icon={<AlertOutlined className="text-danger text-md" />}
             style={{ flex: 1 }}
           >
-            <ScrollingAlarmList alarms={alarms} onCameraClick={handleCameraClick} />
+            <ScrollingAlarmList
+              alarms={alarms}
+              onCameraClick={() => handleCameraClick(cameras[1].label, dateTime.time, cameras[1].streamUrl)}
+            />
           </GlassPanel>
 
           <GlassPanel

@@ -144,7 +144,8 @@
     "logout": "Logout",
     "language": "Language",
     "english": "English",
-    "vietnamese": "Vietnamese"
+    "vietnamese": "Vietnamese",
+    "switchUser": "Switch account"
   },
   "home": {
     "selectTenant": "Smart Building Management System",
@@ -1215,6 +1216,8 @@
     "smartSnapshots": "Quick snapshot",
     "screenshot": "Screenshot",
     "captureRecord": "Capture record",
+    "strangers": "Strangers",
+    "familiar": "Verified",
     "dynamicVideo": "Dynamic video of entrances and exits",
     "personnelToday": "Number of Permanent Personnel Today",
     "people": "people",
@@ -1499,7 +1502,8 @@
     "streamNotSupported": "Browser does not support live stream playback",
     "streamUnsupportedProtocol": "Unsupported stream protocol",
     "streamFailed": "Unable to decode this stream source",
-    "noCameras": "No cameras found"
+    "noCameras": "No cameras found",
+    "floor": "Floor"
   },
   "cameraPlayback": {
     "title": "Playback",
@@ -1547,7 +1551,24 @@
     "enabled": "Enabled",
     "protocol": "Protocol",
     "streamUrl": "Stream URL",
-    "streamUrlPlaceholder": "Enter stream URL (m3u8 / wss://...)"
+    "streamUrlPlaceholder": "Enter stream URL (m3u8 / wss://...)",
+    "edit": "Edit",
+    "editCamera": "Edit camera details",
+    "editSaved": "Camera details updated",
+    "save": "Save",
+    "cancel": "Cancel",
+    "cameraId": "Camera ID",
+    "name": "Name",
+    "namePlaceholder": "Camera name",
+    "floor": "Floor",
+    "viewPermission": "Permission",
+    "viewPermissionPlaceholder": "Select view permission",
+    "roleAdmin": "Administrator",
+    "roleUser": "User",
+    "roleSecurity": "Security",
+    "roleGuest": "Guest",
+    "statusOn": "Enabled",
+    "statusOff": "Disabled"
   },
   "lockerMap": {
     "title": "Locker Cell Map",

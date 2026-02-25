@@ -28,7 +28,7 @@ import {
   AppstoreOutlined,
   LaptopOutlined,
 } from '@ant-design/icons'
-import { useTabStore, routeToLabelKey, useBuildingStore, useHomeNavigationStore } from '@/stores'
+import { useTabStore, routeToLabelKey, useBuildingStore, useHomeNavigationStore, useUserStore, ADMIN1_HIDDEN_GROUPS } from '@/stores'
 import type { Tab } from '@/stores'
 import { tenantApi, campusApi, buildingApi } from '@/services'
 import viettelLogo from '@/assets/viettel-logo.png'
@@ -81,6 +81,7 @@ export default function MainLayout() {
 
   const { selectedBuilding, selectBuildingById, setSelectedBuilding: setBuildingStoreSelected } = useBuildingStore()
   const navStore = useHomeNavigationStore()
+  const { currentUser, switchUser } = useUserStore()
 
   useEffect(() => {
     if (navStore.tenants.length === 0) {
@@ -243,7 +244,10 @@ export default function MainLayout() {
         ? { key: child.key, label: child.label, children: mapChildren(child.children), disabled: child.disabled }
         : { key: child.key, label: child.label, disabled: child.disabled }
     )
-  const menuItems: MenuProps['items'] = menuConfig.map((item) => ({
+  const visibleMenuConfig = currentUser === 'admin1'
+    ? menuConfig.filter(item => !ADMIN1_HIDDEN_GROUPS.has(item.key))
+    : menuConfig
+  const menuItems: MenuProps['items'] = visibleMenuConfig.map((item) => ({
     key: item.key, icon: item.icon, label: item.label, disabled: item.disabled,
     children: item.children ? mapChildren(item.children) : undefined,
   }))
@@ -251,6 +255,15 @@ export default function MainLayout() {
   const userMenuItems: MenuProps['items'] = [
     { key: 'profile', icon: <UserOutlined />, label: t('header.profile') },
     { key: 'settings', icon: <SettingOutlined />, label: t('header.settings') },
+    { type: 'divider' },
+    {
+      key: 'switch-user',
+      label: t('header.switchUser', 'Chuyển tài khoản'),
+      children: [
+        { key: 'switch-admin', label: 'Admin', disabled: currentUser === 'admin' },
+        { key: 'switch-admin1', label: 'Admin1', disabled: currentUser === 'admin1' },
+      ],
+    },
     { type: 'divider' },
     { key: 'logout', icon: <LogoutOutlined />, label: t('header.logout') },
   ]
@@ -628,10 +641,19 @@ export default function MainLayout() {
                 <BellOutlined className="main-header_toggle" />
               </Badge>
             </div>
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+            <Dropdown
+              menu={{
+                items: userMenuItems,
+                onClick: ({ key }) => {
+                  if (key === 'switch-admin') switchUser('admin')
+                  else if (key === 'switch-admin1') switchUser('admin1')
+                },
+              }}
+              placement="bottomRight"
+            >
               <div className="header-action_user">
                 <Avatar icon={<UserOutlined />} size={32} />
-                <span className="header-action_username">Admin</span>
+                <span className="header-action_username">{currentUser === 'admin1' ? 'Admin1' : 'Admin'}</span>
               </div>
             </Dropdown>
           </div>

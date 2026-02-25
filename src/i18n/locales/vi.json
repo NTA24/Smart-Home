@@ -144,7 +144,8 @@
     "logout": "Đăng xuất",
     "language": "Ngôn ngữ",
     "english": "Tiếng Anh",
-    "vietnamese": "Tiếng Việt"
+    "vietnamese": "Tiếng Việt",
+    "switchUser": "Chuyển tài khoản"
   },
   "home": {
     "selectTenant": "Hệ thống quản lý tòa nhà thông minh",
@@ -1270,6 +1271,8 @@
     "smartSnapshots": "Chụp ảnh nhanh",
     "screenshot": "Chụp màn hình",
     "captureRecord": "Hình ảnh lưu trữ",
+    "strangers": "Người lạ",
+    "familiar": "Đã xác thực",
     "dynamicVideo": "Video giám sát luồng ra vào thời gian thực",
     "personnelToday": "Số nhân viên thường trực hôm nay",
     "people": "người",
@@ -1554,7 +1557,8 @@
     "streamNotSupported": "Trình duyệt không hỗ trợ phát luồng trực tiếp",
     "streamUnsupportedProtocol": "Giao thức luồng không được hỗ trợ",
     "streamFailed": "Không thể giải mã nguồn stream này",
-    "noCameras": "Không tìm thấy camera"
+    "noCameras": "Không tìm thấy camera",
+    "floor": "Tầng"
   },
   "cameraPlayback": {
     "title": "Xem Lại",
@@ -1602,7 +1606,24 @@
     "enabled": "Kích hoạt",
     "protocol": "Giao thức",
     "streamUrl": "Đường dẫn stream",
-    "streamUrlPlaceholder": "Nhập URL stream (m3u8 / wss://...)"
+    "streamUrlPlaceholder": "Nhập URL stream (m3u8 / wss://...)",
+    "edit": "Chỉnh sửa",
+    "editCamera": "Chỉnh sửa thông tin camera",
+    "editSaved": "Đã cập nhật thông tin camera",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "cameraId": "Mã camera",
+    "name": "Tên",
+    "namePlaceholder": "Tên camera",
+    "floor": "Tầng",
+    "viewPermission": "Phân quyền",
+    "viewPermissionPlaceholder": "Chọn quyền xem",
+    "roleAdmin": "Quản trị viên",
+    "roleUser": "Người dùng",
+    "roleSecurity": "Bảo vệ",
+    "roleGuest": "Khách",
+    "statusOn": "Đang bật",
+    "statusOff": "Đang tắt"
   },
   "lockerMap": {
     "title": "Sơ Đồ Ngăn Tủ",

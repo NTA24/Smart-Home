@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Button, Input, InputNumber, Select, Space, Switch, Table, Typography, message } from 'antd'
+import { Button, Input, InputNumber, Modal, Select, Space, Switch, Table, Typography, message } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { SettingOutlined } from '@ant-design/icons'
+import { EditOutlined, SettingOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { ContentCard, PageContainer, PageHeader } from '@/components'
 
@@ -28,6 +28,7 @@ interface CameraItemConfig {
   enabled: boolean
   protocol: CameraProtocol
   streamUrl: string
+  viewPermission?: string
 }
 
 const STORAGE_KEY_GLOBAL = 'securityCamera.globalConfig'
@@ -44,18 +45,18 @@ const defaultGlobalConfig: CameraGlobalConfig = {
 }
 
 const seedCameraItems: CameraItemConfig[] = [
-  { id: 'CAM-01', name: 'Lobby Main Entrance', floor: '1F', enabled: true, protocol: 'hls', streamUrl: 'https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/manifest/video.m3u8' },
-  { id: 'CAM-02', name: 'Parking Gate A', floor: 'B1', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-03', name: 'Elevator Hall 1F', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-04', name: 'Office Floor 3', floor: '3F', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-05', name: 'Rooftop', floor: 'RF', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-06', name: 'Server Room', floor: 'B1', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-07', name: 'Parking Gate B', floor: 'B1', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-08', name: 'Meeting Room 5F', floor: '5F', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-09', name: 'Fire Escape Stair', floor: '2F', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-10', name: 'Loading Dock', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-11', name: 'Lobby Side Entrance', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '' },
-  { id: 'CAM-12', name: 'Garden Area', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '' },
+  { id: 'CAM-01', name: 'Lobby Main Entrance', floor: '1F', enabled: true, protocol: 'hls', streamUrl: 'https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/manifest/video.m3u8', viewPermission: '' },
+  { id: 'CAM-02', name: 'Parking Gate A', floor: 'B1', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-03', name: 'Elevator Hall 1F', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-04', name: 'Office Floor 3', floor: '3F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-05', name: 'Rooftop', floor: 'RF', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-06', name: 'Server Room', floor: 'B1', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-07', name: 'Parking Gate B', floor: 'B1', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-08', name: 'Meeting Room 5F', floor: '5F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-09', name: 'Fire Escape Stair', floor: '2F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-10', name: 'Loading Dock', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-11', name: 'Lobby Side Entrance', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-12', name: 'Garden Area', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
 ]
 
 function readJson<T>(key: string): T | null {
@@ -80,6 +81,7 @@ function normalizeItems(items: CameraItemConfig[] | null): CameraItemConfig[] {
       protocol: current.protocol === 'ws-flv' ? 'ws-flv' : 'hls',
       streamUrl: typeof current.streamUrl === 'string' ? current.streamUrl : '',
       enabled: current.enabled !== false,
+      viewPermission: typeof current.viewPermission === 'string' ? current.viewPermission : '',
     }
   })
 }
@@ -107,6 +109,8 @@ export default function CameraConfig() {
   })
   const [cameraItems, setCameraItems] = useState<CameraItemConfig[]>(() => normalizeItems(readJson<CameraItemConfig[]>(STORAGE_KEY_ITEMS)))
   const [msgApi, msgContextHolder] = message.useMessage()
+  const [editingCamera, setEditingCamera] = useState<CameraItemConfig | null>(null)
+  const [editForm, setEditForm] = useState<Partial<CameraItemConfig>>({})
 
   const enabledCount = useMemo(() => cameraItems.filter(item => item.enabled).length, [cameraItems])
 
@@ -126,6 +130,37 @@ export default function CameraConfig() {
     localStorage.removeItem(STORAGE_KEY_GLOBAL)
     localStorage.removeItem(STORAGE_KEY_ITEMS)
     msgApi.success(t('cameraConfig.resetDone', 'Da dat lai cau hinh mac dinh'))
+  }
+
+  const openEditModal = (record: CameraItemConfig) => {
+    setEditingCamera(record)
+    setEditForm({
+      name: record.name,
+      floor: record.floor,
+      enabled: record.enabled,
+      protocol: record.protocol,
+      streamUrl: record.streamUrl,
+      viewPermission: record.viewPermission ?? '',
+    })
+  }
+
+  const closeEditModal = () => {
+    setEditingCamera(null)
+    setEditForm({})
+  }
+
+  const saveEditModal = () => {
+    if (!editingCamera) return
+    updateCameraItem(editingCamera.id, {
+      name: editForm.name ?? editingCamera.name,
+      floor: editForm.floor ?? editingCamera.floor,
+      enabled: editForm.enabled ?? editingCamera.enabled,
+      protocol: (editForm.protocol as CameraProtocol) ?? editingCamera.protocol,
+      streamUrl: editForm.streamUrl ?? editingCamera.streamUrl,
+      viewPermission: editForm.viewPermission ?? editingCamera.viewPermission ?? '',
+    })
+    msgApi.success(t('cameraConfig.editSaved', 'Đã cập nhật thông tin camera'))
+    closeEditModal()
   }
 
   const columns: ColumnsType<CameraItemConfig> = [
@@ -176,6 +211,22 @@ export default function CameraConfig() {
           placeholder={t('cameraConfig.streamUrlPlaceholder', 'Nhap URL stream (m3u8 / wss://...)')}
           onChange={(event) => updateCameraItem(record.id, { streamUrl: event.target.value })}
         />
+      ),
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 90,
+      align: 'center',
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => openEditModal(record)}
+        >
+          {t('cameraConfig.edit', 'Chỉnh sửa')}
+        </Button>
       ),
     },
   ]
@@ -251,7 +302,7 @@ export default function CameraConfig() {
               ]}
             />
           </div>
-          {globalConfig.rtspConversionMode === 'hls-direct' ? (
+          {globalConfig.rtspConversionMode === 'hls-direct' && (
             <div>
               <Text>{t('cameraConfig.rtspHlsPort', 'HLS port (mặc định 8888)')}</Text>
               <InputNumber
@@ -262,18 +313,6 @@ export default function CameraConfig() {
                   setGlobalConfig((prev) => ({ ...prev, rtspHlsPort: Number(value) || 8888 }))
                 }
                 className="w-full mt-4"
-              />
-            </div>
-          ) : (
-            <div>
-              <Text>{t('cameraConfig.rtspProxyBaseUrl', 'RTSP proxy base URL')}</Text>
-              <Input
-                value={globalConfig.rtspProxyBaseUrl}
-                onChange={(event) =>
-                  setGlobalConfig((prev) => ({ ...prev, rtspProxyBaseUrl: event.target.value }))
-                }
-                placeholder="wss://yuanqu.smartmk.cn:19993/proxy"
-                className="mt-4"
               />
             </div>
           )}
@@ -305,6 +344,98 @@ export default function CameraConfig() {
           )}
         </Text>
       </ContentCard>
+
+      <Modal
+        title={t('cameraConfig.editCamera', 'Chỉnh sửa thông tin camera')}
+        open={editingCamera != null}
+        onCancel={closeEditModal}
+        onOk={saveEditModal}
+        okText={t('cameraConfig.save', 'Lưu')}
+        cancelText={t('cameraConfig.cancel', 'Hủy')}
+        width={520}
+        destroyOnClose
+      >
+        {editingCamera && (
+          <Space direction="vertical" size={12} className="w-full" style={{ width: '100%' }}>
+            <div>
+              <Text type="secondary" className="block mb-1">{t('cameraConfig.cameraId', 'Mã camera')}</Text>
+              <Text strong>{editingCamera.id}</Text>
+            </div>
+            <div>
+              <Text type="secondary" className="block mb-1">{t('cameraConfig.name', 'Tên')}</Text>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder={t('cameraConfig.namePlaceholder', 'Tên camera')}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Text type="secondary" className="block mb-1">{t('cameraConfig.floor', 'Tầng')}</Text>
+              <Input
+                value={editForm.floor}
+                onChange={(e) => setEditForm(prev => ({ ...prev, floor: e.target.value }))}
+                placeholder="1F, B1, ..."
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Text type="secondary" className="block mb-1">{t('cameraConfig.streamUrl', 'Đường dẫn stream')}</Text>
+              <Input
+                value={editForm.streamUrl}
+                onChange={(e) => setEditForm(prev => ({ ...prev, streamUrl: e.target.value }))}
+                placeholder={t('cameraConfig.streamUrlPlaceholder', 'Nhập URL stream (m3u8 / wss/...)')}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Text type="secondary" className="block mb-1">{t('cameraConfig.enabled', 'Kích hoạt')}</Text>
+              <div className="camcfg_switch-row">
+                <Switch
+                  checked={editForm.enabled ?? editingCamera.enabled}
+                  onChange={(checked) => setEditForm(prev => ({ ...prev, enabled: checked }))}
+                />
+                <Text className="camcfg_switch-label">
+                  {(editForm.enabled ?? editingCamera.enabled)
+                    ? t('cameraConfig.statusOn', 'Đang bật')
+                    : t('cameraConfig.statusOff', 'Đang tắt')}
+                </Text>
+              </div>
+            </div>
+            <div>
+              <Text type="secondary" className="block mb-1">{t('cameraConfig.protocol', 'Giao thức')}</Text>
+              <Select
+                value={editForm.protocol ?? editingCamera.protocol}
+                onChange={(value) => setEditForm(prev => ({ ...prev, protocol: value as CameraProtocol }))}
+                options={[
+                  { value: 'hls', label: 'HLS' },
+                  { value: 'ws-flv', label: 'WS-FLV' },
+                ]}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Text type="secondary" className="block mb-1">{t('cameraConfig.viewPermission', 'Phân quyền')}</Text>
+              <Select
+                mode="multiple"
+                value={
+                  (editForm.viewPermission ?? editingCamera.viewPermission ?? '')
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean)
+                }
+                onChange={(vals: string[]) => setEditForm(prev => ({ ...prev, viewPermission: vals.join(', ') }))}
+                options={[
+                  { value: 'admin', label: t('cameraConfig.roleAdmin', 'Quản trị viên') },
+                  { value: 'user', label: t('cameraConfig.roleUser', 'Người dùng') },
+                ]}
+                placeholder={t('cameraConfig.viewPermissionPlaceholder', 'Chọn quyền xem')}
+                className="w-full"
+              />
+            </div>
+          </Space>
+        )}
+      </Modal>
     </PageContainer>
   )
 }

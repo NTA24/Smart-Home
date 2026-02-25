@@ -54,6 +54,34 @@ export function resolveCameraStreamUrl(rawUrl?: string): string {
   return `${base}${path}`
 }
 
+/** Params: mute+autoplay so video starts immediately and initial play overlay disappears; minimal UI. */
+const YOUTUBE_EMBED_PARAMS = 'autoplay=1&mute=1&modestbranding=1&rel=0&iv_load_policy=3&controls=0&showinfo=0&disablekb=0&fs=1'
+
+/** Returns YouTube embed URL if input is a YouTube watch/share URL, otherwise null. */
+export function getYoutubeEmbedUrl(rawUrl?: string): string | null {
+  const input = (rawUrl || '').trim()
+  if (!input) return null
+  try {
+    const url = new URL(input)
+    const host = url.hostname.replace(/^www\./, '')
+    if (host === 'youtube.com' && url.pathname === '/watch' && url.searchParams.get('v')) {
+      const vid = url.searchParams.get('v')
+      return `https://www.youtube-nocookie.com/embed/${vid}?${YOUTUBE_EMBED_PARAMS}`
+    }
+    if (host === 'youtu.be' && url.pathname.length > 1) {
+      const id = url.pathname.slice(1).split('/')[0]
+      return id ? `https://www.youtube-nocookie.com/embed/${id}?${YOUTUBE_EMBED_PARAMS}` : null
+    }
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+
+export function isYoutubeUrl(rawUrl?: string): boolean {
+  return getYoutubeEmbedUrl(rawUrl) != null
+}
+
 export function getWebPlayableStreamCandidates(rawUrl?: string): string[] {
   const input = (rawUrl || '').trim()
   if (!input) return []
