@@ -16,6 +16,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      '/camera-stream/': {
+        target: 'https://camera.iot-platform.io.vn',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/camera-stream\//, '/'),
+      },
     },
   },
 })

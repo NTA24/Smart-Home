@@ -1,23 +1,81 @@
-export { default as Dashboard } from './Dashboard'
-export { default as ParkingManagement } from './ParkingManagement'
-export { default as DeviceManagement } from './DeviceManagement'
-export { default as EnergyMonitor } from './EnergyMonitor'
-export { default as AlarmStatistics } from './AlarmStatistics'
-export { default as EnergyMonitoring } from './EnergyMonitoring'
-export { default as EquipmentOperation } from './EquipmentOperation'
-export { default as VisitorDistribution } from './VisitorDistribution'
-export { default as EnergyDataCenter } from './EnergyDataCenter'
-export { default as SecurityMonitoring } from './SecurityMonitoring'
-export { default as CameraLiveView } from './CameraLiveView'
-export { default as CameraPlayback } from './CameraPlayback'
-export { default as PersonnelManagement } from './PersonnelManagement'
-export { default as RobotManagement } from './RobotManagement'
-export { default as LuggageControl } from './LuggageControl'
-export { default as ItemControl } from './ItemControl'
-export { default as LockerMap } from './LockerMap'
-export { default as UserManagement } from './UserManagement'
-export { default as ElevatorByArea } from './ElevatorByArea'
-export { default as EnergyDeviceManagement } from './EnergyDeviceManagement'
-export { default as ApiTest } from './ApiTest'
-export { default as CampusTest } from './CampusTest'
-export { default as BuildingTest } from './BuildingTest'
+// Dashboard
+export { Home, Dashboard } from './Dashboard'
+
+// Security
+export { SecurityMonitoring, CameraLiveView, CameraPlayback, CameraConfig } from './Security'
+
+// Vehicle / Parking
+export {
+  ParkingManagement,
+  VehicleAccessControl,
+  LiveEntrance,
+  LiveExit,
+  ParkingMap,
+  ParkingTickets,
+  ParkingSubscription,
+  ParkingDevices,
+} from './Vehicle'
+
+// People
+export { PersonnelManagement, VisitorDistribution } from './People'
+
+// Item / Locker
+export { ItemControl, LockerMap, LuggageControl } from './Item'
+
+// Energy
+export {
+  AlarmStatistics,
+  EnergyMonitoring,
+  EnergyDataCenter,
+  EnergyMeterPage,
+  HvacAssetPage,
+  IaqSensorPage,
+  EnergyAggregatePage,
+  EnergyTelemetryPage,
+  IaqTelemetryPage,
+  HvacTelemetryPage,
+  EnergyDeviceManagement,
+} from './Energy'
+
+// Elevator
+export {
+  ElevatorDashboard,
+  ElevatorLive,
+  ElevatorDetail,
+  ElevatorAlarms,
+  ElevatorAccessControl,
+  ElevatorMaintenance,
+  ElevatorByArea,
+} from './Elevator'
+
+// Robot
+export {
+  RobotDashboard,
+  RobotLiveFleet,
+  RobotDetail,
+  RobotCreateMission,
+  RobotAlerts,
+  RobotMaintenance,
+  RobotManagement,
+} from './Robot'
+
+// Workspace
+export {
+  WorkspaceDashboard,
+  SmartWorkspace,
+  WorkspaceRoomDetail,
+  WorkspaceBookingCalendar,
+  WorkspaceCreateBooking,
+  WorkspaceKiosk,
+  WorkspaceReportIssue,
+  SmartMeetingRoom,
+} from './Workspace'
+
+// Admin
+export { UserManagement, DeviceManagement } from './Admin'
+
+// Test
+export { ApiTest, CampusTest, BuildingTest } from './Test'
+
+// Other
+export { EquipmentOperation, EnergyMonitor } from './Other'

@@ -26,32 +26,14 @@ export default function StatCard({
 
   return (
     <Card className="stat-card" bordered={false}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+      <div className="stat-card_content">
         {icon && (
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 8,
-              background: iconBgColor,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: 24,
-            }}
-          >
+          <div className="stat-card_icon" style={{ background: iconBgColor }}>
             {icon}
           </div>
         )}
-        <div style={{ flex: 1 }}>
-          <div
-            style={{
-              color: token.colorTextSecondary,
-              fontSize: 14,
-              marginBottom: 8,
-            }}
-          >
+        <div className="stat-card_body">
+          <div className="stat-card_label" style={{ color: token.colorTextSecondary }}>
             {title}
           </div>
           <Statistic

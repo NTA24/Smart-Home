@@ -1,0 +1,677 @@
+import { useState, useEffect, useRef } from 'react'
+import { Typography, Badge, Tag, Modal } from 'antd'
+import { useTranslation } from 'react-i18next'
+import {
+  AlertOutlined,
+  CameraOutlined,
+  UserOutlined,
+  EnvironmentOutlined,
+  CloseOutlined,
+  PlayCircleOutlined
+} from '@ant-design/icons'
+import securityBg from '../../assets/security-bg-2.png'
+import alertIcon from '../../assets/alert-icon.png'
+import cameraIcon from '../../assets/camera-icon.png'
+import cameraPreview from '../../assets/camera-preview.png'
+import Hls from 'hls.js'
+import mpegts from 'mpegts.js'
+import { getWebPlayableStreamCandidates, resolveCameraStreamUrl } from '@/utils/streamUrl'
+
+const { Text } = Typography
+
+// Panel component with glass effect
+const GlassPanel: React.FC<{
+  title: string
+  icon?: React.ReactNode
+  children: React.ReactNode
+  style?: React.CSSProperties
+  titleRight?: React.ReactNode
+}> = ({ title, icon, children, style, titleRight }) => (
+  <div className="security_glass-panel" style={style}>
+    <div className="security_glass-header">
+      <div className="security_glass-header-left">
+        {icon}
+        <Text className="security_glass-title">{title}</Text>
+      </div>
+      {titleRight}
+    </div>
+    <div className="security_glass-body">{children}</div>
+  </div>
+)
+
+// Video alarm item - matching reference design
+const VideoAlarmItem: React.FC<{
+  camera: string
+  location: string
+  time: string
+  type: string
+  onCameraClick?: () => void
+}> = ({ camera, location, time, type, onCameraClick }) => (
+  <div className="security_alarm-item">
+    <div className="security_alarm-icon-wrap">
+      <img src={alertIcon} alt="" className="security_alarm-icon" />
+    </div>
+
+    <div className="security_alarm-content min-w-0">
+      <div className="security_alarm-row">
+        <Text className="text-sm font-medium security_text-alarm">{camera}</Text>
+        <Text className="text-11 security_text-red">{type}</Text>
+      </div>
+      <Text className="text-xs block mt-2 security_text-light">{location}</Text>
+      <Text className="font-mono security_alarm-time">{time}</Text>
+    </div>
+
+    <div
+      onClick={(e) => { e.stopPropagation(); onCameraClick?.() }}
+      className="security_alarm-camera-btn"
+    >
+      <img src={cameraIcon} alt="" className="block security_camera-icon-sm" />
+    </div>
+  </div>
+)
+
+// Camera video modal component
+const CameraVideoModal: React.FC<{
+  visible: boolean
+  camera: string
+  time: string
+  streamUrl?: string
+  onClose: () => void
+}> = ({ visible, camera, streamUrl, onClose }) => {
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    if (visible) {
+      const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+      return () => clearInterval(timer)
+    }
+  }, [visible])
+
+  useEffect(() => {
+    const videoEl = videoRef.current
+    const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
+    if (!visible || !videoEl || playableCandidates.length === 0) return
+
+    let hls: Hls | null = null
+    let player: mpegts.Player | null = null
+    let disposed = false
+    const cleanupCurrent = () => {
+      if (hls) hls.destroy()
+      hls = null
+      if (player) {
+        player.pause()
+        player.unload()
+        player.detachMediaElement()
+        player.destroy()
+      }
+      player = null
+      videoEl.removeAttribute('src')
+      videoEl.load()
+    }
+
+    const trySourceAt = (index: number) => {
+      if (disposed) return
+      if (index >= playableCandidates.length) return
+      const source = playableCandidates[index]
+      cleanupCurrent()
+
+      const isHlsStream = source.includes('.m3u8')
+      const isWsStream = source.startsWith('ws://') || source.startsWith('wss://')
+      const isMp4Stream = source.includes('.mp4')
+
+      if (isHlsStream) {
+        if (Hls.isSupported()) {
+          hls = new Hls({ enableWorker: true, lowLatencyMode: true })
+          hls.loadSource(source)
+          hls.attachMedia(videoEl)
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            const playResult = videoEl.play()
+            if (playResult && typeof playResult.then === 'function') {
+              playResult.catch(() => {})
+            }
+          })
+          hls.on(Hls.Events.ERROR, (_, data) => {
+            if (!data?.fatal) return
+            cleanupCurrent()
+            trySourceAt(index + 1)
+          })
+          return
+        }
+
+        if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+          videoEl.src = source
+          const playResult = videoEl.play()
+          if (playResult && typeof playResult.then === 'function') {
+            playResult.catch(() => trySourceAt(index + 1))
+          }
+          return
+        }
+
+        trySourceAt(index + 1)
+        return
+      }
+
+      if (isWsStream && mpegts.isSupported()) {
+        player = mpegts.createPlayer(
+          { type: 'flv', url: source, isLive: true, hasAudio: false },
+          { enableWorker: true, lazyLoad: false },
+        )
+        player.attachMediaElement(videoEl)
+        player.load()
+        const playResult = player.play()
+        if (playResult && typeof playResult.then === 'function') {
+          playResult.catch(() => trySourceAt(index + 1))
+        }
+        player.on(mpegts.Events.ERROR, () => {
+          cleanupCurrent()
+          trySourceAt(index + 1)
+        })
+        return
+      }
+
+      if (isMp4Stream) {
+        videoEl.src = source
+        const playResult = videoEl.play()
+        if (playResult && typeof playResult.then === 'function') {
+          playResult.catch(() => trySourceAt(index + 1))
+        }
+        videoEl.onerror = () => {
+          videoEl.onerror = null
+          trySourceAt(index + 1)
+        }
+        return
+      }
+
+      trySourceAt(index + 1)
+    }
+
+    trySourceAt(0)
+
+    return () => {
+      disposed = true
+      cleanupCurrent()
+    }
+  }, [visible, streamUrl])
+
+  const formatTime = (date: Date) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${days[date.getDay()]} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+  }
+
+  return (
+    <Modal
+      open={visible}
+      onCancel={onClose}
+      footer={null}
+      closable={false}
+      centered
+      width={920}
+      styles={{
+        content: { padding: 0, background: 'transparent', boxShadow: 'none' },
+        mask: { background: 'rgba(0, 10, 30, 0.85)' }
+      }}
+    >
+      <div className="security_modal-wrap">
+        <div className="security_modal-header">
+          <Text className="text-cyan text-md font-semibold">{camera}</Text>
+          <CloseOutlined
+            onClick={onClose}
+            className="text-muted cursor-pointer p-4 rounded transition-all text-md"
+          />
+        </div>
+        <div className="security_modal-video-area">
+          {streamUrl ? (
+            <video
+              ref={videoRef}
+              className="camera_feed-video-element"
+              autoPlay
+              muted
+              playsInline
+              controls={false}
+            />
+          ) : (
+            <PlayCircleOutlined className="security_play-icon cursor-pointer transition-all text-4xl opacity-90" />
+          )}
+          <div className="security_timestamp-overlay">
+            <Text className="font-mono text-11 security_text-green">{formatTime(currentTime)}</Text>
+          </div>
+          <div className="security_camera-name-overlay">
+            <Text className="text-white text-11">{camera}</Text>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+// Scrolling alarm list component
+const ScrollingAlarmList: React.FC<{
+  alarms: Array<{ camera: string; location: string; time: string; type: string }>
+  onCameraClick: (camera: string, time: string) => void
+}> = ({ alarms, onCameraClick }) => {
+  const [offset, setOffset] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const itemHeight = 64
+
+  useEffect(() => {
+    if (isPaused) return
+    const timer = setInterval(() => {
+      setOffset(prev => (prev + 1) % (alarms.length * 2))
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [alarms.length, isPaused])
+
+  const displayAlarms = [...alarms, ...alarms]
+
+  return (
+    <div
+      className="security_scroll-list"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <div className="security_scroll-track" />
+      <div style={{ transform: `translateY(-${offset * itemHeight}px)`, transition: 'transform 0.8s ease-in-out' }}>
+        {displayAlarms.map((alarm, i) => (
+          <VideoAlarmItem key={i} {...alarm} onCameraClick={() => onCameraClick(alarm.camera, alarm.time)} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Camera thumbnail component
+const CameraThumbnail: React.FC<{
+  label: string
+  sublabel?: string
+  isLive?: boolean
+  camId?: string
+  streamUrl?: string
+  onClick?: () => void
+}> = ({ label, sublabel, isLive, camId, streamUrl, onClick }) => {
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const videoEl = videoRef.current
+    const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
+    if (!videoEl || playableCandidates.length === 0) return
+
+    let hls: Hls | null = null
+    let player: mpegts.Player | null = null
+    let disposed = false
+    const cleanupCurrent = () => {
+      if (hls) {
+        hls.destroy()
+      }
+      hls = null
+      if (player) {
+        player.pause()
+        player.unload()
+        player.detachMediaElement()
+        player.destroy()
+      }
+      player = null
+      videoEl.removeAttribute('src')
+      videoEl.load()
+    }
+
+    const trySourceAt = (index: number) => {
+      if (disposed) return
+      if (index >= playableCandidates.length) return
+      const source = playableCandidates[index]
+      cleanupCurrent()
+
+      const isHlsStream = source.includes('.m3u8')
+      const isWsStream = source.startsWith('ws://') || source.startsWith('wss://')
+      const isMp4Stream = source.includes('.mp4')
+
+      if (isHlsStream) {
+        if (Hls.isSupported()) {
+          hls = new Hls({ enableWorker: true, lowLatencyMode: true })
+          hls.loadSource(source)
+          hls.attachMedia(videoEl)
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            const playResult = videoEl.play()
+            if (playResult && typeof playResult.then === 'function') {
+              playResult.catch(() => {})
+            }
+          })
+          hls.on(Hls.Events.ERROR, (_, data) => {
+            if (!data?.fatal) return
+            cleanupCurrent()
+            trySourceAt(index + 1)
+          })
+          return
+        }
+
+        if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+          videoEl.src = source
+          const playResult = videoEl.play()
+          if (playResult && typeof playResult.then === 'function') {
+            playResult.catch(() => trySourceAt(index + 1))
+          }
+          return
+        }
+
+        trySourceAt(index + 1)
+        return
+      }
+
+      if (isWsStream && mpegts.isSupported()) {
+        player = mpegts.createPlayer(
+          { type: 'flv', url: source, isLive: true, hasAudio: false },
+          { enableWorker: true, lazyLoad: false },
+        )
+        player.attachMediaElement(videoEl)
+        player.load()
+        const playResult = player.play()
+        if (playResult && typeof playResult.then === 'function') {
+          playResult.catch(() => trySourceAt(index + 1))
+        }
+        player.on(mpegts.Events.ERROR, () => {
+          cleanupCurrent()
+          trySourceAt(index + 1)
+        })
+        return
+      }
+
+      if (isMp4Stream) {
+        videoEl.src = source
+        const playResult = videoEl.play()
+        if (playResult && typeof playResult.then === 'function') {
+          playResult.catch(() => trySourceAt(index + 1))
+        }
+        videoEl.onerror = () => {
+          videoEl.onerror = null
+          trySourceAt(index + 1)
+        }
+        return
+      }
+
+      trySourceAt(index + 1)
+    }
+
+    trySourceAt(0)
+
+    return () => {
+      disposed = true
+      cleanupCurrent()
+    }
+  }, [streamUrl])
+
+  const formatTimestamp = (date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+  }
+
+  return (
+    <div
+      className="security_thumbnail-card"
+      onClick={onClick}
+      style={onClick ? { cursor: 'pointer' } : undefined}
+    >
+      <div
+        className="security_thumbnail-preview"
+        style={!streamUrl ? { backgroundImage: `url(${cameraPreview})` } : undefined}
+      >
+        {streamUrl ? (
+          <video
+            ref={videoRef}
+            className="camera_feed-video-element"
+            autoPlay
+            muted
+            playsInline
+            controls={false}
+          />
+        ) : null}
+        <div className="security_thumbnail-ts">
+          <Text className="security_cam-ts-text">{formatTimestamp(currentTime)}</Text>
+        </div>
+        {isLive && (
+          <div className="security_thumbnail-live-badge">
+            <Text className="security_cam-live-text">LIVE</Text>
+          </div>
+        )}
+        <div className="security_thumbnail-cam-id">
+          <Text className="security_cam-id-text">{camId || label.split(' - ')[1]}</Text>
+        </div>
+      </div>
+      <div className="security_thumbnail-info">
+        <Text className="security_cam-info-label">{label}</Text>
+        {sublabel && <Text className="security_cam-info-sub">{sublabel}</Text>}
+      </div>
+    </div>
+  )
+}
+
+// Face capture item
+const FaceCapture: React.FC<{
+  tag: string
+  tagColor: string
+  location: string
+  time: string
+}> = ({ tag, tagColor, location, time }) => (
+  <div className="security_face-card">
+    <div className="security_face-avatar">
+      <UserOutlined className="opacity-60 security_text-blue-dark" style={{ fontSize: 28 }} />
+      <div className="security_face-tag-bar" style={{ background: tagColor }}>
+        <Text className="text-white text-xs">{tag}</Text>
+      </div>
+    </div>
+    <div className="security_face-info">
+      <Text className="block security_face-location">{location}</Text>
+      <Text className="security_face-time">{time}</Text>
+    </div>
+  </div>
+)
+
+// Scrolling capture list component
+const ScrollingCaptureList: React.FC<{
+  captures: Array<{ tag: string; tagColor: string; location: string; time: string }>
+}> = ({ captures }) => {
+  const [offset, setOffset] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const itemWidth = 76
+
+  useEffect(() => {
+    if (isPaused) return
+    const timer = setInterval(() => {
+      setOffset(prev => (prev + 1) % captures.length)
+    }, 2000)
+    return () => clearInterval(timer)
+  }, [captures.length, isPaused])
+
+  const displayCaptures = [...captures, ...captures, ...captures]
+
+  return (
+    <div
+      className="overflow-hidden relative"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <div
+        className="flex gap-6"
+        style={{ transform: `translateX(-${offset * itemWidth}px)`, transition: 'transform 0.5s ease-in-out' }}
+      >
+        {displayCaptures.map((cap, i) => (
+          <FaceCapture key={i} {...cap} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function SecurityMonitoring() {
+  const { t } = useTranslation()
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [videoModal, setVideoModal] = useState<{ visible: boolean; camera: string; time: string; streamUrl?: string }>({
+    visible: false, camera: '', time: '', streamUrl: undefined,
+  })
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const handleCameraClick = (camera: string, time: string, streamUrl?: string) => {
+    setVideoModal({ visible: true, camera, time, streamUrl })
+  }
+
+  const handleCloseModal = () => {
+    setVideoModal({ visible: false, camera: '', time: '', streamUrl: undefined })
+  }
+
+  const formatDateTime = (date: Date) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    return {
+      date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
+      day: days[date.getDay()],
+      time: `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+    }
+  }
+
+  const dateTime = formatDateTime(currentTime)
+
+  const alarms = [
+    { camera: 'CAM-BF-32 (Increased)', location: 'Viettel Headquarters Building Park', time: '2026-02-04 09:18:34', type: 'Regional invasion' },
+    { camera: 'CAM-BF-32 (Increased)', location: 'Viettel Headquarters Building Park', time: '2026-02-04 09:18:33', type: 'Regional invasion' },
+    { camera: 'CAM-BF-32 (Increased)', location: 'Viettel Headquarters Building Park', time: '2026-02-04 09:18:32', type: 'Regional invasion' },
+    { camera: 'CAM-A1-15 (Main)', location: 'Viettel Headquarters Building Park', time: '2026-02-04 09:15:20', type: 'Motion detected' },
+    { camera: 'CAM-C3-08 (Lobby)', location: 'Viettel Headquarters Building Park', time: '2026-02-04 09:12:45', type: 'Regional invasion' },
+    { camera: 'CAM-D2-22 (Parking)', location: 'Viettel Headquarters Building Park', time: '2026-02-04 09:08:18', type: 'Access violation' },
+  ]
+
+  const captures = [
+    { tag: 'Strangers', tagColor: '#1890ff', location: 'Area, Building 2, 2F', time: '2026-02-04 09:18:41' },
+    { tag: 'Strangers', tagColor: '#1890ff', location: 'Office Area, Building 2, 3F', time: '2026-02-04 09:18:36' },
+    { tag: 'Strangers', tagColor: '#1890ff', location: 'Office Area, Building 2, 2F', time: '2026-02-04 09:18:31' },
+    { tag: 'Strangers', tagColor: '#ff4d4f', location: 'Office Area, Building 2, 2F', time: '2026-02-04 09:18:28' },
+  ]
+
+  const cameras = [
+    {
+      label: 'Main Gate - CAM-01',
+      sublabel: 'Vehicle entrance monitoring',
+      camId: '1-1F-01',
+      streamUrl: 'https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/manifest/video.m3u8',
+    },
+    {
+      label: 'Lobby - CAM-02',
+      sublabel: 'Reception area surveillance',
+      camId: '1-2F-05',
+      streamUrl: resolveCameraStreamUrl('/hls/699e639f021a61a13ee1ce32/index.m3u8'),
+    },
+    { label: 'Parking B1 - CAM-03', sublabel: 'Underground parking exit', camId: 'B1-P-12' },
+  ]
+
+  return (
+    <div className="security_root">
+      <div className="security_bg" style={{ backgroundImage: `url(${securityBg})` }} />
+      <div className="security_overlay" />
+
+      <div className="security_header">
+        <Text className="security_title">{t('security.title', 'Security monitoring center')}</Text>
+        <div className="security_date-row">
+          <Text className="text-base security_nav-arrow">◀ </Text>
+          <Text className="text-base security_text-light">{dateTime.date}</Text>
+          <Text className="text-base text-cyan security_date-separator">{dateTime.day}</Text>
+          <Text className="text-lg font-bold font-mono security_text-aqua">{dateTime.time}</Text>
+          <Text className="text-base security_nav-arrow"> ▶</Text>
+        </div>
+      </div>
+
+      <div className="security_main">
+        <div className="security_left-col">
+          <GlassPanel
+            title={t('security.videoAlarm', 'Video alarm')}
+            icon={<AlertOutlined className="text-danger text-md" />}
+            style={{ flex: 1 }}
+          >
+            <ScrollingAlarmList alarms={alarms} onCameraClick={handleCameraClick} />
+          </GlassPanel>
+
+          <GlassPanel
+            title={t('security.smartSnapshots', 'Smart snapshots')}
+            icon={<CameraOutlined className="text-primary text-md" />}
+            titleRight={
+              <div className="flex items-center gap-8">
+                <Tag color="processing" className="tag--no-margin text-xs">2-2F-32 (Increased)</Tag>
+                <Tag color="success" className="tag--no-margin text-xs">Online</Tag>
+              </div>
+            }
+          >
+            <div className="security_personnel-box">
+              <UserOutlined className="text-warning text-lg" />
+              <Text className="text-11 security_text-light">
+                {t('security.personnelToday', 'Number of Permanent Personnel Today')}:
+              </Text>
+              <Badge count={14} style={{ backgroundColor: '#faad14' }} />
+              <Text className="text-xs security_text-light">{t('security.people', 'people')}</Text>
+            </div>
+            <div className="security_snapshot-placeholder">
+              <CameraOutlined className="opacity-40 text-3xl security_text-blue-dark" />
+              <div className="security_snapshot-label-tl">
+                <Text className="text-warning text-xs">Mo-TM {t('security.meetingRoom', 'Meeting Room')}</Text>
+              </div>
+              <div className="security_snapshot-label-tr">
+                <Text className="text-cyan text-xs">09:30:11</Text>
+              </div>
+            </div>
+          </GlassPanel>
+
+          <GlassPanel
+            title={t('security.captureRecord', 'Capture record')}
+            icon={<UserOutlined className="text-success text-md" />}
+          >
+            <ScrollingCaptureList captures={captures} />
+          </GlassPanel>
+        </div>
+
+        <div className="flex-1" />
+
+        <div className="security_right-col">
+          <GlassPanel
+            title={t('security.dynamicVideo', 'Dynamic video of entrances and exits')}
+            icon={<EnvironmentOutlined className="text-success text-md" />}
+            titleRight={<Text className="text-xs security_text-light">Viettel Headquarters Building Park</Text>}
+          >
+            <div className="security_dynamic-header">
+              <Text className="text-cyan text-11 font-medium block">Building A - Floor 1F</Text>
+              <Text className="text-xs security_text-light">3 cameras active • Real-time monitoring</Text>
+            </div>
+            <div className="flex flex-col gap-8">
+              {cameras.map((cam, i) => (
+                <CameraThumbnail
+                  key={i}
+                  {...cam}
+                  isLive={i === 0}
+                  onClick={cam.streamUrl ? () => handleCameraClick(cam.label, dateTime.time, cam.streamUrl) : undefined}
+                />
+              ))}
+            </div>
+          </GlassPanel>
+        </div>
+      </div>
+
+      <style>{`
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 50, 100, 0.3); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 150, 255, 0.5); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0, 150, 255, 0.7); }
+      `}</style>
+
+      <CameraVideoModal
+        visible={videoModal.visible}
+        camera={videoModal.camera}
+        time={videoModal.time}
+        streamUrl={videoModal.streamUrl}
+        onClose={handleCloseModal}
+      />
+    </div>
+  )
+}

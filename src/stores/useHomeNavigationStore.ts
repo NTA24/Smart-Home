@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { Tenant, Campus, Building } from '@/services'
 
 export type HomeStep = 'tenants' | 'campuses' | 'buildings'
@@ -22,28 +23,40 @@ interface HomeNavigationState {
   reset: () => void
 }
 
-export const useHomeNavigationStore = create<HomeNavigationState>()((set) => ({
-  step: 'tenants',
-  tenants: [],
-  campuses: [],
-  buildings: [],
-  selectedTenant: null,
-  selectedCampus: null,
-
-  setStep: (step) => set({ step }),
-  setTenants: (tenants) => set({ tenants }),
-  setCampuses: (campuses) => set({ campuses }),
-  setBuildings: (buildings) => set({ buildings }),
-  setSelectedTenant: (tenant) => set({ selectedTenant: tenant }),
-  setSelectedCampus: (campus) => set({ selectedCampus: campus }),
-
-  reset: () =>
-    set({
+export const useHomeNavigationStore = create<HomeNavigationState>()(
+  persist(
+    (set) => ({
       step: 'tenants',
       tenants: [],
       campuses: [],
       buildings: [],
       selectedTenant: null,
       selectedCampus: null,
+
+      setStep: (step) => set({ step }),
+      setTenants: (tenants) => set({ tenants }),
+      setCampuses: (campuses) => set({ campuses }),
+      setBuildings: (buildings) => set({ buildings }),
+      setSelectedTenant: (tenant) => set({ selectedTenant: tenant }),
+      setSelectedCampus: (campus) => set({ selectedCampus: campus }),
+
+      reset: () =>
+        set({
+          step: 'tenants',
+          tenants: [],
+          campuses: [],
+          buildings: [],
+          selectedTenant: null,
+          selectedCampus: null,
+        }),
     }),
-}))
+    {
+      name: 'home-navigation',
+      partialize: (state) => ({
+        step: state.step,
+        selectedTenant: state.selectedTenant,
+        selectedCampus: state.selectedCampus,
+      }),
+    }
+  )
+)

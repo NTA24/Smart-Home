@@ -52,6 +52,9 @@ export const parkingApi = {
 }
 
 export const deviceApi = {
+  /** GET /api/devices/list — List Items */
+  getList: (params?: { limit?: number; offset?: number }) =>
+    api.get('/devices/list', { params }),
   getDevices: (params?: { status?: string; type?: string }) =>
     api.get('/devices', { params }),
   getDeviceDetail: (id: string) => api.get(`/devices/${id}`),

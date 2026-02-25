@@ -1,17 +1,6 @@
 # Smart Home Dashboard
 
-A comprehensive smart building management dashboard built with React + TypeScript + Ant Design + ECharts.
-
-## Tech Stack
-
-- **React 18** - UI Framework
-- **TypeScript** - Type-safe JavaScript
-- **Vite** - Build tool
-- **Ant Design 5** - UI Component Library
-- **ECharts** - Data Visualization
-- **React Router 6** - Routing
-- **Zustand** - State Management
-- **Axios** - HTTP Client
+A comprehensive smart building management dashboard built with React, TypeScript, Ant Design, and ECharts.
 
 ## Installation
 
@@ -28,84 +17,15 @@ npm run dev
 
 ## Scripts
 
-```bash
-npm run dev      # Start dev server (http://localhost:3000)
-npm run build    # Build for production
-npm run preview  # Preview production build
-npm run lint     # Run ESLint
-```
+| Command | Description |
+|---|---|
+| `npm run dev` | Start dev server |
+| `npm run build` | TypeScript check + Vite build |
+| `npm run build:vercel` | Vite build only (for Vercel deploy) |
+| `npm run typecheck` | Run TypeScript compiler check |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
 
-## Project Structure
+## API Integration
 
-```
-src/
-??? components/          # Reusable components
-?   ??? charts/          # Chart components (Pie, Bar, Line, Gauge)
-?   ??? StatCard.tsx     # Statistics card
-?   ??? TabBar.tsx       # Tab navigation bar
-?   ??? index.ts
-??? hooks/               # Custom React hooks
-?   ??? useAsync.ts      # Async state management
-?   ??? index.ts
-??? layouts/             # Layout components
-?   ??? MainLayout.tsx   # Main layout with sidebar
-??? pages/               # Page components
-?   ??? Dashboard.tsx    # Main dashboard
-?   ??? ParkingManagement.tsx
-?   ??? DeviceManagement.tsx
-?   ??? EnergyMonitor.tsx
-?   ??? AlarmStatistics.tsx
-?   ??? EnergyMonitoring.tsx
-?   ??? EquipmentOperation.tsx
-?   ??? VisitorDistribution.tsx
-?   ??? index.ts
-??? services/            # API services
-?   ??? api.ts           # Axios instance & API functions
-?   ??? index.ts
-??? stores/              # Zustand stores
-?   ??? useAppStore.ts   # App state
-?   ??? useTabStore.ts   # Tab navigation state
-?   ??? index.ts
-??? styles/              # Global styles
-?   ??? global.css
-??? utils/               # Utility functions
-?   ??? format.ts        # Number, date formatters
-?   ??? index.ts
-??? App.tsx              # Root component
-??? main.tsx             # Entry point
-```
-
-## Features
-
-- **Dashboard**: System overview with statistics charts
-- **Parking Management**: Vehicle tracking, parking status
-- **IoT Device Management**: Monitor device status
-- **Energy Monitoring**: Track power consumption
-- **Alarm Statistics**: View and filter alarm records
-- **Visitor Distribution**: Manage visitor reservations
-- **Tab Navigation**: Multi-tab interface with closable tabs
-
-## Customize
-
-### Theme
-
-Edit theme in `src/main.tsx`:
-
-```tsx
-<ConfigProvider
-  theme={{
-    token: {
-      colorPrimary: '#1890ff',  // Primary color
-      borderRadius: 6,           // Border radius
-    },
-  }}
->
-```
-
-### API Integration
-
-Update API functions in `src/services/api.ts` to connect with your backend.
-
-## License
-
-MIT
+Update API base URL in `.env` and API functions in `src/services/api.ts` to connect with your backend. Each domain has its own service file (e.g. `buildingApi.ts`, `energyMeterApi.ts`) with corresponding TypeScript types in `src/services/types/`.

@@ -4,43 +4,62 @@ import enUS from 'antd/locale/en_US'
 import viVN from 'antd/locale/vi_VN'
 import { useTranslation } from 'react-i18next'
 import MainLayout from './layouts/MainLayout'
-import Home from './pages/Home'
-import Dashboard from './pages/Dashboard'
-import ParkingManagement from './pages/ParkingManagement'
-import DeviceManagement from './pages/DeviceManagement'
-import EnergyMonitor from './pages/EnergyMonitor'
-import AlarmStatistics from './pages/AlarmStatistics'
-import EnergyMonitoring from './pages/EnergyMonitoring'
-import EnergyDataCenter from './pages/EnergyDataCenter'
-import SecurityMonitoring from './pages/SecurityMonitoring'
-import CameraLiveView from './pages/CameraLiveView'
-import CameraPlayback from './pages/CameraPlayback'
-import EquipmentOperation from './pages/EquipmentOperation'
-import VisitorDistribution from './pages/VisitorDistribution'
-import PersonnelManagement from './pages/PersonnelManagement'
-import RobotManagement from './pages/RobotManagement'
-import LuggageControl from './pages/LuggageControl'
-import ItemControl from './pages/ItemControl'
-import LockerMap from './pages/LockerMap'
-import UserManagement from './pages/UserManagement'
-import SmartMeetingRoom from './pages/SmartMeetingRoom'
-import SmartWorkspace from './pages/SmartWorkspace'
-import ElevatorByArea from './pages/ElevatorByArea'
-import EnergyDeviceManagement from './pages/EnergyDeviceManagement'
-import ApiTest from './pages/ApiTest'
-import CampusTest from './pages/CampusTest'
-import BuildingTest from './pages/BuildingTest'
+
+// Dashboard
+import { Home, Dashboard } from './pages/Dashboard'
+
+// Security
+import { SecurityMonitoring, CameraLiveView, CameraPlayback, CameraConfig } from './pages/Security'
+
+// Vehicle / Parking
 import {
-  SmartBuildingLanding,
-  Architecture,
-  Journeys,
-  Solutions,
-  SolutionDetail,
-  Investment,
-  Implementation,
-  Contact,
-  ElevatorControl,
-} from './pages/smart-building'
+  ParkingManagement, VehicleAccessControl,
+  ParkingMap, ParkingTickets, ParkingSubscription, ParkingDevices, VehicleConfig,
+} from './pages/Vehicle'
+
+// People
+import { PersonnelManagement, VisitorDistribution } from './pages/People'
+
+// Item / Locker
+import { ItemControl, LockerMap, LuggageControl } from './pages/Item'
+
+// Energy
+import {
+  AlarmStatistics, EnergyMonitoring, EnergyDataCenter,
+  EnergyMeterPage, HvacAssetPage, IaqSensorPage, EnergyAggregatePage,
+  EnergyTelemetryPage, IaqTelemetryPage, HvacTelemetryPage,
+  EnergyDeviceManagement,
+} from './pages/Energy'
+
+// Elevator
+import {
+  ElevatorDashboard, ElevatorLive, ElevatorDetail,
+  ElevatorAlarms, ElevatorAccessControl, ElevatorMaintenance, ElevatorByArea,
+} from './pages/Elevator'
+
+// Robot
+import {
+  RobotDashboard, RobotLiveFleet, RobotDetail,
+  RobotCreateMission, RobotAlerts, RobotMaintenance, RobotManagement,
+} from './pages/Robot'
+
+// Workspace
+import {
+  WorkspaceDashboard, SmartWorkspace, WorkspaceRoomDetail, WorkspaceBookingCalendar,
+  WorkspaceCreateBooking, WorkspaceKiosk, WorkspaceReportIssue,
+  SmartMeetingRoom, MeetingRoomDashboard, MeetingRoomDetail,
+  MeetingRoomBookingCalendar, MeetingRoomCreateBooking, MeetingRoomKiosk, MeetingRoomReportIssue, IssueTickets,
+} from './pages/Workspace'
+
+// Admin
+import { UserManagement, DeviceManagement } from './pages/Admin'
+
+// Other
+import { EquipmentOperation, EnergyMonitor } from './pages/Other'
+
+// Test
+import { ApiTest, CampusTest, BuildingTest } from './pages/Test'
+
 
 const locales = {
   en: enUS,
@@ -68,28 +87,47 @@ function App() {
             <Route path="home" element={<Home />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="parking" element={<ParkingManagement />} />
+            <Route path="vehicle-access-control" element={<VehicleAccessControl />} />
+            <Route path="live-entrance" element={<Navigate to="/vehicle-access-control" replace />} />
+            <Route path="live-exit" element={<Navigate to="/vehicle-access-control" replace />} />
+            <Route path="parking-map" element={<ParkingMap />} />
+            <Route path="parking-tickets" element={<ParkingTickets />} />
+            <Route path="parking-subscription" element={<ParkingSubscription />} />
+            <Route path="parking-devices" element={<ParkingDevices />} />
+            <Route path="vehicle-config" element={<VehicleConfig />} />
             <Route path="devices" element={<DeviceManagement />} />
             <Route path="energy" element={<EnergyMonitor />} />
             {/* Detail pages from Dashboard */}
             <Route path="alarm-statistics" element={<AlarmStatistics />} />
             <Route path="energy-monitoring" element={<EnergyMonitoring />} />
             <Route path="energy-data-center" element={<EnergyDataCenter />} />
+            <Route path="energy-meters" element={<EnergyMeterPage />} />
+            <Route path="hvac-assets" element={<HvacAssetPage />} />
+            <Route path="iaq-sensors" element={<IaqSensorPage />} />
+            <Route path="energy-aggregates" element={<EnergyAggregatePage />} />
+            <Route path="energy-telemetry" element={<EnergyTelemetryPage />} />
+            <Route path="iaq-telemetry" element={<IaqTelemetryPage />} />
+            <Route path="hvac-telemetry" element={<HvacTelemetryPage />} />
             <Route path="security-monitoring" element={<SecurityMonitoring />} />
             <Route path="camera-live" element={<CameraLiveView />} />
             <Route path="camera-playback" element={<CameraPlayback />} />
+            <Route path="camera-config" element={<CameraConfig />} />
             <Route path="equipment-operation" element={<EquipmentOperation />} />
             <Route path="visitor-distribution" element={<VisitorDistribution />} />
-            {/* Smart Building Management */}
-            <Route path="smart-building" element={<SmartBuildingLanding />} />
-            <Route path="smart-building/architecture" element={<Architecture />} />
-            <Route path="smart-building/journeys" element={<Journeys />} />
-            <Route path="smart-building/solutions" element={<Solutions />} />
-            <Route path="smart-building/solutions/:slug" element={<SolutionDetail />} />
-            <Route path="smart-building/investment" element={<Investment />} />
-            <Route path="smart-building/implementation" element={<Implementation />} />
-            <Route path="smart-building/contact" element={<Contact />} />
-            <Route path="smart-building/elevator-control" element={<ElevatorControl />} />
+
             <Route path="elevator-by-area" element={<ElevatorByArea />} />
+            <Route path="elevator-dashboard" element={<ElevatorDashboard />} />
+            <Route path="elevator-live" element={<ElevatorLive />} />
+            <Route path="elevator-detail" element={<ElevatorDetail />} />
+            <Route path="elevator-alarms" element={<ElevatorAlarms />} />
+            <Route path="elevator-access" element={<ElevatorAccessControl />} />
+            <Route path="elevator-maintenance" element={<ElevatorMaintenance />} />
+            <Route path="robot-dashboard" element={<RobotDashboard />} />
+            <Route path="robot-live-fleet" element={<RobotLiveFleet />} />
+            <Route path="robot-detail" element={<RobotDetail />} />
+            <Route path="robot-create-mission" element={<RobotCreateMission />} />
+            <Route path="robot-alerts" element={<RobotAlerts />} />
+            <Route path="robot-maintenance" element={<RobotMaintenance />} />
             <Route path="energy-device-management" element={<EnergyDeviceManagement />} />
             {/* Management */}
             <Route path="personnel-management" element={<PersonnelManagement />} />
@@ -98,8 +136,22 @@ function App() {
             <Route path="item-control" element={<ItemControl />} />
             <Route path="locker-map" element={<LockerMap />} />
             <Route path="user-management" element={<UserManagement />} />
+            <Route path="smart-meeting-room/dashboard" element={<MeetingRoomDashboard />} />
             <Route path="smart-meeting-room/meeting-room" element={<SmartMeetingRoom />} />
+            <Route path="smart-meeting-room/room-detail" element={<MeetingRoomDetail />} />
+            <Route path="smart-meeting-room/booking-calendar" element={<MeetingRoomBookingCalendar />} />
+            <Route path="smart-meeting-room/create-booking" element={<MeetingRoomCreateBooking />} />
+            <Route path="smart-meeting-room/kiosk" element={<MeetingRoomKiosk />} />
+            <Route path="smart-meeting-room/report-issue" element={<MeetingRoomReportIssue />} />
+            <Route path="smart-meeting-room/issue-tickets" element={<IssueTickets defaultSource="meeting" />} />
+            <Route path="smart-workspace/dashboard" element={<WorkspaceDashboard />} />
             <Route path="smart-workspace/workspace" element={<SmartWorkspace />} />
+            <Route path="smart-workspace/room-detail" element={<WorkspaceRoomDetail />} />
+            <Route path="smart-workspace/booking-calendar" element={<WorkspaceBookingCalendar />} />
+            <Route path="smart-workspace/create-booking" element={<WorkspaceCreateBooking />} />
+            <Route path="smart-workspace/kiosk" element={<WorkspaceKiosk />} />
+            <Route path="smart-workspace/report-issue" element={<WorkspaceReportIssue />} />
+            <Route path="smart-workspace/issue-tickets" element={<IssueTickets defaultSource="workspace" />} />
             {/* API Testing */}
             <Route path="api-test" element={<Navigate to="/test-api" replace />} />
             <Route path="test-api" element={<ApiTest />} />

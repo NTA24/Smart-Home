@@ -1,5 +1,6 @@
 import ReactECharts from 'echarts-for-react'
 import { Card } from 'antd'
+import type { CSSProperties } from 'react'
 import type { EChartsOption } from 'echarts'
 
 interface PieChartProps {
@@ -9,6 +10,8 @@ interface PieChartProps {
   showLegend?: boolean
   innerRadius?: string
   outerRadius?: string
+  centerText?: string
+  cardStyle?: CSSProperties
 }
 
 export default function PieChart({
@@ -18,6 +21,8 @@ export default function PieChart({
   showLegend = true,
   innerRadius = '40%',
   outerRadius = '70%',
+  centerText,
+  cardStyle,
 }: PieChartProps) {
   const option: EChartsOption = {
     tooltip: {
@@ -48,11 +53,16 @@ export default function PieChart({
           borderWidth: 2,
         },
         label: {
-          show: false,
+          show: !!centerText,
+          position: 'center',
+          formatter: (params) => (params.dataIndex === 0 ? (centerText || '') : ''),
+          fontSize: 36,
+          fontWeight: 700,
+          color: '#262626',
         },
         emphasis: {
           label: {
-            show: true,
+            show: false,
             fontSize: 14,
             fontWeight: 'bold',
           },
@@ -69,7 +79,7 @@ export default function PieChart({
   }
 
   return (
-    <Card title={title} bordered={false}>
+    <Card title={title} bordered={false} style={cardStyle}>
       <ReactECharts option={option} style={{ height }} />
     </Card>
   )

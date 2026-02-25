@@ -1,0 +1,162 @@
+/* ═══════════════════════════════════════════════
+   PAGE-SPECIFIC STYLES (Workspace, People, Admin, Other, Test)
+   ═══════════════════════════════════════════════ */
+
+/* ── Workspace ── */
+.workspace_row-mb-20 { margin-bottom: 20px; }
+.workspace_card-h-full { height: 100%; }
+.workspace_list-item-py { padding: 8px 0; }
+.workspace_list-item-py-10 { padding: 10px 0; }
+.workspace_tag-rounded-10 { border-radius: 10px; }
+.workspace_tag-alert { border-radius: 4px; font-weight: 600; font-size: 11px; }
+.workspace_chart-height { height: 260px; }
+.workspace_progress-w-80 { width: 80px; }
+.workspace_percent-w-36 { width: 36px; }
+.workspace_bell-icon { font-size: 20px; cursor: pointer; }
+.workspace_title-icon-mr { margin-right: 8px; }
+.workspace_badge-ml { margin-left: 8px; }
+
+.workspace_filter-mb { margin-bottom: 16px; }
+.workspace_drawer-col { display: flex; flex-direction: column; gap: 20px; }
+.workspace_control-row { display: flex; justify-content: space-between; align-items: center; }
+.workspace_control-col { display: flex; flex-direction: column; gap: 14px; }
+.workspace_ac-indent { padding-left: 24px; }
+.workspace_card-icon-mr { margin-right: 6px; }
+
+.workspace_header-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+.workspace_meta-mt { margin-top: 8px; margin-left: 40px; }
+.workspace_meta-mt-4 { margin-top: 4px; margin-left: 40px; }
+.workspace_title-m0 { margin: 0; }
+.workspace_tag-radius-12 { border-radius: 12px; }
+.workspace_icon-mr-4 { margin-right: 4px; }
+.workspace_co2-row { display: flex; align-items: center; gap: 6px; }
+.workspace_divider-my { margin: 12px 0; }
+.workspace_scenes-label { font-size: 12px; margin-bottom: 8px; display: block; }
+.workspace_scenes-mb { margin-bottom: 20px; }
+.workspace_device-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.workspace_device-tag { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
+.workspace_timeline-time { margin-right: 8px; font-size: 12px; }
+.workspace_booking-card { height: 100%; background: #f6ffed; border-color: #b7eb8f; }
+.workspace_btn-border-default { border-color: #d9d9d9; }
+
+.workspace_calendar-overflow { overflow: auto; }
+.workspace_calendar-min-w { min-width: 700px; }
+.workspace_calendar-header { display: flex; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; margin-bottom: 0; }
+.workspace_calendar-time-col { width: 70px; flex-shrink: 0; font-weight: 600; color: #8c8c8c; font-size: 12px; }
+.workspace_calendar-room-col { flex: 1; text-align: center; font-weight: 600; font-size: 13px; }
+.workspace_calendar-row { display: flex; align-items: stretch; min-height: 36px; }
+.workspace_calendar-row-hour { border-bottom: 1px solid #f0f0f0; }
+.workspace_calendar-row-half { border-bottom: 1px solid #fafafa; }
+.workspace_calendar-time-cell { width: 70px; flex-shrink: 0; font-size: 11px; color: #8c8c8c; display: flex; align-items: center; padding-right: 8px; }
+.workspace_calendar-time-cell-hour { font-weight: 600; }
+.workspace_calendar-cell { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2px 4px; position: relative; }
+.workspace_calendar-slot-busy { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; min-height: 32px; border-radius: 6px 6px 0 0; }
+.workspace_calendar-slot-busy-mid { border-radius: 0; }
+.workspace_calendar-slot-free { width: 100%; height: 100%; min-height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.workspace_calendar-legend { margin-top: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
+.workspace_calendar-legend-dot { width: 14px; height: 14px; border-radius: 3px; }
+.workspace_calendar-legend-dot-busy { background: #e6f7ff; border: 2px solid #1890ff; }
+.workspace_calendar-legend-dot-issue { background: #fff1f0; border: 2px solid #ff4d4f; }
+.workspace_calendar-legend-dot-free { background: #fafffe; border: 1px solid #d9d9d9; }
+
+.workspace_create-form-col { display: flex; flex-direction: column; gap: 20px; }
+.workspace_create-label-block { display: block; margin-bottom: 6px; }
+.workspace_create-label-block-8 { display: block; margin-bottom: 8px; }
+.workspace_create-ml-12 { margin-left: 12px; }
+.workspace_create-rooms-col { display: flex; flex-direction: column; gap: 10px; }
+.workspace_create-room-card { padding: 12px 16px; border-radius: 10px; transition: all 0.2s; }
+.workspace_create-room-card-selected { border: 2px solid #1890ff; background: #e6f7ff; }
+.workspace_create-room-card-available { border: 1px solid #f0f0f0; background: #fff; }
+.workspace_create-room-card-unavailable { background: #fafafa; opacity: 0.5; cursor: not-allowed; }
+.workspace_create-summary-row { display: flex; justify-content: space-between; }
+.workspace_create-summary-sticky { position: sticky; top: 80px; }
+.workspace_create-divider-my { margin: 8px 0; }
+.workspace_create-selected-box { background: #f6ffed; padding: 8px 12px; border-radius: 8px; margin-top: 4px; }
+.workspace_create-actions { display: flex; justify-content: flex-end; gap: 12px; }
+.workspace_create-alert-radius { border-radius: 8px; }
+.workspace_create-tag-mb { margin-bottom: 2px; }
+
+.workspace_kiosk-max-w { max-width: 560px; width: 100%; }
+.workspace_kiosk-card-center { margin-bottom: 16px; text-align: center; }
+.workspace_kiosk-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.workspace_kiosk-badge-in-use { background: #ff4d4f; border-radius: 10px; padding: 8px 0; text-align: center; margin-bottom: 16px; }
+.workspace_kiosk-badge-text { color: #fff; font-size: 14px; letter-spacing: 1px; }
+.workspace_kiosk-now-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+.workspace_kiosk-title-margin { margin: 4px 0 12px; }
+.workspace_kiosk-progress-mb { margin-bottom: 16px; }
+.workspace_kiosk-host-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.workspace_kiosk-warning-box { background: #fffbe6; border: 1px solid #ffe58f; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.workspace_kiosk-actions { display: flex; gap: 10px; }
+.workspace_kiosk-btn-checkin { border-radius: 10px; height: 48px; font-weight: 600; font-size: 15px; }
+.workspace_kiosk-btn-checked { border-radius: 10px; height: 48px; background: #f6ffed; border-color: #52c41a; color: #52c41a; font-weight: 600; }
+.workspace_kiosk-btn-extend { border-radius: 10px; height: 48px; min-width: 110px; }
+.workspace_kiosk-hint { display: block; text-align: center; margin-top: 8px; font-size: 11px; }
+.workspace_kiosk-next-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; display: block; }
+.workspace_kiosk-report-btn { border-radius: 10px; height: 46px; font-weight: 500; }
+
+.workspace_report-max-w { max-width: 560px; width: 100%; }
+.workspace_report-room-row { display: flex; align-items: center; gap: 10px; }
+.workspace_report-section-mb { margin-bottom: 20px; }
+.workspace_report-label { display: block; margin-bottom: 10px; font-size: 13px; }
+.workspace_report-type-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.workspace_report-type-btn { border-radius: 8px; height: 38px; }
+.workspace_report-sev-row { display: flex; gap: 8px; }
+.workspace_report-sev-btn { border-radius: 8px; height: 36px; flex: 1; font-weight: 500; font-size: 13px; }
+.workspace_report-textarea { border-radius: 8px; font-size: 14px; resize: none; }
+.workspace_report-upload-text { font-size: 12px; }
+.workspace_report-submit-btn { border-radius: 10px; height: 48px; font-weight: 600; font-size: 15px; }
+.workspace_report-result-card { max-width: 440px; width: 100%; text-align: center; }
+.workspace_report-result-btn { border-radius: 8px; }
+
+/* ── People ── */
+.people_filter-form { display: flex; flex-wrap: wrap; gap: 12px 24px; flex: 1; }
+.people_filter-form-mt { margin-top: 12px; flex-wrap: wrap; gap: 12px 24px; }
+.people_filter-mt { margin-top: 16px; }
+.people_pagination-wrap { margin-top: 16px; display: flex; justify-content: flex-end; align-items: center; gap: 16px; }
+.people_card-mb { margin-bottom: 16px; }
+.people_form-inline { flex-wrap: wrap; gap: 12px 24px; flex: 1; }
+.people_drawer-title { display: flex; align-items: center; gap: 8px; }
+.people_mono-primary { font-family: monospace; color: #1890ff; }
+.people_body-padding { padding: 12px 20px; }
+.people_operation-btn {
+  min-width: 72px;
+  height: 28px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Admin ── */
+.admin_card-mb { margin-bottom: 16px; }
+.admin_form-wrap { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px 24px; }
+.admin_stat-inner { display: flex; align-items: center; gap: 12px; }
+.admin_stat-label { color: #666; }
+.admin_stat-value-20 { font-weight: 600; font-size: 20px; }
+.admin_stat-value-green { color: #52c41a; }
+.admin_stat-value-gray { color: #999; }
+.admin_stat-value-red { color: #f5222d; }
+
+/* ── Other ── */
+.other_row-mb { margin-bottom: 16px; }
+.other_stat-inner { display: flex; align-items: center; gap: 12px; }
+.other_stat-icon-box { width: 48px; height: 48px; border-radius: 8px; background: #1890ff; display: flex; align-items: center; justify-content: center; }
+.other_stat-icon-white { font-size: 24px; color: #fff; }
+.other_form-inline { flex-wrap: wrap; gap: 12px; }
+.other_link-primary { color: #1890ff; }
+.other_change-positive { color: #f5222d; }
+.other_change-negative { color: #52c41a; }
+.other_change-neutral { color: #666; }
+
+/* ── Test ── */
+.test_breadcrumb-mb { margin-bottom: 16px; }
+.test_link-p0 { padding: 0; }
+.test_subtitle-mt { margin-top: 4px; display: block; }
+.test_tag-row { margin-top: 8px; }
+.test_api-block { margin-top: 8px; font-size: 13px; }
+.test_api-line { margin-top: 4px; }
+.test_tag-method { width: 60px; text-align: center; }
+.test_card-mb { margin-bottom: 16px; border-radius: 12px; }
+.test_id-copy { font-size: 12px; }
+.test_name-link { padding: 0; font-weight: 600; }
+.test_arrow-ml { margin-left: 4px; font-size: 11px; }

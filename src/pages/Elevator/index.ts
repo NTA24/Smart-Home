@@ -1,0 +1,7 @@
+export { default as ElevatorDashboard } from './ElevatorDashboard'
+export { default as ElevatorLive } from './ElevatorLive'
+export { default as ElevatorDetail } from './ElevatorDetail'
+export { default as ElevatorAlarms } from './ElevatorAlarms'
+export { default as ElevatorAccessControl } from './ElevatorAccessControl'
+export { default as ElevatorMaintenance } from './ElevatorMaintenance'
+export { default as ElevatorByArea } from './ElevatorByArea'
