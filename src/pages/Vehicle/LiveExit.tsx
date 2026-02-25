@@ -35,7 +35,6 @@ import {
   SwapOutlined,
   ExportOutlined,
   EditOutlined,
-  SettingOutlined,
 } from '@ant-design/icons'
 import {
   PageContainer,
@@ -52,20 +51,17 @@ import {
   getVehiclePricingConfig,
   getVehicleSubscriptions,
   saveVehicleLiveExitEntries,
-  saveVehiclePricingConfig,
   saveVehicleLiveExitState,
 } from '@/services/mockPersistence'
 
 const { Text } = Typography
 
-// Mock exit gates
 const gates = [
   { id: 'gate-exit-1', name: 'Cổng ra 1', status: 'online' },
   { id: 'gate-exit-2', name: 'Cổng ra 2', status: 'online' },
   { id: 'gate-exit-3', name: 'Cổng ra 3', status: 'offline' },
 ]
 
-// Mock recent exits
 const recentExits = [
   { key: '1', time: '10:45:20', plate: '51A-123.45', type: 'Car', fee: 25000, status: 'paid', operator: 'Auto' },
   { key: '2', time: '10:42:15', plate: '30G-789.01', type: 'Motorcycle', fee: 5000, status: 'paid', operator: 'Auto' },
@@ -96,7 +92,6 @@ interface ExitEntry {
   status: string
   operator: string
   occurredAt?: string
-  occuredAt?: string
 }
 
 interface VehicleSubscriptionRecord {
@@ -122,8 +117,6 @@ interface VehicleManagementConfig {
   defaultEntryGate: string
   defaultExitGate: string
 }
-
-type PriceMode = 'hourly' | 'daily'
 
 const defaultVehiclePricingConfig: VehiclePricingConfigItem[] = [
   { vehicleType: 'Car', hourlyRate: 15000, dailyRate: 180000 },
@@ -184,11 +177,7 @@ export default function LiveExit(props: LiveExitProps = {}) {
   const [editingVehicleType, setEditingVehicleType] = useState<'Car' | 'Motorcycle' | 'Truck'>(currentVehicleType)
   const [currentEntryAt] = useState(() => dayjs().subtract(2, 'hour').subtract(15, 'minute'))
   const [nowTick, setNowTick] = useState(() => dayjs())
-  const [pricingConfigOpen, setPricingConfigOpen] = useState(false)
-  const [priceMode, setPriceMode] = useState<PriceMode>('hourly')
-  const [pricingConfig, setPricingConfig] = useState<VehiclePricingConfigItem[]>(
-    () => getVehiclePricingConfig<VehiclePricingConfigItem[]>(defaultVehiclePricingConfig),
-  )
+  const pricingConfig = getVehiclePricingConfig<VehiclePricingConfigItem[]>(defaultVehiclePricingConfig)
   const [filterRange, setFilterRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
     persistedState.timeRange?.[0] && persistedState.timeRange?.[1]
       ? [dayjs(persistedState.timeRange[0]), dayjs(persistedState.timeRange[1])]
@@ -201,8 +190,7 @@ export default function LiveExit(props: LiveExitProps = {}) {
     }))
     return getVehicleLiveExitEntries<ExitEntry>(seedExits).map((entry) => ({
       ...entry,
-      // Backward-compatible with old key `occuredAt` in localStorage.
-      occurredAt: entry.occurredAt || entry.occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`,
+      occurredAt: entry.occurredAt || (entry as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`,
     }))
   })
 
@@ -236,17 +224,13 @@ export default function LiveExit(props: LiveExitProps = {}) {
   }, [selectedPayment])
 
   useEffect(() => {
-    saveVehiclePricingConfig(pricingConfig)
-  }, [pricingConfig])
-
-  useEffect(() => {
     const timer = window.setInterval(() => setNowTick(dayjs()), 60_000)
     return () => window.clearInterval(timer)
   }, [])
 
   const filteredExits = exits.filter((entry) => {
     if (!filterRange) return true
-    const occurredAt = dayjs(entry.occurredAt || entry.occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`)
+    const occurredAt = dayjs(entry.occurredAt || (entry as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`)
     return !occurredAt.isBefore(filterRange[0]) && !occurredAt.isAfter(filterRange[1])
   })
 
@@ -270,7 +254,7 @@ export default function LiveExit(props: LiveExitProps = {}) {
       fee: entry.fee,
       status: entry.status,
       operator: entry.operator,
-      occurredAt: entry.occurredAt || entry.occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`,
+      occurredAt: entry.occurredAt || (entry as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`,
     }))
     const headers = Object.keys(rows[0])
     const csv = [headers.join(','), ...rows.map((row) => headers.map((h) => `"${String(row[h as keyof typeof row]).replace(/"/g, '""')}"`).join(','))].join('\n')
@@ -285,11 +269,6 @@ export default function LiveExit(props: LiveExitProps = {}) {
 
   const gate = gates.find(g => g.id === selectedGate) || gates[0]
 
-  const vehicleTypeLabelMap: Record<VehiclePricingConfigItem['vehicleType'], string> = {
-    Car: t('parking.car'),
-    Motorcycle: t('parking.motorcycle'),
-    Truck: t('liveEntrance.truck'),
-  }
   const parkedMinutes = Math.max(1, nowTick.diff(currentEntryAt, 'minute'))
   const parkedHours = parkedMinutes / 60
   const billableHours = Math.max(1, Math.ceil(parkedHours))
@@ -356,7 +335,6 @@ export default function LiveExit(props: LiveExitProps = {}) {
     props.onExitAdded?.()
   }
 
-  // Simulated current exit ticket
   const currentTicket = {
     plate: currentPlate,
     confidence: 88,
@@ -656,15 +634,6 @@ export default function LiveExit(props: LiveExitProps = {}) {
               title={t('liveExit.payment')}
               titleIcon={<DollarOutlined />}
               titleIconColor="#52c41a"
-              titleExtra={
-                <Button
-                  size="small"
-                  icon={<SettingOutlined />}
-                  onClick={() => setPricingConfigOpen(true)}
-                >
-                  Cài đặt
-                </Button>
-              }
               bodyStyle={{ padding: '16px 20px' }}
             >
               {matchedSubscription ? (
@@ -863,90 +832,6 @@ export default function LiveExit(props: LiveExitProps = {}) {
               { value: 'Truck', label: `🚛 ${t('liveEntrance.truck')}` },
             ]}
           />
-        </Space>
-      </Modal>
-
-      <Modal
-        open={pricingConfigOpen}
-        title="Cấu hình giá đỗ xe"
-        width={760}
-        onCancel={() => setPricingConfigOpen(false)}
-        onOk={() => {
-          setPricingConfigOpen(false)
-          message.success('Đã lưu cấu hình giá')
-        }}
-        okText="Lưu"
-        cancelText={t('apiTest.cancel')}
-      >
-        <div className="mb-12 flex items-center justify-between gap-12">
-          <Text type="secondary">Thiết lập đơn giá theo loại xe</Text>
-          <Select
-            value={priceMode}
-            onChange={(value) => setPriceMode(value as PriceMode)}
-            style={{ width: 160 }}
-            options={[
-              { value: 'hourly', label: 'Theo giờ' },
-              { value: 'daily', label: 'Theo ngày' },
-            ]}
-          />
-        </div>
-        <div
-          className="mb-8"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '180px 1fr',
-            columnGap: 12,
-            alignItems: 'center',
-          }}
-        >
-          <Text strong>Loại xe</Text>
-          <Text strong>{priceMode === 'hourly' ? 'Giá theo giờ' : 'Giá theo ngày'}</Text>
-        </div>
-        <Space direction="vertical" className="w-full" size={10}>
-          {pricingConfig.map((item, index) => (
-            <div
-              key={item.vehicleType}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '180px 1fr',
-                columnGap: 12,
-                alignItems: 'center',
-              }}
-            >
-              <Text>{vehicleTypeLabelMap[item.vehicleType]}</Text>
-              {priceMode === 'hourly' ? (
-                <InputNumber
-                  min={0}
-                  step={1000}
-                  value={item.hourlyRate}
-                  className="w-full"
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => Number(value?.replace(/,/g, '') || 0)}
-                  addonAfter="đ"
-                  onChange={(value) => {
-                    const next = [...pricingConfig]
-                    next[index] = { ...next[index], hourlyRate: Number(value) || 0 }
-                    setPricingConfig(next)
-                  }}
-                />
-              ) : (
-                <InputNumber
-                  min={0}
-                  step={1000}
-                  value={item.dailyRate}
-                  className="w-full"
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                  parser={(value) => Number(value?.replace(/,/g, '') || 0)}
-                  addonAfter="đ"
-                  onChange={(value) => {
-                    const next = [...pricingConfig]
-                    next[index] = { ...next[index], dailyRate: Number(value) || 0 }
-                    setPricingConfig(next)
-                  }}
-                />
-              )}
-            </div>
-          ))}
         </Space>
       </Modal>
 

@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   peopleVisitors: 'smart-home.people.visitors',
   peoplePersonnelFilters: 'smart-home.people.personnel.filters',
   peopleVisitorFilters: 'smart-home.people.visitor.filters',
+  peopleGateHistory: 'smart-home.people.gate.history',
   energyMeters: 'smart-home.energy.meters',
   hvacAssets: 'smart-home.energy.hvac-assets',
   iaqSensors: 'smart-home.energy.iaq-sensors',
@@ -263,6 +264,15 @@ export function getPeopleVisitorFilters<T>(seed: T): T {
 
 export function savePeopleVisitorFilters<T>(value: T) {
   writeJson(STORAGE_KEYS.peopleVisitorFilters, value)
+}
+
+export function getPeopleGateHistory<T>(seed: T[] = []): T[] {
+  const cached = readJson<T[]>(STORAGE_KEYS.peopleGateHistory, [])
+  return cached.length > 0 ? cached : seed
+}
+
+export function savePeopleGateHistory<T>(items: T[]) {
+  writeJson(STORAGE_KEYS.peopleGateHistory, items)
 }
 
 export function getEnergyMeters<T>(seed: T[] = []): T[] {

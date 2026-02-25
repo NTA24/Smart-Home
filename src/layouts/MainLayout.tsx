@@ -45,9 +45,9 @@ export default function MainLayout() {
   const routeToParentKey: Record<string, string> = {
     '/security-monitoring': 'security-camera', '/camera-live': 'security-camera', '/camera-playback': 'security-camera', '/camera-config': 'security-camera',
     '/parking': 'vehicle-control', '/vehicle-access-control': 'vehicle-control', '/live-entrance': 'vehicle-control', '/live-exit': 'vehicle-control', '/parking-map': 'vehicle-control', '/parking-tickets': 'vehicle-control', '/parking-subscription': 'vehicle-control', '/parking-devices': 'vehicle-control', '/vehicle-config': 'vehicle-control',
-    '/personnel-management': 'people-control', '/visitor-distribution': 'people-control',
+    '/people-visitors': 'people-control', '/people-access-logs': 'people-control', '/people-alerts': 'people-control', '/people-admin-audit': 'people-control', '/people-report-overview': 'people-control',
     '/item-control': 'item-control', '/locker-map': 'item-control',
-    '/alarm-statistics': 'energy-management', '/energy-monitoring': 'energy-management', '/energy-data-center': 'energy-management', '/energy-meters': 'energy-management', '/hvac-assets': 'energy-management', '/iaq-sensors': 'energy-management', '/energy-aggregates': 'energy-management', '/energy-telemetry': 'remote-monitoring', '/iaq-telemetry': 'remote-monitoring', '/hvac-telemetry': 'remote-monitoring',
+    '/alarm-statistics': 'energy-management', '/energy-monitoring': 'energy-management', '/energy-data-center': 'energy-management', '/energy-meters': 'energy-management', '/hvac-assets': 'remote-monitoring', '/iaq-sensors': 'remote-monitoring', '/energy-aggregates': 'remote-monitoring',
     '/robot-dashboard': 'robot-management', '/robot-live-fleet': 'robot-management', '/robot-detail': 'robot-management', '/robot-create-mission': 'robot-management', '/robot-alerts': 'robot-management', '/robot-maintenance': 'robot-management',
     '/smart-workspace/dashboard': 'smart-workspace', '/smart-workspace/workspace': 'smart-workspace', '/smart-workspace/room-detail': 'smart-workspace', '/smart-workspace/booking-calendar': 'smart-workspace', '/smart-workspace/create-booking': 'smart-workspace', '/smart-workspace/kiosk': 'smart-workspace', '/smart-workspace/report-issue': 'smart-workspace', '/smart-workspace/issue-tickets': 'smart-workspace',
     '/smart-meeting-room/meeting-room': 'smart-meeting-room', '/smart-meeting-room/dashboard': 'smart-meeting-room', '/smart-meeting-room/room-detail': 'smart-meeting-room', '/smart-meeting-room/booking-calendar': 'smart-meeting-room', '/smart-meeting-room/create-booking': 'smart-meeting-room', '/smart-meeting-room/kiosk': 'smart-meeting-room', '/smart-meeting-room/report-issue': 'smart-meeting-room', '/smart-meeting-room/issue-tickets': 'smart-meeting-room',
@@ -144,10 +144,13 @@ export default function MainLayout() {
     },
     {
       key: 'people-control', icon: <TeamOutlined />,
-      label: groupLabel('people-control', '/personnel-management', t('menu.peopleControl')),
+      label: groupLabel('people-control', '/people-report-overview', t('menu.peopleControl')),
       children: [
-        { key: '/personnel-management', label: t('menu.personnelManagement') },
-        { key: '/visitor-distribution', label: t('menu.visitorDistribution') },
+        { key: '/people-report-overview', label: t('menu.peopleReportOverview') },
+        { key: '/people-visitors', label: t('menu.peopleVisitors') },
+        { key: '/people-access-logs', label: t('menu.peopleAccessLogs') },
+        { key: '/people-alerts', label: t('menu.peopleAlerts') },
+        { key: '/people-admin-audit', label: t('menu.peopleAdminAudit') },
       ],
     },
     {
@@ -166,19 +169,16 @@ export default function MainLayout() {
         { key: '/energy-monitoring', label: t('menu.energyMonitoring') },
         { key: '/energy-data-center', label: t('menu.energyDataCenter') },
         { key: '/energy-meters', label: t('menu.energyMeters') },
-        { key: '/hvac-assets', label: t('menu.hvacAssets') },
-        { key: '/iaq-sensors', label: t('menu.iaqSensors') },
-        { key: '/energy-aggregates', label: t('menu.energyAggregates') },
       ],
     },
     {
       key: 'remote-monitoring',
       icon: <ThunderboltOutlined />,
-      label: groupLabel('remote-monitoring', '/energy-telemetry', t('menu.remoteMonitoring')),
+      label: groupLabel('remote-monitoring', '/hvac-assets', t('menu.remoteMonitoring')),
       children: [
-        { key: '/energy-telemetry', label: t('menu.energyTelemetry') },
-        { key: '/iaq-telemetry', label: t('menu.iaqTelemetry') },
-        { key: '/hvac-telemetry', label: t('menu.hvacTelemetry') },
+        { key: '/hvac-assets', label: t('menu.hvacAssets') },
+        { key: '/iaq-sensors', label: t('menu.iaqSensors') },
+        { key: '/energy-aggregates', label: t('menu.energyAggregates') },
       ],
     },
     {
@@ -301,8 +301,9 @@ export default function MainLayout() {
         navStore.setSelectedTenant(tenant)
         navStore.setStep('campuses')
         try {
-          const res = await campusApi.getList({ limit: 50, offset: 0 })
-          navStore.setCampuses(res?.items || [])
+          const res = await campusApi.getListByTenantId(tenant.id)
+          const list = Array.isArray(res) ? res : (res?.items ?? [])
+          navStore.setCampuses(list)
         } catch { /* ignore */ }
       }
       navigate('/home')
@@ -312,8 +313,9 @@ export default function MainLayout() {
         navStore.setSelectedCampus(campus)
         navStore.setStep('buildings')
         try {
-          const res = await buildingApi.getList({ limit: 50, offset: 0 })
-          navStore.setBuildings(res?.items || [])
+          const res = await buildingApi.getListByCampusId(campus.id)
+          const list = Array.isArray(res) ? res : (res?.items ?? [])
+          navStore.setBuildings(list)
         } catch { /* ignore */ }
       }
       navigate('/home')
@@ -353,7 +355,6 @@ export default function MainLayout() {
   const middleSiderWidth = isHomePage ? 0 : (collapsed ? 0 : 260)
   const totalLeftMargin = leftNavWidth + middleSiderWidth
 
-  // Dropdown items for the current navigation step
   const dropdownItems = navStore.step === 'tenants'
     ? navStore.tenants.map(t => ({ id: t.id, name: t.name, status: t.status }))
     : navStore.step === 'campuses'

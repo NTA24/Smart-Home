@@ -8,9 +8,7 @@ import backgroundImage from '../../assets/background.png'
 
 const { Text } = Typography
 
-// Falling particles component - smooth falling animation
 const FloatingParticles = () => {
-  // Snowflakes falling
   const snowflakes = useMemo(() =>
     Array.from({ length: 20 }, (_, i) => ({
       id: `snow-${i}`,
@@ -23,7 +21,6 @@ const FloatingParticles = () => {
     })), []
   )
 
-  // Sparkles/stars falling
   const sparkles = useMemo(() =>
     Array.from({ length: 15 }, (_, i) => ({
       id: `sparkle-${i}`,
@@ -36,7 +33,6 @@ const FloatingParticles = () => {
     })), []
   )
 
-  // Tiny dots falling fast
   const dots = useMemo(() =>
     Array.from({ length: 30 }, (_, i) => ({
       id: `dot-${i}`,
@@ -138,7 +134,6 @@ const FloatingParticles = () => {
   )
 }
 
-// 3D Building Component with enhanced effects
 const Building3D = () => {
   return (
     <div className="edc_building-wrap">
@@ -171,7 +166,6 @@ const Building3D = () => {
   )
 }
 
-// Glowing card component
 const GlowCard: React.FC<{ title?: string; icon?: string; children: React.ReactNode; style?: React.CSSProperties; className?: string; headerRight?: React.ReactNode }> = ({ title, icon, children, style, className, headerRight }) => (
   <div className={['edc_glow-card', className].filter(Boolean).join(' ')} style={style}>
     {title && (
@@ -207,7 +201,6 @@ export default function EnergyDataCenter() {
 
   const dateInfo = formatDate(currentTime)
 
-  // Chart options
   const realtimeChartOption = {
     backgroundColor: 'transparent',
     grid: { top: 30, right: 15, bottom: 25, left: 45 },

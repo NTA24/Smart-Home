@@ -46,7 +46,6 @@ export default function HvacAssetPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form] = Form.useForm()
 
-  // Dropdown data for create modal
   const [tenants, setTenants] = useState<Tenant[]>([])
   const [devices, setDevices] = useState<Record<string, unknown>[]>([])
   const [spaces, setSpaces] = useState<SpaceItem[]>([])
@@ -184,7 +183,6 @@ export default function HvacAssetPage() {
     setEditingId(null)
     form.resetFields()
     setModalVisible(true)
-    // Fetch dropdown data
     fetchTenants()
     fetchDevices()
     fetchSpaces()

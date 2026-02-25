@@ -130,7 +130,6 @@ export default function ElevatorDetail() {
     setTimeout(() => message.success(`${action} - OK`), 1500)
   }
 
-  // Build floor shaft visualization
   const totalFloors = data.floorRange[1] - data.floorRange[0] + 1
   const floors = Array.from({ length: totalFloors }, (_, i) => {
     const floorNum = data.floorRange[1] - i

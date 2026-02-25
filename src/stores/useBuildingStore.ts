@@ -66,7 +66,8 @@ export const useBuildingStore = create<BuildingState>()(
         set({ loading: true })
         try {
           const res = await buildingApi.getList({ limit: 100, offset: 0 })
-          const buildings = (res?.items || []).map(toStoreBuilding)
+          const list = Array.isArray(res) ? res : (res?.items ?? [])
+          const buildings = list.map(toStoreBuilding)
           set({ buildings, loading: false })
         } catch {
           set({ loading: false })

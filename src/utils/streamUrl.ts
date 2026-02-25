@@ -33,7 +33,6 @@ export function resolveCameraStreamUrl(rawUrl?: string): string {
   const input = (rawUrl || '').trim()
   if (!input) return ''
 
-  // Absolute/protocol URLs should be used as-is.
   if (
     input.startsWith('http://') ||
     input.startsWith('https://') ||
@@ -70,7 +69,6 @@ export function getWebPlayableStreamCandidates(rawUrl?: string): string[] {
     if (!hostname || !streamPath) return [input]
 
     const config = getConversionConfig()
-    // Default to ws proxy for broader compatibility in browser playback.
     const mode: RtspConversionMode = config.rtspConversionMode || 'wss-proxy'
     const query = parsed.search || ''
     const hlsPort = typeof config.rtspHlsPort === 'number' && config.rtspHlsPort > 0

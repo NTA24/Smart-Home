@@ -21,6 +21,13 @@ export const campusApi = {
     api.get('/campuses/list', { params }),
 
   /**
+   * Lấy danh sách Campuses theo Tenant
+   * GET /api/campuses/by-tenant?tenant_id=...
+   */
+  getListByTenantId: (tenantId: string): Promise<ListResponse<Campus>> =>
+    api.get('/campuses/by-tenant', { params: { tenant_id: tenantId } }),
+
+  /**
    * Lấy chi tiết một Campus theo ID
    * GET /api/campuses/:id
    */

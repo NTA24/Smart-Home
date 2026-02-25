@@ -35,7 +35,6 @@ import { useBuildingStore } from '@/stores'
 
 const { Text } = Typography
 
-// ─── Mock Data ──────────────────────────────────────────────
 interface Camera {
   id: string
   name: string
@@ -80,7 +79,6 @@ const eventConfig = {
   vehicle: { color: '#52c41a', tagColor: 'success' },
 }
 
-// ─── Main Component ─────────────────────────────────────────
 export default function CameraPlayback() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()

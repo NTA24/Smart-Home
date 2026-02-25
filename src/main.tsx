@@ -9,6 +9,7 @@ import './styles/pages-vehicle-energy.css'
 import './styles/pages-dashboard.css'
 import './styles/pages-elevator-robot.css'
 import './styles/pages-workspace-admin.css'
+import './styles/pages-people.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

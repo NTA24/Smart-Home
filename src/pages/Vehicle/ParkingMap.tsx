@@ -51,7 +51,6 @@ const STATUS_CONFIG: Record<SlotStatus, { color: string; bg: string; label: stri
   reserved: { color: '#faad14', bg: '#fffbe6', label: 'reserved' },
 }
 
-// Generate mock slots
 function generateSlots(): ParkingSlot[] {
   const slots: ParkingSlot[] = []
   const statuses: SlotStatus[] = ['free', 'occupied', 'reserved']

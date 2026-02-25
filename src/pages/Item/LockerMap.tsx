@@ -37,7 +37,6 @@ import { PageContainer, PageHeader, ContentCard, FilterBar } from '@/components'
 
 const { Text } = Typography
 
-// ─── Cell status type ───────────────────────────────────────
 type CellStatus = 'empty' | 'occupied' | 'reserved' | 'maintenance' | 'error'
 
 interface Cell {
@@ -58,7 +57,6 @@ interface Locker {
   cells: Cell[]
 }
 
-// ─── Mock Data ──────────────────────────────────────────────
 const generateCells = (count: number): Cell[] => {
   return Array.from({ length: count }, (_, i) => {
     const r = Math.random()
@@ -93,7 +91,6 @@ const lockers: Locker[] = [
   { id: 'L-12', name: 'Locker 12', location: 'Lobby F', floor: '5F', online: true, cells: generateCells(16) },
 ]
 
-// ─── Status config ──────────────────────────────────────────
 const statusConfig: Record<CellStatus, { color: string; bg: string; border: string; labelKey: string }> = {
   empty:       { color: '#52c41a', bg: '#f6ffed', border: '#b7eb8f', labelKey: 'lockerMap.statusEmpty' },
   occupied:    { color: '#1890ff', bg: '#e6f7ff', border: '#91d5ff', labelKey: 'lockerMap.statusOccupied' },
@@ -102,7 +99,6 @@ const statusConfig: Record<CellStatus, { color: string; bg: string; border: stri
   error:       { color: '#ff4d4f', bg: '#fff2f0', border: '#ffccc7', labelKey: 'lockerMap.statusError' },
 }
 
-// ─── Cell Grid Component ────────────────────────────────────
 function CellGrid({ cells, t, onCellClick }: { cells: Cell[]; t: (key: string, fallback?: string) => string; onCellClick?: (cell: Cell) => void }) {
   return (
     <div className="flex flex-wrap gap-8">
@@ -146,7 +142,6 @@ function CellGrid({ cells, t, onCellClick }: { cells: Cell[]; t: (key: string, f
   )
 }
 
-// ─── Cell Detail Modal ──────────────────────────────────────
 function CellDetailModal({
   cell,
   lockerId,
@@ -163,7 +158,6 @@ function CellDetailModal({
   if (!cell) return null
   const cfg = statusConfig[cell.status]
 
-  // Mock history for the cell
   const cellHistory = [
     { time: '10:32', action: t('lockerMap.historyOpened', 'Opened by user'), detail: cell.user || 'User A', color: 'blue' },
     { time: '09:15', action: t('lockerMap.historyDelivered', 'Package delivered'), detail: `${t('lockerMap.session', 'Session')} ${cell.session || '#S1001'}`, color: 'green' },
@@ -306,7 +300,6 @@ function CellDetailModal({
   )
 }
 
-// ─── Locker Card (Grid View) ────────────────────────────────
 function LockerCard({ locker, t, onCellClick }: { locker: Locker; t: (key: string, fallback?: string) => string; onCellClick?: (cell: Cell, lockerId: string) => void }) {
   const counts = {
     empty: locker.cells.filter(c => c.status === 'empty').length,
@@ -361,7 +354,6 @@ function LockerCard({ locker, t, onCellClick }: { locker: Locker; t: (key: strin
   )
 }
 
-// ─── Locker Row (Tab/List View) ─────────────────────────────
 function LockerListItem({ locker, t, onCellClick }: { locker: Locker; t: (key: string, fallback?: string) => string; onCellClick?: (cell: Cell, lockerId: string) => void }) {
   const counts = {
     empty: locker.cells.filter(c => c.status === 'empty').length,
@@ -456,7 +448,6 @@ function LockerListItem({ locker, t, onCellClick }: { locker: Locker; t: (key: s
   )
 }
 
-// ─── Main Component ─────────────────────────────────────────
 export default function LockerMap() {
   const { t } = useTranslation()
   const [viewMode, setViewMode] = useState<string>('grid')
@@ -472,10 +463,8 @@ export default function LockerMap() {
     setCellModalOpen(true)
   }
 
-  // Get unique floors
   const floors = [...new Set(lockers.map(l => l.floor))]
 
-  // Filter lockers
   const filteredLockers = lockers.filter(l => {
     if (floorFilter !== 'all' && l.floor !== floorFilter) return false
     if (statusFilter === 'online' && !l.online) return false
@@ -483,7 +472,6 @@ export default function LockerMap() {
     return true
   })
 
-  // Summary counts
   const allCells = lockers.flatMap(l => l.cells)
   const summary = {
     total: allCells.length,

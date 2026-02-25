@@ -159,7 +159,6 @@ export default function ElevatorAccessControl() {
   const [editingRule, setEditingRule] = useState<AccessRule | null>(null)
   const [form] = Form.useForm()
 
-  // Filter rules by selected zone floors
   const filteredRules = selectedZoneFloors.length > 0
     ? rules.filter(r => r.allowedFloors.some(f => selectedZoneFloors.includes(f)))
     : rules

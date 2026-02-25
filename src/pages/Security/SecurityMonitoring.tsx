@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Typography, Badge, Tag, Modal } from 'antd'
+import { Typography, Tag, Modal, Button } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
   AlertOutlined,
@@ -26,8 +26,9 @@ const GlassPanel: React.FC<{
   children: React.ReactNode
   style?: React.CSSProperties
   titleRight?: React.ReactNode
-}> = ({ title, icon, children, style, titleRight }) => (
-  <div className="security_glass-panel" style={style}>
+  className?: string
+}> = ({ title, icon, children, style, titleRight, className }) => (
+  <div className={['security_glass-panel', className].filter(Boolean).join(' ')} style={style}>
     <div className="security_glass-header">
       <div className="security_glass-header-left">
         {icon}
@@ -78,15 +79,7 @@ const CameraVideoModal: React.FC<{
   streamUrl?: string
   onClose: () => void
 }> = ({ visible, camera, streamUrl, onClose }) => {
-  const [currentTime, setCurrentTime] = useState(new Date())
   const videoRef = useRef<HTMLVideoElement>(null)
-
-  useEffect(() => {
-    if (visible) {
-      const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-      return () => clearInterval(timer)
-    }
-  }, [visible])
 
   useEffect(() => {
     const videoEl = videoRef.current
@@ -194,11 +187,6 @@ const CameraVideoModal: React.FC<{
     }
   }, [visible, streamUrl])
 
-  const formatTime = (date: Date) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${days[date.getDay()]} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
-  }
-
   return (
     <Modal
       open={visible}
@@ -233,9 +221,6 @@ const CameraVideoModal: React.FC<{
           ) : (
             <PlayCircleOutlined className="security_play-icon cursor-pointer transition-all text-4xl opacity-90" />
           )}
-          <div className="security_timestamp-overlay">
-            <Text className="font-mono text-11 security_text-green">{formatTime(currentTime)}</Text>
-          </div>
           <div className="security_camera-name-overlay">
             <Text className="text-white text-11">{camera}</Text>
           </div>
@@ -289,13 +274,7 @@ const CameraThumbnail: React.FC<{
   streamUrl?: string
   onClick?: () => void
 }> = ({ label, sublabel, isLive, camId, streamUrl, onClick }) => {
-  const [currentTime, setCurrentTime] = useState(new Date())
   const videoRef = useRef<HTMLVideoElement>(null)
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
 
   useEffect(() => {
     const videoEl = videoRef.current
@@ -405,10 +384,6 @@ const CameraThumbnail: React.FC<{
     }
   }, [streamUrl])
 
-  const formatTimestamp = (date: Date) => {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
-  }
-
   return (
     <div
       className="security_thumbnail-card"
@@ -429,9 +404,6 @@ const CameraThumbnail: React.FC<{
             controls={false}
           />
         ) : null}
-        <div className="security_thumbnail-ts">
-          <Text className="security_cam-ts-text">{formatTimestamp(currentTime)}</Text>
-        </div>
         {isLive && (
           <div className="security_thumbnail-live-badge">
             <Text className="security_cam-live-text">LIVE</Text>
@@ -506,9 +478,135 @@ const ScrollingCaptureList: React.FC<{
   )
 }
 
+// Snapshot video box (plays stream in Smart snapshots panel)
+const SnapshotVideo: React.FC<{
+  streamUrl: string
+  onClick?: () => void
+  onVideoRef?: (el: HTMLVideoElement | null) => void
+}> = ({ streamUrl, onClick, onVideoRef }) => {
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const videoEl = videoRef.current
+    const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
+    if (!videoEl || playableCandidates.length === 0) return
+
+    let hls: Hls | null = null
+    let player: mpegts.Player | null = null
+    let disposed = false
+    const cleanupCurrent = () => {
+      if (hls) hls.destroy()
+      hls = null
+      if (player) {
+        player.pause()
+        player.unload()
+        player.detachMediaElement()
+        player.destroy()
+      }
+      player = null
+      videoEl.removeAttribute('src')
+      videoEl.load()
+    }
+
+    const trySourceAt = (index: number) => {
+      if (disposed) return
+      if (index >= playableCandidates.length) return
+      const source = playableCandidates[index]
+      cleanupCurrent()
+
+      const isHlsStream = source.includes('.m3u8')
+      const isWsStream = source.startsWith('ws://') || source.startsWith('wss://')
+      const isMp4Stream = source.includes('.mp4')
+
+      if (isHlsStream) {
+        if (Hls.isSupported()) {
+          hls = new Hls({ enableWorker: true, lowLatencyMode: true })
+          hls.loadSource(source)
+          hls.attachMedia(videoEl)
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            const playResult = videoEl.play()
+            if (playResult && typeof playResult.then === 'function') playResult.catch(() => {})
+          })
+          hls.on(Hls.Events.ERROR, (_, data) => {
+            if (!data?.fatal) return
+            cleanupCurrent()
+            trySourceAt(index + 1)
+          })
+          return
+        }
+        if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+          videoEl.src = source
+          const playResult = videoEl.play()
+          if (playResult && typeof playResult.then === 'function') playResult.catch(() => trySourceAt(index + 1))
+          return
+        }
+        trySourceAt(index + 1)
+        return
+      }
+
+      if (isWsStream && mpegts.isSupported()) {
+        player = mpegts.createPlayer(
+          { type: 'flv', url: source, isLive: true, hasAudio: false },
+          { enableWorker: true, lazyLoad: false },
+        )
+        player.attachMediaElement(videoEl)
+        player.load()
+        const playResult = player.play()
+        if (playResult && typeof playResult.then === 'function') playResult.catch(() => trySourceAt(index + 1))
+        player.on(mpegts.Events.ERROR, () => {
+          cleanupCurrent()
+          trySourceAt(index + 1)
+        })
+        return
+      }
+
+      if (isMp4Stream) {
+        videoEl.src = source
+        const playResult = videoEl.play()
+        if (playResult && typeof playResult.then === 'function') playResult.catch(() => trySourceAt(index + 1))
+        videoEl.onerror = () => {
+          videoEl.onerror = null
+          trySourceAt(index + 1)
+        }
+        return
+      }
+
+      trySourceAt(index + 1)
+    }
+
+    trySourceAt(0)
+    return () => {
+      disposed = true
+      cleanupCurrent()
+    }
+  }, [streamUrl])
+
+  return (
+    <div
+      className="security_snapshot-placeholder"
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      style={onClick ? { cursor: 'pointer' } : undefined}
+    >
+      <video
+        ref={el => {
+          (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el
+          onVideoRef?.(el)
+        }}
+        className="camera_feed-video-element"
+        autoPlay
+        muted
+        playsInline
+        controls={false}
+      />
+    </div>
+  )
+}
+
 export default function SecurityMonitoring() {
   const { t } = useTranslation()
   const [currentTime, setCurrentTime] = useState(new Date())
+  const snapshotVideoRef = useRef<HTMLVideoElement | null>(null)
   const [videoModal, setVideoModal] = useState<{ visible: boolean; camera: string; time: string; streamUrl?: string }>({
     visible: false, camera: '', time: '', streamUrl: undefined,
   })
@@ -517,6 +615,25 @@ export default function SecurityMonitoring() {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
+
+  const handleCaptureSnapshot = () => {
+    const video = snapshotVideoRef.current
+    if (!video || video.readyState < 2) return
+    const w = video.videoWidth
+    const h = video.videoHeight
+    if (!w || !h) return
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.drawImage(video, 0, 0, w, h)
+    const dataUrl = canvas.toDataURL('image/png')
+    const a = document.createElement('a')
+    a.href = dataUrl
+    a.download = `snapshot-${Date.now()}.png`
+    a.click()
+  }
 
   const handleCameraClick = (camera: string, time: string, streamUrl?: string) => {
     setVideoModal({ visible: true, camera, time, streamUrl })
@@ -596,32 +713,32 @@ export default function SecurityMonitoring() {
           </GlassPanel>
 
           <GlassPanel
-            title={t('security.smartSnapshots', 'Smart snapshots')}
+            className="security_quick-snapshot-panel"
+            title={t('security.smartSnapshots', 'Quick snapshot')}
             icon={<CameraOutlined className="text-primary text-md" />}
             titleRight={
-              <div className="flex items-center gap-8">
-                <Tag color="processing" className="tag--no-margin text-xs">2-2F-32 (Increased)</Tag>
-                <Tag color="success" className="tag--no-margin text-xs">Online</Tag>
+              <div className="security_glass-header-right">
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<CameraOutlined />}
+                  onClick={e => { e.stopPropagation(); handleCaptureSnapshot() }}
+                  className="security_snapshot-capture-btn"
+                >
+                  {t('security.screenshot', 'Chụp màn hình')}
+                </Button>
+                <span className="security_header-tags-same-row">
+                  <Tag color="processing" className="tag--no-margin text-xs">2-2F-32 (Increased)</Tag>
+                  <Tag color="success" className="tag--no-margin text-xs">Online</Tag>
+                </span>
               </div>
             }
           >
-            <div className="security_personnel-box">
-              <UserOutlined className="text-warning text-lg" />
-              <Text className="text-11 security_text-light">
-                {t('security.personnelToday', 'Number of Permanent Personnel Today')}:
-              </Text>
-              <Badge count={14} style={{ backgroundColor: '#faad14' }} />
-              <Text className="text-xs security_text-light">{t('security.people', 'people')}</Text>
-            </div>
-            <div className="security_snapshot-placeholder">
-              <CameraOutlined className="opacity-40 text-3xl security_text-blue-dark" />
-              <div className="security_snapshot-label-tl">
-                <Text className="text-warning text-xs">Mo-TM {t('security.meetingRoom', 'Meeting Room')}</Text>
-              </div>
-              <div className="security_snapshot-label-tr">
-                <Text className="text-cyan text-xs">09:30:11</Text>
-              </div>
-            </div>
+            <SnapshotVideo
+              streamUrl={cameras[1].streamUrl!}
+              onVideoRef={el => { snapshotVideoRef.current = el }}
+              onClick={() => handleCameraClick(cameras[1].label, dateTime.time, cameras[1].streamUrl)}
+            />
           </GlassPanel>
 
           <GlassPanel

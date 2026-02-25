@@ -66,8 +66,9 @@ export default function BuildingTest() {
     setLoading(true)
     try {
       const res = await buildingApi.getList({ limit, offset })
-      setBuildings(res?.items || [])
-      setTotal(res?.total || 0)
+      const list = Array.isArray(res) ? res : (res?.items ?? [])
+      setBuildings(list)
+      setTotal(Array.isArray(res) ? res.length : (res?.total ?? 0))
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       message.error(`${t('apiTest.fetchError')}: ${errorMsg}`)

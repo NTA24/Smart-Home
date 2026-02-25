@@ -18,7 +18,16 @@ import {
 } from './pages/Vehicle'
 
 // People
-import { PersonnelManagement, VisitorDistribution } from './pages/People'
+import {
+  PeopleDirectory,
+  VisitorManagement,
+  AccessLogs,
+  AlertsPage,
+  AdminAudit,
+  PersonnelManagement,
+  VisitorDistribution,
+  PeopleReportOverview,
+} from './pages/People'
 
 // Item / Locker
 import { ItemControl, LockerMap, LuggageControl } from './pages/Item'
@@ -114,6 +123,12 @@ function App() {
             <Route path="camera-config" element={<CameraConfig />} />
             <Route path="equipment-operation" element={<EquipmentOperation />} />
             <Route path="visitor-distribution" element={<VisitorDistribution />} />
+            <Route path="people-directory" element={<PeopleDirectory />} />
+            <Route path="people-visitors" element={<VisitorManagement />} />
+            <Route path="people-access-logs" element={<AccessLogs />} />
+            <Route path="people-alerts" element={<AlertsPage />} />
+            <Route path="people-admin-audit" element={<AdminAudit />} />
+            <Route path="people-report-overview" element={<PeopleReportOverview />} />
 
             <Route path="elevator-by-area" element={<ElevatorByArea />} />
             <Route path="elevator-dashboard" element={<ElevatorDashboard />} />

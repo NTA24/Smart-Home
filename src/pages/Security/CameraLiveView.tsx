@@ -10,7 +10,6 @@ import {
   Tooltip,
   Segmented,
   Empty,
-  Modal,
   Pagination,
 } from 'antd'
 import { useTranslation } from 'react-i18next'
@@ -32,7 +31,6 @@ import { getWebPlayableStreamCandidates, resolveCameraStreamUrl } from '@/utils/
 
 const { Title, Text } = Typography
 
-// ─── Mock Camera Data ───────────────────────────────────────
 interface Camera {
   id: string
   name: string
@@ -257,17 +255,14 @@ function CameraStreamPlayer({
   )
 }
 
-// ─── Camera Feed Card ───────────────────────────────────────
 function CameraFeed({
   camera,
   t,
   compact,
-  onPreview,
 }: {
   camera: Camera
   t: any
   compact?: boolean
-  onPreview: (camera: Camera) => void
 }) {
   const normalizedStatus = camera.status === 'offline' ? 'offline' : 'online'
   const stCfg = statusConfig[normalizedStatus]
@@ -282,7 +277,6 @@ function CameraFeed({
       return
     }
     el.requestFullscreen().catch(() => {
-      // Ignore fullscreen errors silently for unsupported/blocked browsers.
     })
   }
 
@@ -297,7 +291,6 @@ function CameraFeed({
         ref={videoBoxRef}
         className={`camera_feed-video ${camera.status === 'offline' ? 'camera_feed-video--offline' : 'camera_feed-video--live'}`}
         style={{ height: compact ? 140 : 180 }}
-        onClick={() => onPreview(camera)}
       >
         {camera.status === 'offline' ? (
           <div className="text-center">
@@ -311,11 +304,6 @@ function CameraFeed({
             ) : (
               <VideoCameraOutlined style={{ fontSize: 40, color: 'rgba(255,255,255,0.15)' }} />
             )}
-
-            {/* Timestamp */}
-            <div className="camera_feed-timestamp">
-              {new Date().toLocaleTimeString()} · {camera.resolution}
-            </div>
 
             {/* Controls overlay */}
             <div className="camera_feed-controls">
@@ -375,14 +363,12 @@ function CameraFeed({
   )
 }
 
-// ─── Main Component ─────────────────────────────────────────
 export default function CameraLiveView() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
   const [gridLayout, setGridLayout] = useState<GridLayout>('3x3')
   const [floorFilter, setFloorFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [previewCamera, setPreviewCamera] = useState<Camera | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [configVersion, setConfigVersion] = useState(0)
 
@@ -425,7 +411,6 @@ export default function CameraLiveView() {
     }
   }, [currentPage, totalPages])
 
-  // Summary
   const onlineCount = configuredCameras.filter(c => normalizeStatus(c.status) === 'online').length
   const offlineCount = configuredCameras.filter(c => c.status === 'offline').length
 
@@ -496,7 +481,6 @@ export default function CameraLiveView() {
                 camera={camera}
                 t={t}
                 compact={gridLayout === '4x4'}
-                onPreview={setPreviewCamera}
               />
             </Col>
             ))}
@@ -514,41 +498,6 @@ export default function CameraLiveView() {
           )}
         </>
       )}
-
-      <Modal
-        open={!!previewCamera}
-        onCancel={() => setPreviewCamera(null)}
-        footer={null}
-        width={1000}
-        destroyOnClose
-        title={previewCamera ? `${previewCamera.name} (${previewCamera.id})` : ''}
-      >
-        {previewCamera && (
-          <div className="camera_feed-video camera_feed-video--live" style={{ height: 560 }}>
-            {previewCamera.status === 'offline' ? (
-              <div className="text-center">
-                <CloseCircleOutlined className="text-4xl text-danger mb-8" />
-                <div className="text-danger text-sm">{t('cameraLive.signalLost', 'Signal Lost')}</div>
-              </div>
-            ) : previewCamera.streamUrl ? (
-              <CameraStreamPlayer
-                streamUrl={previewCamera.streamUrl}
-                cameraId={previewCamera.id}
-                muted={false}
-                t={t}
-              />
-            ) : (
-              <VideoCameraOutlined style={{ fontSize: 52, color: 'rgba(255,255,255,0.2)' }} />
-            )}
-            <div className="camera_feed-timestamp">
-              {new Date().toLocaleTimeString()} · {previewCamera.resolution}
-            </div>
-            <div className="camera_feed-name-overlay">
-              {previewCamera.location} · {previewCamera.floor}
-            </div>
-          </div>
-        )}
-      </Modal>
 
       {/* Pulse animation for REC indicator */}
       <style>{`

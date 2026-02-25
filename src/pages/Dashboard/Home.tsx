@@ -19,7 +19,6 @@ import type { Tab } from '@/stores'
 
 const { Title, Text } = Typography
 
-// Building images pool
 const buildingImages = [
   'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop',
   'https://images.unsplash.com/photo-1554435493-93422e8220c8?w=400&h=300&fit=crop',
@@ -35,7 +34,6 @@ export default function Home() {
   const { setSelectedBuilding } = useBuildingStore()
   const { addTab } = useTabStore()
 
-  // Shared navigation store
   const {
     step, setStep,
     tenants, setTenants,
@@ -62,7 +60,6 @@ export default function Home() {
   const [buildingSaving, setBuildingSaving] = useState(false)
   const [buildingForm] = Form.useForm()
 
-  // Fetch tenants on mount
   useEffect(() => { fetchTenants() }, [])
 
   const fetchTenants = async () => {
@@ -81,10 +78,14 @@ export default function Home() {
   const handleSelectTenant = async (tenant: Tenant) => {
     setSelectedTenantState(tenant)
     setStep('campuses')
+    setCampuses([])
+    setBuildings([])
+    setSelectedCampusState(null)
     setLoading(true)
     try {
-      const res = await campusApi.getList({ limit: 50, offset: 0 })
-      setCampuses(res?.items || [])
+      const res = await campusApi.getListByTenantId(tenant.id)
+      const list = Array.isArray(res) ? res : (res?.items ?? [])
+      setCampuses(list)
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       message.error(`${t('apiTest.fetchError')}: ${errorMsg}`)
@@ -162,7 +163,6 @@ export default function Home() {
     try {
       await tenantApi.delete(tenant.id)
     } catch {
-      // Ignore API failures in demo mode; remove item locally for editing workflow.
     }
     setTenants(tenants.filter(item => item.id !== tenant.id))
     message.success('Đã xóa khách thuê')
@@ -171,10 +171,12 @@ export default function Home() {
   const handleSelectCampus = async (campus: Campus) => {
     setSelectedCampusState(campus)
     setStep('buildings')
+    setBuildings([])
     setLoading(true)
     try {
-      const res = await buildingApi.getList({ limit: 50, offset: 0 })
-      setBuildings(res?.items || [])
+      const res = await buildingApi.getListByCampusId(campus.id)
+      const list = Array.isArray(res) ? res : (res?.items ?? [])
+      setBuildings(list)
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       message.error(`${t('apiTest.fetchError')}: ${errorMsg}`)
@@ -261,7 +263,6 @@ export default function Home() {
     try {
       await campusApi.delete(campus.id)
     } catch {
-      // Ignore API failures in demo mode; remove item locally for editing workflow.
     }
     setCampuses(campuses.filter(item => item.id !== campus.id))
     message.success('Đã xóa khu viên')
@@ -349,14 +350,12 @@ export default function Home() {
     try {
       await buildingApi.delete(building.id)
     } catch {
-      // Ignore API failures in demo mode; remove item locally for editing workflow.
     }
     setBuildings(buildings.filter(item => item.id !== building.id))
     message.success('Đã xóa tòa nhà')
   }
 
   const handleSelectBuilding = (building: Building) => {
-    // Save to store
     setSelectedBuilding({
       id: building.id,
       name: building.name,
@@ -367,7 +366,6 @@ export default function Home() {
       created_at: building.created_at,
       updated_at: building.updated_at,
     })
-    // Add dashboard tab and navigate
     const tab: Tab = { key: '/dashboard', labelKey: 'menu.dashboard', closable: false }
     addTab(tab)
     navigate('/dashboard')
@@ -385,7 +383,6 @@ export default function Home() {
     }
   }
 
-  // Step info for hero
   const stepConfig = {
     tenants: {
       icon: <CloudServerOutlined className="home_hero-icon text-white" />,

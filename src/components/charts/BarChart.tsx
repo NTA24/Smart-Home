@@ -78,7 +78,6 @@ export default function BarChart({
     ],
   }
 
-  // If no title, render chart only
   if (!title) {
     return <ReactECharts option={option} style={{ height }} />
   }

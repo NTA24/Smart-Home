@@ -73,7 +73,6 @@ export default function PieChart({
     color: ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2'],
   }
 
-  // If no title, render chart only
   if (!title) {
     return <ReactECharts option={option} style={{ height }} />
   }

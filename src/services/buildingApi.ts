@@ -21,6 +21,13 @@ export const buildingApi = {
     api.get('/buildings/list', { params }),
 
   /**
+   * Lấy danh sách Buildings theo Campus
+   * GET /api/buildings/by-campus?campus_id=...
+   */
+  getListByCampusId: (campusId: string): Promise<ListResponse<Building>> =>
+    api.get('/buildings/by-campus', { params: { campus_id: campusId } }),
+
+  /**
    * Lấy chi tiết một Building theo ID
    * GET /api/buildings/:id
    */

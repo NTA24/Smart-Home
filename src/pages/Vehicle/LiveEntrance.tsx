@@ -36,7 +36,6 @@ import {
 
 const { Text } = Typography
 
-// Mock gate data
 const gates = [
   { id: 'gate-1', name: 'Cổng vào 1', status: 'online', type: 'entrance' },
   { id: 'gate-2', name: 'Cổng vào 2', status: 'online', type: 'entrance' },
@@ -45,7 +44,6 @@ const gates = [
 ]
 const entranceGates = gates.filter((gate) => gate.type === 'entrance')
 
-// Mock recent entries
 const recentEntries = [
   { key: '1', time: '08:30:25', plate: '51A-123.45', type: 'Car', status: 'confirmed', operator: 'Nguyen Van A' },
   { key: '2', time: '08:28:10', plate: '30G-789.01', type: 'Motorcycle', status: 'confirmed', operator: 'Nguyen Van A' },
@@ -79,7 +77,6 @@ interface EntranceEntry {
   status: string
   operator: string
   occurredAt?: string
-  occuredAt?: string
 }
 
 interface VehicleSubscriptionRecord {
@@ -139,8 +136,7 @@ export default function LiveEntrance(props: LiveEntranceProps = {}) {
     }))
     return getVehicleLiveEntranceEntries<EntranceEntry>(seedEntries).map((entry) => ({
       ...entry,
-      // Backward-compatible with old key `occuredAt` in localStorage.
-      occurredAt: entry.occurredAt || entry.occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`,
+      occurredAt: entry.occurredAt || (entry as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`,
     }))
   })
   const [currentShift] = useState<(typeof shifts)[number]>(shifts[0])
@@ -172,7 +168,7 @@ export default function LiveEntrance(props: LiveEntranceProps = {}) {
 
   const filteredEntries = entries.filter((entry) => {
     if (!filterRange) return true
-    const occurredAt = dayjs(entry.occurredAt || entry.occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`)
+    const occurredAt = dayjs(entry.occurredAt || (entry as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`)
     return !occurredAt.isBefore(filterRange[0]) && !occurredAt.isAfter(filterRange[1])
   })
 
@@ -195,7 +191,7 @@ export default function LiveEntrance(props: LiveEntranceProps = {}) {
       type: entry.type,
       status: entry.status,
       operator: entry.operator,
-      occurredAt: entry.occurredAt || entry.occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`,
+      occurredAt: entry.occurredAt || (entry as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${entry.time}`,
     }))
     const headers = Object.keys(rows[0])
     const csv = [headers.join(','), ...rows.map((row) => headers.map((h) => `"${String(row[h as keyof typeof row]).replace(/"/g, '""')}"`).join(','))].join('\n')
@@ -247,7 +243,6 @@ export default function LiveEntrance(props: LiveEntranceProps = {}) {
       return hasSubscriptionPlan && statusOk && inRange && subPlate === normalizedPlate && subType === normalizedType
     })
   }, [currentPlate, currentVehicleType])
-  // Simulated current recognition
   const currentRecognition = {
     plate: currentPlate,
     confidence: 92,

@@ -17,7 +17,6 @@ import building3dImage from '@/assets/building-3d.png'
 
 const { Text } = Typography
 
-// Stat Card with Icon
 function StatCard({
   icon,
   iconBg,
@@ -70,7 +69,6 @@ function StatCard({
   )
 }
 
-// Alarm Count Badge
 function AlarmCount({ count, label, color, bgColor }: { count: number; label: string; color: string; bgColor: string }) {
   return (
     <div className="dashboard_alarm-wrap">
@@ -82,7 +80,6 @@ function AlarmCount({ count, label, color, bgColor }: { count: number; label: st
   )
 }
 
-// Alert Item
 function AlertItem({ 
   type, 
   title, 
@@ -113,7 +110,6 @@ function AlertItem({
   )
 }
 
-// Zone Info Card
 function ZoneInfo({ zone, temp, power, co2 }: { zone: string; temp: string; power: string; co2?: string }) {
   return (
     <div className="dashboard_zone-card">
@@ -134,7 +130,6 @@ export default function Dashboard() {
   const { selectedBuilding } = useBuildingStore()
   const [activeTab, setActiveTab] = useState('energy')
 
-  // Energy breakdown data
   const energyBreakdownData = [
     { name: 'HVAC', value: 64, color: '#1890ff' },
     { name: 'Lighting', value: 20, color: '#faad14' },
@@ -142,7 +137,6 @@ export default function Dashboard() {
     { name: 'Other', value: 6, color: '#722ed1' },
   ]
 
-  // Asset health chart data
   const assetCategories = ['2:00', '6:00', '10:00', '14:00', '16:00', '2']
   const assetSeries = [
     { name: 'kWh', data: [80, 120, 180, 220, 200, 160], color: '#1890ff' }

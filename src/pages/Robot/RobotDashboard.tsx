@@ -81,16 +81,14 @@ export default function RobotDashboard() {
     { time: '10:15', robot: 'R-02', event: t('robotDash.eventMissionAssigned'), severity: 'info' as const },
   ]
 
-  // Robot fleet overview (mini grid)
-  // 20 total: 10 running, 3 idle, 3 charging, 2 error, 2 offline = 20
   const robots = Array.from({ length: 20 }, (_, i) => {
     const id = `R-${String(i + 1).padStart(2, '0')}`
     let status: 'running' | 'idle' | 'charging' | 'error' | 'offline' = 'running'
-    if (i === 6) status = 'error'       // R-07 stuck
-    if (i === 2) status = 'error'       // R-03 nav error
-    if ([18, 19].includes(i)) status = 'offline'  // R-19, R-20 offline
-    if ([3, 8, 13].includes(i)) status = 'idle'   // 3 idle
-    if ([5, 11, 17].includes(i)) status = 'charging' // 3 charging
+    if (i === 6) status = 'error'
+    if (i === 2) status = 'error'
+    if ([18, 19].includes(i)) status = 'offline'
+    if ([3, 8, 13].includes(i)) status = 'idle'
+    if ([5, 11, 17].includes(i)) status = 'charging'
     const battery = status === 'charging' ? 25 + ((i * 11) % 25)
       : status === 'error' ? 20 + ((i * 7) % 20)
       : status === 'offline' ? 0

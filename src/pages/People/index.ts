@@ -1,2 +1,8 @@
+export { default as PeopleDirectory } from './PeopleDirectory'
+export { default as VisitorManagement } from './VisitorManagement'
+export { default as AccessLogs } from './AccessLogs'
+export { default as AlertsPage } from './AlertsPage'
+export { default as AdminAudit } from './AdminAudit'
 export { default as PersonnelManagement } from './PersonnelManagement'
 export { default as VisitorDistribution } from './VisitorDistribution'
+export { default as PeopleReportOverview } from './PeopleReportOverview'

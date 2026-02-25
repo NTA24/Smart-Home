@@ -93,7 +93,6 @@ const mockDevices: ParkingDevice[] = [
   { key: '16', name: 'CAM-B3-ZONE-A', type: 'camera', location: 'B3 - Zone A', status: 'online', lastHeartbeat: '2026-02-10 10:44:50', ip: '192.168.2.10', firmware: 'v5.0.9' },
   { key: '17', name: 'CAM-B3-ZONE-B', type: 'camera', location: 'B3 - Zone B', status: 'online', lastHeartbeat: '2026-02-10 10:44:48', ip: '192.168.2.11', firmware: 'v5.0.9' },
   { key: '18', name: 'CAM-B3-ZONE-C', type: 'camera', location: 'B3 - Zone C', status: 'online', lastHeartbeat: '2026-02-10 10:44:45', ip: '192.168.2.12', firmware: 'v5.0.9' },
-  // Sensors — many
   ...Array.from({ length: 480 }, (_, i) => {
     const zone = ['A', 'B', 'C'][i % 3]
     const floor = ['B1', 'B2', 'B3'][Math.floor(i / 160)]

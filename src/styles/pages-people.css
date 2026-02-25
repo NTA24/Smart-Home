@@ -1,0 +1,226 @@
+/* ═══════════════════════════════════════════════
+   Visitor Management (Quản lý khách ra vào)
+   ═══════════════════════════════════════════════ */
+
+.visitor-mgmt-page .visitor-mgmt-header {
+  padding: 16px 0 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 20px;
+}
+
+.visitor-mgmt-page .visitor-mgmt-header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a1a2e;
+  letter-spacing: -0.02em;
+}
+
+.visitor-mgmt-page .visitor-mgmt-header .ant-space .ant-btn {
+  color: #595959;
+  transition: color 0.2s, background 0.2s;
+}
+
+.visitor-mgmt-page .visitor-mgmt-header .ant-space .ant-btn:hover {
+  color: #1890ff;
+  background: rgba(24, 144, 255, 0.06);
+}
+
+.visitor-mgmt-page .visitor-mgmt-header .ant-avatar {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+}
+
+/* Tabs */
+.visitor-mgmt-page .visitor-mgmt-tabs .ant-tabs-nav {
+  margin-bottom: 20px;
+}
+
+.visitor-mgmt-page .visitor-mgmt-tabs .ant-tabs-tab {
+  padding: 10px 4px 12px;
+  font-weight: 500;
+  color: #595959;
+}
+
+.visitor-mgmt-page .visitor-mgmt-tabs .ant-tabs-tab:hover {
+  color: #1890ff;
+}
+
+.visitor-mgmt-page .visitor-mgmt-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.visitor-mgmt-page .visitor-mgmt-tabs .ant-tabs-ink-bar {
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, #1890ff, #40a9ff);
+}
+
+/* Left list panel */
+.visitor-mgmt-page .visitor-mgmt-list-wrap {
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.visitor-mgmt-page .visitor-mgmt-search .ant-input {
+  border-radius: 8px;
+  border-color: #d9d9d9;
+  padding: 8px 12px;
+}
+
+.visitor-mgmt-page .visitor-mgmt-search .ant-input:hover,
+.visitor-mgmt-page .visitor-mgmt-search .ant-input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.visitor-mgmt-page .visitor-mgmt-list .ant-list-item {
+  border-radius: 8px;
+  padding: 12px 14px !important;
+  margin-bottom: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.visitor-mgmt-page .visitor-mgmt-list .ant-list-item:last-child {
+  margin-bottom: 0;
+}
+
+.visitor-mgmt-page .visitor-mgmt-list .ant-list-item:hover {
+  background: #fff;
+  border-color: rgba(24, 144, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.visitor-mgmt-page .visitor-mgmt-list .ant-list-item.visitor-mgmt-item-active {
+  background: linear-gradient(135deg, rgba(24, 144, 255, 0.08) 0%, rgba(24, 144, 255, 0.04) 100%);
+  border-color: rgba(24, 144, 255, 0.25);
+  box-shadow: 0 2px 12px rgba(24, 144, 255, 0.12);
+}
+
+.visitor-mgmt-page .visitor-mgmt-list .ant-list-item .ant-list-item-meta-title {
+  font-weight: 600;
+  color: #1a1a2e;
+  font-size: 14px;
+}
+
+.visitor-mgmt-page .visitor-mgmt-list .ant-list-item .ant-list-item-meta-description {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-top: 2px;
+}
+
+/* Detail card */
+.visitor-mgmt-page .visitor-mgmt-detail-card .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.visitor-mgmt-page .visitor-mgmt-detail-card .visitor-mgmt-profile-row {
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.visitor-mgmt-page .visitor-mgmt-detail-card .ant-avatar {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  flex-shrink: 0;
+}
+
+.visitor-mgmt-page .visitor-mgmt-detail-card .visitor-mgmt-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.visitor-mgmt-page .visitor-mgmt-detail-card .visitor-mgmt-meta {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin-bottom: 8px;
+}
+
+.visitor-mgmt-page .visitor-mgmt-detail-card .visitor-mgmt-stopover-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  border-color: #d9d9d9;
+  color: #595959;
+}
+
+.visitor-mgmt-page .visitor-mgmt-detail-card .visitor-mgmt-stopover-btn:hover {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+/* Inner tabs (Profiles, Credentials, History) */
+.visitor-mgmt-page .visitor-mgmt-detail-card .ant-tabs-small > .ant-tabs-nav .ant-tabs-tab {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* Profile content card */
+.visitor-mgmt-page .visitor-mgmt-profile-card .ant-card {
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #fafbfc;
+}
+
+.visitor-mgmt-page .visitor-mgmt-qr-wrap {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px dashed #d9d9d9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 140px;
+}
+
+.visitor-mgmt-page .visitor-mgmt-qr-wrap .anticon {
+  color: #bfbfbf;
+}
+
+.visitor-mgmt-page .visitor-mgmt-qr-wrap .visitor-mgmt-qr-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.visitor-mgmt-page .visitor-mgmt-qr-code {
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  letter-spacing: 0.05em;
+  margin-top: 10px;
+}
+
+/* Empty state */
+.visitor-mgmt-page .visitor-mgmt-empty-card .ant-card {
+  border-radius: 12px;
+  border: 1px dashed #d9d9d9;
+  background: #fafafa;
+}
+
+.visitor-mgmt-page .visitor-mgmt-empty-card .ant-card-body {
+  color: #8c8c8c;
+  padding: 48px 24px;
+}
+
+/* Invite tab CTA */
+.visitor-mgmt-page .visitor-mgmt-invite-cta .ant-btn-primary {
+  border-radius: 10px;
+  padding: 12px 32px;
+  height: auto;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.35);
+}
+
+.visitor-mgmt-page .visitor-mgmt-invite-cta .ant-btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+  transform: translateY(-1px);
+}

@@ -24,18 +24,14 @@ export default function TabBar() {
     }
   }
 
-  // Get label for tab - use translation if available
   const getTabLabel = (tab: { key: string; labelKey?: string; label?: string }) => {
-    // First try labelKey
     if (tab.labelKey) {
       return t(tab.labelKey)
     }
-    // Then try route mapping
     const mappedKey = routeToLabelKey[tab.key]
     if (mappedKey) {
       return t(mappedKey)
     }
-    // Fallback to static label
     return tab.label || tab.key
   }
 

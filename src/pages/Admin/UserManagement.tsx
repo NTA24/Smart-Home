@@ -58,7 +58,6 @@ export default function UserManagement() {
   }
 
   const handleAddAdmin = () => {
-    // TODO: open modal or navigate to add form
   }
 
   return (

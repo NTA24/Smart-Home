@@ -93,7 +93,6 @@ export default function SmartWorkspace() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingRoom, setEditingRoom] = useState<WorkspaceRoom | null>(null)
 
-  // Filters
   const [filterFloor, setFilterFloor] = useState<string | undefined>()
   const [filterCapMin, setFilterCapMin] = useState<number | undefined>()
   const [filterCapMax, setFilterCapMax] = useState<number | undefined>()

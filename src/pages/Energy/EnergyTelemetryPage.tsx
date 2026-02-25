@@ -86,7 +86,6 @@ export default function EnergyTelemetryPage() {
     saveEnergyTelemetryIngestDraft(ingestItems)
   }, [ingestItems])
 
-  // Stats
   const totalKwh = data.reduce((acc, d) => acc + (d.kwh_delta || 0), 0)
   const avgKw = data.length > 0 ? data.reduce((acc, d) => acc + (d.kw || 0), 0) / data.length : 0
   const maxKw = data.length > 0 ? Math.max(...data.map(d => d.kw || 0)) : 0

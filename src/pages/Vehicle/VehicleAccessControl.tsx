@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Card, Select, Space, Typography, Tag, Badge, DatePicker, Input } from 'antd'
-import { CameraOutlined } from '@ant-design/icons'
+import { Card, Select, Space, Typography, Tag, Badge, DatePicker, Input, Modal } from 'antd'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import { ContentCard, DataTable } from '@/components'
 import { getVehicleLiveEntranceEntries, getVehicleLiveExitEntries, getVehicleManagementConfig } from '@/services/mockPersistence'
 import LiveEntrance from './LiveEntrance'
 import LiveExit from './LiveExit'
+
+const SPOT_PREVIEW_IMAGE = '/parking-spot-preview.png'
 
 type GateMode = 'entrance' | 'exit'
 
@@ -36,6 +37,7 @@ export default function VehicleAccessControl() {
   const [directionFilter, setDirectionFilter] = useState<'all' | 'entrance' | 'exit'>('all')
   const [plateKeyword, setPlateKeyword] = useState('')
   const [timeRange, setTimeRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
+  const [previewImageOpen, setPreviewImageOpen] = useState(false)
   const selectedGate = gateOptions.find((gate) => gate.id === selectedGateId) || gateOptions[0]
   const mode = selectedGate.mode
 
@@ -66,7 +68,7 @@ export default function VehicleAccessControl() {
       status: item.status,
       operator: item.operator,
       fee: null as number | null,
-      occurredAt: item.occurredAt || item.occuredAt || `${dayjs().format('YYYY-MM-DD')} ${item.time}`,
+      occurredAt: item.occurredAt || (item as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${item.time}`,
     }))
     const exitRows = getVehicleLiveExitEntries<any>(exitSeed).map((item: any) => ({
       key: `out-${item.key}`,
@@ -77,7 +79,7 @@ export default function VehicleAccessControl() {
       status: item.status,
       operator: item.operator,
       fee: item.fee ?? null,
-      occurredAt: item.occurredAt || item.occuredAt || `${dayjs().format('YYYY-MM-DD')} ${item.time}`,
+      occurredAt: item.occurredAt || (item as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${item.time}`,
     }))
 
     return [...entranceRows, ...exitRows]
@@ -120,19 +122,27 @@ export default function VehicleAccessControl() {
         key: 'snapshot',
         width: 130,
         render: (value: 'entrance' | 'exit', row: { plate: string }) => (
-          <div
-            className="flex items-center gap-6"
+          <button
+            type="button"
+            onClick={() => setPreviewImageOpen(true)}
             style={{
+              display: 'block',
               border: '1px solid #d9d9d9',
               borderRadius: 6,
-              padding: '2px 6px',
+              padding: 0,
+              overflow: 'hidden',
+              width: 100,
+              height: 56,
+              cursor: 'pointer',
               background: '#fafafa',
-              width: 110,
             }}
           >
-            <CameraOutlined style={{ color: '#8c8c8c' }} />
-            <span className="text-11">{value === 'entrance' ? 'IN' : 'OUT'} · {row.plate}</span>
-          </div>
+            <img
+              src={SPOT_PREVIEW_IMAGE}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </button>
         ),
       },
       {
@@ -265,6 +275,22 @@ export default function VehicleAccessControl() {
           className="rounded"
         />
       </ContentCard>
+
+      <Modal
+        title={t('parkingMap.spotPreview', 'Ảnh chỗ đỗ')}
+        open={previewImageOpen}
+        onCancel={() => setPreviewImageOpen(false)}
+        footer={null}
+        width={720}
+      >
+        <div style={{ textAlign: 'center', padding: '8px 0' }}>
+          <img
+            src={SPOT_PREVIEW_IMAGE}
+            alt={t('parkingMap.spotPreview', 'Ảnh chỗ đỗ')}
+            style={{ maxWidth: '100%', height: 'auto', borderRadius: 8, border: '1px solid #eee' }}
+          />
+        </div>
+      </Modal>
     </>
   )
 }
