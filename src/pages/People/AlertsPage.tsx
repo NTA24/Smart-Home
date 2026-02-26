@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Table, Select, Input, Button, Space, Drawer, Tag } from 'antd'
+import { Table, Select, Input, Button, Space, Drawer, Tag, Modal, message, Form, Switch } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { BellOutlined, SettingOutlined } from '@ant-design/icons'
 import { PageContainer, PageHeader, ContentCard } from '@/components'
@@ -33,7 +33,8 @@ const STATUS_LABEL_KEY: Record<StatusKey, string> = {
   CLOSED: 'alertsPage.statusClosed',
 }
 
-const MOCK_ALERTS: { key: string; severity: SeverityKey; time: string; type: AlertTypeKey; location: LocationKey; assignee: string; status: StatusKey }[] = [
+type AlertRow = { key: string; severity: SeverityKey; time: string; type: AlertTypeKey; location: LocationKey; assignee: string; status: StatusKey }
+const INITIAL_ALERTS: AlertRow[] = [
   { key: '1', severity: 'HIGH', time: '10:06', type: 'Forced Door Open', location: 'Server Room', assignee: '-', status: 'OPEN' },
   { key: '2', severity: 'MED', time: '10:02', type: 'Elevator Door Held', location: 'Tower A / Lift 2', assignee: 'Security1', status: 'ACK' },
   { key: '3', severity: 'LOW', time: '09:40', type: 'Visitor Overstay', location: 'Lobby', assignee: '-', status: 'OPEN' },
@@ -47,16 +48,26 @@ const REFRESH_OPTIONS = [{ value: '10s', labelKey: 'alertsPage.refresh10s' }, { 
 
 export default function AlertsPage() {
   const { t } = useTranslation()
+  const [alerts, setAlerts] = useState<AlertRow[]>(() => [...INITIAL_ALERTS])
   const [severityFilter, setSeverityFilter] = useState<string>('all')
   const [locationFilter, setLocationFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('OPEN')
   const [refreshInterval, setRefreshInterval] = useState<string>('10s')
   const [search, setSearch] = useState('')
-  const [selectedAlert, setSelectedAlert] = useState<(typeof MOCK_ALERTS)[0] | null>(null)
+  const [selectedAlert, setSelectedAlert] = useState<AlertRow | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [assigneeValue, setAssigneeValue] = useState('')
+  const [incidentModalOpen, setIncidentModalOpen] = useState(false)
+  const [incidentForm] = Form.useForm()
+  const [incidents, setIncidents] = useState<Array<{ id: string; alertKey: string; title: string; priority: string; createdAt: string }>>([])
+  const [settingsNotify, setSettingsNotify] = useState(true)
+  const [settingsSound, setSettingsSound] = useState(true)
+  const [settingsDefaultSeverity, setSettingsDefaultSeverity] = useState<string>('HIGH')
 
   const filteredAlerts = useMemo(() => {
-    return MOCK_ALERTS.filter((row) => {
+    return alerts.filter((row) => {
       if (severityFilter !== 'all' && row.severity !== severityFilter) return false
       if (locationFilter !== 'all' && row.location !== locationFilter) return false
       if (typeFilter !== 'all' && row.type !== typeFilter) return false
@@ -69,7 +80,66 @@ export default function AlertsPage() {
       }
       return true
     })
-  }, [t, severityFilter, locationFilter, typeFilter, statusFilter, search])
+  }, [t, severityFilter, locationFilter, typeFilter, statusFilter, search, alerts])
+
+  const handleAcknowledge = () => {
+    if (!selectedAlert) return
+    setAlerts((prev) => prev.map((a) => (a.key === selectedAlert.key ? { ...a, status: 'ACK' as StatusKey } : a)))
+    setSelectedAlert((a) => (a ? { ...a, status: 'ACK' } : null))
+    message.success(t('alertsPage.ackSuccess', 'Đã xác nhận cảnh báo'))
+  }
+
+  const handleAssign = () => {
+    setAssigneeValue(selectedAlert?.assignee ?? '-')
+    setAssignModalOpen(true)
+  }
+
+  const handleAssignSubmit = () => {
+    if (!selectedAlert) return
+    const name = assigneeValue.trim() || '-'
+    setAlerts((prev) => prev.map((a) => (a.key === selectedAlert.key ? { ...a, assignee: name } : a)))
+    setSelectedAlert((a) => (a ? { ...a, assignee: name } : null))
+    setAssignModalOpen(false)
+    setAssigneeValue('')
+    message.success(t('alertsPage.assignSuccess', 'Đã gán người xử lý'))
+  }
+
+  const handleResolve = () => {
+    if (!selectedAlert) return
+    setAlerts((prev) => prev.map((a) => (a.key === selectedAlert.key ? { ...a, status: 'CLOSED' as StatusKey } : a)))
+    setSelectedAlert(null)
+    message.success(t('alertsPage.resolveSuccess', 'Đã đánh dấu đã xử lý'))
+  }
+
+  const handleCreateIncident = () => {
+    if (!selectedAlert) return
+    incidentForm.setFieldsValue({
+      title: `${t(TYPE_LABEL_KEY[selectedAlert.type])} - ${selectedAlert.location}`,
+      priority: selectedAlert.severity,
+      description: '',
+    })
+    setIncidentModalOpen(true)
+  }
+
+  const handleIncidentSubmit = () => {
+    incidentForm.validateFields().then((values) => {
+      const newIncident = {
+        id: `inc-${Date.now()}`,
+        alertKey: selectedAlert!.key,
+        title: values.title,
+        priority: values.priority,
+        createdAt: new Date().toLocaleString(),
+      }
+      setIncidents((prev) => [newIncident, ...prev])
+      setIncidentModalOpen(false)
+      incidentForm.resetFields()
+      message.success(t('alertsPage.incidentCreated', 'Đã tạo sự cố và ghi nhận'))
+    }).catch(() => {})
+  }
+
+  const handleAddNote = () => {
+    message.info(t('alertsPage.addNoteHint', 'Thêm ghi chú'))
+  }
 
   const columns = [
     {
@@ -111,7 +181,7 @@ export default function AlertsPage() {
         icon={<BellOutlined />}
         subtitle={t('alertsPage.subtitle', 'Realtime + processing')}
         actions={
-          <Button type="link" size="small" className="p-0" icon={<SettingOutlined />}>{t('common.settings', 'Settings')}</Button>
+          <Button type="link" size="small" className="p-0" icon={<SettingOutlined />} onClick={() => setSettingsOpen(true)}>{t('common.settings', 'Cài đặt')}</Button>
         }
       />
       <ContentCard>
@@ -189,15 +259,101 @@ export default function AlertsPage() {
           <>
             <ul className="list-disc pl-4 mb-12"><li>{t('alertsPage.drawerHint', 'Timeline, related access events, camera snapshot (if any)')}</li></ul>
             <Space wrap>
-              <Button size="small">{t('alertsPage.acknowledge', 'Acknowledge')}</Button>
-              <Button size="small">{t('alertsPage.assign', 'Assign')}</Button>
-              <Button size="small">{t('alertsPage.resolve', 'Resolve')}</Button>
-              <Button size="small">{t('alertsPage.createIncident', 'Create Incident')}</Button>
-              <Button size="small">{t('alertsPage.addNote', 'Add Note')}</Button>
+              <Button size="small" onClick={handleAcknowledge}>{t('alertsPage.acknowledge', 'Xác nhận')}</Button>
+              <Button size="small" onClick={handleAssign}>{t('alertsPage.assign', 'Gán')}</Button>
+              <Button size="small" onClick={handleResolve}>{t('alertsPage.resolve', 'Đã xử lý')}</Button>
+              <Button size="small" onClick={handleCreateIncident}>{t('alertsPage.createIncident', 'Tạo sự cố')}</Button>
+              <Button size="small" onClick={handleAddNote}>{t('alertsPage.addNote', 'Thêm ghi chú')}</Button>
             </Space>
           </>
         )}
       </Drawer>
+
+      <Modal
+        className="alerts-page-settings-modal"
+        title={t('common.settings', 'Cài đặt')}
+        open={settingsOpen}
+        onCancel={() => setSettingsOpen(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setSettingsOpen(false)}>{t('common.cancel', 'Hủy')}</Button>,
+          <Button key="save" type="primary" onClick={() => { message.success(t('alertsPage.settingsSaved', 'Đã lưu cài đặt')); setSettingsOpen(false) }}>{t('common.save', 'Lưu')}</Button>,
+        ]}
+        width={440}
+      >
+        <div className="alerts-settings-body">
+          <div className="alerts-settings-row">
+            <span className="alerts-settings-label">{t('alertsPage.settingsNotifyNew', 'Thông báo khi có cảnh báo mới')}</span>
+            <Switch checked={settingsNotify} onChange={setSettingsNotify} />
+          </div>
+          <div className="alerts-settings-row">
+            <span className="alerts-settings-label">{t('alertsPage.settingsSound', 'Phát âm thanh cảnh báo')}</span>
+            <Switch checked={settingsSound} onChange={setSettingsSound} />
+          </div>
+          <div className="alerts-settings-field">
+            <label className="alerts-settings-field-label">{t('alertsPage.settingsDefaultSeverity', 'Mức độ ưu tiên mặc định')}</label>
+            <Select
+              value={settingsDefaultSeverity}
+              onChange={setSettingsDefaultSeverity}
+              className="alerts-settings-select"
+              options={[
+                { value: 'HIGH', label: t('alertsPage.severityHigh') },
+                { value: 'MED', label: t('alertsPage.severityMed') },
+                { value: 'LOW', label: t('alertsPage.severityLow') },
+              ]}
+            />
+          </div>
+          <div className="alerts-settings-note">
+            {t('alertsPage.settingsIntegrations', 'Tích hợp: Email, Slack (cấu hình tại Hệ thống).')}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        title={t('alertsPage.createIncident', 'Tạo sự cố')}
+        open={incidentModalOpen}
+        onCancel={() => { setIncidentModalOpen(false); incidentForm.resetFields() }}
+        onOk={handleIncidentSubmit}
+        okText={t('alertsPage.createIncidentSubmit', 'Tạo sự cố')}
+        cancelText={t('common.cancel', 'Hủy')}
+        width={480}
+      >
+        <Form form={incidentForm} layout="vertical" className="mt-8">
+          <Form.Item name="title" label={t('alertsPage.incidentTitle', 'Tiêu đề sự cố')} rules={[{ required: true }]}>
+            <Input placeholder={t('alertsPage.incidentTitlePlaceholder', 'Từ cảnh báo đang chọn')} />
+          </Form.Item>
+          <Form.Item name="priority" label={t('alertsPage.incidentPriority', 'Mức độ ưu tiên')}>
+            <Select
+              options={[
+                { value: 'HIGH', label: t('alertsPage.severityHigh') },
+                { value: 'MED', label: t('alertsPage.severityMed') },
+                { value: 'LOW', label: t('alertsPage.severityLow') },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item name="description" label={t('alertsPage.incidentDescription', 'Mô tả')}>
+            <Input.TextArea rows={3} placeholder={t('alertsPage.incidentDescriptionPlaceholder', 'Ghi chú thêm (tùy chọn)')} />
+          </Form.Item>
+        </Form>
+        {incidents.length > 0 && (
+          <div className="mt-8 pt-8 border-t text-sm text-secondary">
+            {t('alertsPage.incidentsCreatedCount', 'Đã tạo {{count}} sự cố từ cảnh báo', { count: incidents.length })}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        title={t('alertsPage.assign', 'Gán người xử lý')}
+        open={assignModalOpen}
+        onCancel={() => { setAssignModalOpen(false); setAssigneeValue('') }}
+        onOk={handleAssignSubmit}
+        okText={t('common.confirm', 'Xác nhận')}
+        cancelText={t('common.cancel', 'Hủy')}
+      >
+        <div className="py-8">
+          <label className="block text-sm text-secondary mb-4">{t('alertsPage.assignee', 'Người xử lý')}</label>
+          <Input value={assigneeValue} onChange={(e) => setAssigneeValue(e.target.value)} placeholder="Security1, An ninh..." />
+        </div>
+      </Modal>
     </PageContainer>
   )
 }

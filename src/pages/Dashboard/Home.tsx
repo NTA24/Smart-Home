@@ -85,7 +85,7 @@ export default function Home() {
     try {
       const res = await campusApi.getListByTenantId(tenant.id)
       const list = Array.isArray(res) ? res : (res?.items ?? [])
-      setCampuses(list)
+      setCampuses(list.map((c) => ({ ...c, status: 'ACTIVE' })))
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       message.error(`${t('apiTest.fetchError')}: ${errorMsg}`)
@@ -176,7 +176,7 @@ export default function Home() {
     try {
       const res = await buildingApi.getListByCampusId(campus.id)
       const list = Array.isArray(res) ? res : (res?.items ?? [])
-      setBuildings(list)
+      setBuildings(list.map((b) => ({ ...b, status: 'ACTIVE' })))
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       message.error(`${t('apiTest.fetchError')}: ${errorMsg}`)
@@ -532,7 +532,7 @@ export default function Home() {
         <Spin spinning={loading}>
           {/* Tenants */}
           {step === 'tenants' && (
-            <Row gutter={[24, 24]}>
+            <Row className="home_tenant-row" gutter={[24, 24]}>
               {tenants.length === 0 && !loading && <Col span={24}><Empty description={t('apiTest.noData')} /></Col>}
               {tenants.map((tenant) => (
                 <Col xs={24} sm={12} lg={8} xl={6} key={tenant.id}>
@@ -548,9 +548,9 @@ export default function Home() {
                       <Title level={5} className="mb-4">{tenant.name}</Title>
                       <Tag>{tenant.code}</Tag>
                       <div className="mt-12">
-                        <Tag color={tenant.status === 'ACTIVE' ? 'green' : 'red'}>{tenant.status}</Tag>
+                        <Tag color={tenant.status === 'ACTIVE' ? 'green' : 'red'}>{tenant.status === 'ACTIVE' ? t('home.active') : t('home.inactive')}</Tag>
                       </div>
-                      <Text type="secondary" className="text-sm block mt-8">
+                      <Text type="secondary" className="text-sm block mt-8 mb-12">
                         {tenant.created_at ? new Date(tenant.created_at).toLocaleDateString() : ''}
                       </Text>
                       <div className="mt-12">

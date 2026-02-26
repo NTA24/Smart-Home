@@ -177,20 +177,22 @@ export default function ParkingManagement() {
         </Col>
       </Row>
 
-      <Row gutter={[16, 16]} className="mb-20">
-        <Col xs={24} lg={12}>
+      <Row gutter={[16, 16]} className="mb-20" align="stretch">
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
           <BarChart
             title={t('parking.hourlyTraffic')}
             categories={hourlyData}
             data={hourlyVehicles}
             color="#1890ff"
+            cardStyle={{ width: '100%', height: '100%' }}
           />
         </Col>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
           <ContentCard
             title={t('parking.parkingZones')}
             titleIcon={<EnvironmentOutlined />}
             titleIconColor="#1890ff"
+            style={{ width: '100%' }}
           >
             {parkingZones.map((zone) => {
               const percent = Math.round((zone.used / zone.total) * 100)

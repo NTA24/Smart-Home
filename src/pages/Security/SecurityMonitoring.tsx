@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { Typography, Tag, Modal, Button } from 'antd'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { Typography, Tag, Modal, Button, Select } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
   AlertOutlined,
@@ -18,6 +18,16 @@ import mpegts from 'mpegts.js'
 import { getWebPlayableStreamCandidates, getYoutubeEmbedUrl, isYoutubeUrl, resolveCameraStreamUrl } from '@/utils/streamUrl'
 
 const { Text } = Typography
+
+const FACE_IMAGES = [
+  '/security-faces/stored-face-1.png',
+  '/security-faces/stored-face-2.png',
+  '/security-faces/stored-face-3.png',
+  '/security-faces/stored-face-4.png',
+  '/security-faces/stored-face-5.png',
+  '/security-faces/stored-face-6.png',
+  '/security-faces/stored-face-7.png',
+]
 
 // Panel component with glass effect
 const GlassPanel: React.FC<{
@@ -450,10 +460,15 @@ const FaceCapture: React.FC<{
   tagColor: string
   location: string
   time: string
-}> = ({ tag, tagColor, location, time }) => (
+  image?: string
+}> = ({ tag, tagColor, location, time, image }) => (
   <div className="security_face-card">
     <div className="security_face-avatar">
-      <UserOutlined className="opacity-60 security_text-blue-dark" style={{ fontSize: 28 }} />
+      {image ? (
+        <img src={image} alt="" className="security_face-img" />
+      ) : (
+        <UserOutlined className="opacity-60 security_text-blue-dark" style={{ fontSize: 28 }} />
+      )}
       <div className="security_face-tag-bar" style={{ background: tagColor }}>
         <Text className="text-white text-xs">{tag}</Text>
       </div>
@@ -467,7 +482,7 @@ const FaceCapture: React.FC<{
 
 // Scrolling capture list component
 const ScrollingCaptureList: React.FC<{
-  captures: Array<{ tag: string; tagColor: string; location: string; time: string }>
+  captures: Array<{ tag: string; tagColor: string; location: string; time: string; image?: string }>
 }> = ({ captures }) => {
   const [offset, setOffset] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
@@ -508,8 +523,10 @@ const SnapshotVideo: React.FC<{
   onVideoRef?: (el: HTMLVideoElement | null) => void
 }> = ({ streamUrl, onClick, onVideoRef }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const youtubeEmbed = getYoutubeEmbedUrl(streamUrl)
 
   useEffect(() => {
+    if (isYoutubeUrl(streamUrl)) return
     const videoEl = videoRef.current
     const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
     if (!videoEl || playableCandidates.length === 0) return
@@ -604,6 +621,26 @@ const SnapshotVideo: React.FC<{
     }
   }, [streamUrl])
 
+  if (youtubeEmbed) {
+    return (
+      <div
+        className="security_snapshot-placeholder"
+        onClick={onClick}
+        role={onClick ? 'button' : undefined}
+        style={onClick ? { cursor: 'pointer' } : undefined}
+      >
+        <div className="security_yt-crop-wrap" style={{ width: '100%', height: '100%' }}>
+          <iframe
+            src={youtubeEmbed}
+            title="snapshot-camera"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       className="security_snapshot-placeholder"
@@ -692,12 +729,30 @@ export default function SecurityMonitoring() {
     { tagKey: 'familiar' as const, location: 'Office Area, Building 2, 3F', time: '2026-02-04 09:18:36' },
     { tagKey: 'strangers' as const, location: 'Office Area, Building 2, 2F', time: '2026-02-04 09:18:31' },
     { tagKey: 'familiar' as const, location: 'Office Area, Building 2, 2F', time: '2026-02-04 09:18:28' },
+    { tagKey: 'familiar' as const, location: 'Sảnh tầng 1, Tòa A', time: '2026-02-23 08:15:22', image: '/security-faces/stored-face-1.png' },
+    { tagKey: 'familiar' as const, location: 'Cổng vào, Tòa B', time: '2026-02-23 08:42:11', image: '/security-faces/stored-face-2.png' },
+    { tagKey: 'familiar' as const, location: 'Văn phòng, Tòa B 2F', time: '2026-02-23 09:01:05', image: '/security-faces/stored-face-3.png' },
+    { tagKey: 'familiar' as const, location: 'Sảnh tầng trệt', time: '2026-02-23 09:18:33', image: '/security-faces/stored-face-4.png' },
+    { tagKey: 'familiar' as const, location: 'Khu họp, Tòa C', time: '2026-02-23 10:05:44', image: '/security-faces/stored-face-5.png' },
+    { tagKey: 'familiar' as const, location: 'Hành lang 2F, Tòa A', time: '2026-02-23 10:22:18', image: '/security-faces/stored-face-6.png' },
+    { tagKey: 'familiar' as const, location: 'Lobby, Tòa chính', time: '2026-02-23 11:00:02', image: '/security-faces/stored-face-7.png' },
   ]
-  const captures = captureRows.map(row => ({
+
+  const captureRowsWithFaces = useMemo(
+    () =>
+      captureRows.map((row) => ({
+        ...row,
+        image: FACE_IMAGES[Math.floor(Math.random() * FACE_IMAGES.length)],
+      })),
+    [],
+  )
+
+  const captures = captureRowsWithFaces.map(row => ({
     tag: t(`security.${row.tagKey}`),
     tagColor: captureColors[row.tagKey],
     location: row.location,
     time: row.time,
+    image: row.image,
   }))
 
   const cameras = [
@@ -714,12 +769,15 @@ export default function SecurityMonitoring() {
       streamUrl: resolveCameraStreamUrl('/hls/699e639f021a61a13ee1ce32/index.m3u8'),
     },
     {
-      label: 'Parking B1 - CAM-03',
-      sublabel: 'Underground parking exit',
+      label: '1BKOP_CSV01 - CAM-03',
+      sublabel: 'Highway Traffic',
       camId: 'B1-P-12',
-      streamUrl: 'https://www.youtube.com/watch?v=SCpZOgLKVfY',
+      streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV01.stream/playlist.m3u8',
     },
   ]
+  const [selectedSnapshotCamId, setSelectedSnapshotCamId] = useState(cameras[1]?.camId ?? cameras[0]?.camId ?? '')
+  const selectedSnapshotCam =
+    cameras.find((cam) => cam.camId === selectedSnapshotCamId) ?? cameras[0]
 
   return (
     <div className="security_root">
@@ -756,26 +814,37 @@ export default function SecurityMonitoring() {
             icon={<CameraOutlined className="text-primary text-md" />}
             titleRight={
               <div className="security_glass-header-right">
-                <Button
-                  type="primary"
-                  size="small"
-                  icon={<CameraOutlined />}
-                  onClick={e => { e.stopPropagation(); handleCaptureSnapshot() }}
-                  className="security_snapshot-capture-btn"
-                >
-                  {t('security.screenshot', 'Chụp màn hình')}
-                </Button>
-                <span className="security_header-tags-same-row">
-                  <Tag color="processing" className="tag--no-margin text-xs">2-2F-32 (Increased)</Tag>
+                <div className="security_snapshot-top-row">
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<CameraOutlined />}
+                    onClick={e => { e.stopPropagation(); handleCaptureSnapshot() }}
+                    className="security_snapshot-capture-btn"
+                  >
+                    {t('security.screenshot', 'Chụp màn hình')}
+                  </Button>
                   <Tag color="success" className="tag--no-margin text-xs">Online</Tag>
+                </div>
+                <span className="security_header-tags-same-row">
+                  <Select
+                    size="small"
+                    value={selectedSnapshotCamId}
+                    onChange={setSelectedSnapshotCamId}
+                    className="security_snapshot-cam-select"
+                    options={cameras.map((cam) => ({
+                      value: cam.camId,
+                      label: `${cam.camId} · ${cam.label}`,
+                    }))}
+                  />
                 </span>
               </div>
             }
           >
             <SnapshotVideo
-              streamUrl={cameras[1].streamUrl!}
+              streamUrl={selectedSnapshotCam.streamUrl!}
               onVideoRef={el => { snapshotVideoRef.current = el }}
-              onClick={() => handleCameraClick(cameras[1].label, dateTime.time, cameras[1].streamUrl)}
+              onClick={() => handleCameraClick(selectedSnapshotCam.label, dateTime.time, selectedSnapshotCam.streamUrl)}
             />
           </GlassPanel>
 

@@ -1,11 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Table, Button, Space, Avatar, Tag, Badge, Input, Select, DatePicker } from 'antd'
+import { Table, Button, Space, Avatar, Tag, Badge, Input, Select, DatePicker, Modal } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { BellOutlined, UserOutlined, MailOutlined, RightOutlined, SearchOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { PageContainer, ContentCard } from '@/components'
 
-const MOCK_LOGS = [
+const FACE_IMAGES = [
+  '/security-faces/stored-face-1.png',
+  '/security-faces/stored-face-2.png',
+  '/security-faces/stored-face-3.png',
+  '/security-faces/stored-face-4.png',
+  '/security-faces/stored-face-5.png',
+  '/security-faces/stored-face-6.png',
+  '/security-faces/stored-face-7.png',
+]
+
+const MOCK_LOGS_RAW = [
   { key: '1', date: '2026-02-25', name: 'Linh Tran', subText: 'Rapid visit', accessPoint: 'Lobby Gate', credential: 'Mobile Key', credentialId: 'RFID Card', status: 'success', time: '13:50' },
   { key: '2', date: '2026-02-25', name: 'Nguyễn Văn A', subText: 'Tenant', accessPoint: 'Elevator Panel', credential: 'Mobile Key', credentialId: 'MPRO-0080', status: 'success', time: '23:10' },
   { key: '3', date: '2026-02-25', name: 'Delivery (GHN)', subText: 'Visitor', accessPoint: 'Parking Barrier', credential: 'Badge', credentialId: 'RE6122034', status: 'default', time: '10:00' },
@@ -13,6 +23,11 @@ const MOCK_LOGS = [
   { key: '5', date: '2026-02-24', name: 'Trần Văn B', subText: 'Tenant', accessPoint: 'Lobby Gate', credential: 'Mobile Key', credentialId: 'RFID Card', status: 'success', time: '08:30' },
   { key: '6', date: '2026-02-23', name: 'Linh Tran', subText: 'Employee', accessPoint: 'Elevator Panel', credential: 'Badge', credentialId: 'RE6122035', status: 'success', time: '14:20' },
 ]
+
+const MOCK_LOGS = MOCK_LOGS_RAW.map((r, i) => ({
+  ...r,
+  face: FACE_IMAGES[Number(r.key) % FACE_IMAGES.length] ?? FACE_IMAGES[i % FACE_IMAGES.length],
+}))
 
 const CREDENTIAL_LABEL_KEY: Record<string, string> = {
   'Mobile Key': 'accessLogs.credentialMobileKey',
@@ -40,6 +55,7 @@ export default function AccessLogs() {
   const [nameSearch, setNameSearch] = useState('')
   const [accessPointFilter, setAccessPointFilter] = useState<string>('all')
   const [credentialFilter, setCredentialFilter] = useState<string>('all')
+  const [previewFace, setPreviewFace] = useState<{ src: string; name: string } | null>(null)
 
   const uniqueAccessPoints = useMemo(() => [...new Set(MOCK_LOGS.map((r) => r.accessPoint))], [])
   const uniqueCredentials = useMemo(() => [...new Set(MOCK_LOGS.map((r) => r.credential))], [])
@@ -71,6 +87,20 @@ export default function AccessLogs() {
   )
 
   const columns = [
+    {
+      title: t('accessLogs.face', 'Mặt'),
+      key: 'face',
+      width: 64,
+      render: (_: unknown, r: (typeof MOCK_LOGS)[0]) => (
+        <Avatar
+          size={36}
+          src={r.face}
+          icon={<UserOutlined />}
+          className="cursor-pointer hover:opacity-80"
+          onClick={() => setPreviewFace({ src: r.face, name: r.name })}
+        />
+      ),
+    },
     {
       title: t('accessLogs.date', 'Date'),
       dataIndex: 'date',
@@ -189,6 +219,25 @@ export default function AccessLogs() {
           }}
         />
       </ContentCard>
+
+      <Modal
+        title={previewFace?.name ?? t('accessLogs.facePreview', 'Ảnh khách')}
+        open={!!previewFace}
+        onCancel={() => setPreviewFace(null)}
+        footer={null}
+        width={360}
+        centered
+      >
+        {previewFace && (
+          <div className="text-center py-8">
+            <img
+              src={previewFace.src}
+              alt={previewFace.name}
+              style={{ maxWidth: '100%', maxHeight: 400, objectFit: 'contain', borderRadius: 8 }}
+            />
+          </div>
+        )}
+      </Modal>
     </PageContainer>
   )
 }

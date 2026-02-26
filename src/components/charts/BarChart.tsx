@@ -17,6 +17,7 @@ interface BarChartProps {
   horizontal?: boolean
   /** Multiple series (e.g. Cư dân / Khách lạ) – stacked bar; ignores data/color when set */
   series?: BarChartSeries[]
+  cardStyle?: React.CSSProperties
 }
 
 export default function BarChart({
@@ -27,14 +28,26 @@ export default function BarChart({
   color = '#1890ff',
   horizontal = false,
   series: seriesProp,
+  cardStyle,
 }: BarChartProps) {
   const useSeries = Array.isArray(seriesProp) && seriesProp.length > 0
+  const radius = horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]
+  const emphasisStyle = {
+    itemStyle: {
+      shadowBlur: 8,
+      shadowOffsetY: 2,
+      shadowColor: 'rgba(0,0,0,0.12)',
+    },
+  }
   const seriesConfig = useSeries
     ? seriesProp!.map((s) => ({
         name: s.name,
         type: 'bar' as const,
         data: s.data,
-        itemStyle: { color: s.color, borderRadius: horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0] },
+        barMaxWidth: 28,
+        barGap: '20%',
+        itemStyle: { color: s.color, borderRadius: radius },
+        emphasis: emphasisStyle,
       }))
     : [
         {
@@ -42,17 +55,18 @@ export default function BarChart({
           type: 'bar' as const,
           data,
           barWidth: '60%',
-          itemStyle: {
-            color,
-            borderRadius: horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0],
-          },
+          itemStyle: { color, borderRadius: radius },
+          emphasis: emphasisStyle,
         },
       ]
 
   const option: EChartsOption = {
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'shadow' },
+      axisPointer: {
+        type: 'shadow',
+        shadowStyle: { color: 'rgba(0,0,0,0.04)' },
+      },
       textStyle: { fontSize: 13 },
       borderRadius: 8,
       padding: [8, 12],
@@ -75,21 +89,29 @@ export default function BarChart({
       containLabel: true,
     },
     xAxis: horizontal
-      ? { type: 'value' }
+      ? { type: 'value', splitLine: { lineStyle: { color: '#f5f5f5' } } }
       : {
           type: 'category',
           data: categories,
-          axisLine: { lineStyle: { color: '#d9d9d9' } },
-          axisLabel: { color: '#666' },
+          axisLine: { lineStyle: { color: '#e0e0e0' } },
+          axisTick: { show: false },
+          axisLabel: { color: '#888', fontSize: 11 },
         },
     yAxis: horizontal
-      ? { type: 'category', data: categories }
+      ? { type: 'category', data: categories, axisTick: { show: false } }
       : {
           type: 'value',
           axisLine: { show: false },
-          splitLine: { lineStyle: { color: '#f0f0f0' } },
+          axisTick: { show: false },
+          splitLine: { lineStyle: { color: '#f5f5f5', type: 'dashed' } },
+          axisLabel: { color: '#aaa', fontSize: 11 },
         },
     series: seriesConfig,
+    animationDuration: 800,
+    animationEasing: 'cubicInOut',
+    animationDurationUpdate: 600,
+    animationEasingUpdate: 'cubicInOut',
+    animationDelayUpdate: (idx: number) => idx * 30,
   }
 
   if (!title) {
@@ -97,7 +119,7 @@ export default function BarChart({
   }
 
   return (
-    <Card title={title} bordered={false}>
+    <Card title={title} bordered={false} style={cardStyle}>
       <ReactECharts option={option} style={{ height }} notMerge />
     </Card>
   )

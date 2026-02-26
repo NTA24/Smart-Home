@@ -466,6 +466,271 @@
   border-color: #1677ff !important;
 }
 
+/* 7 màu chạy lấp lánh kiểu đèn LED cây thông Noel */
+@keyframes vehicle_slot-led-rainbow {
+  0%   { border-color: #ff0000; box-shadow: 0 0 14px 3px #ff0000ee, 0 0 24px 6px #ff000066, inset 0 0 10px #ff000066; }
+  14%  { border-color: #ff8800; box-shadow: 0 0 14px 3px #ff8800ee, 0 0 24px 6px #ff880066, inset 0 0 10px #ff880066; }
+  28%  { border-color: #ffdd00; box-shadow: 0 0 14px 3px #ffdd00ee, 0 0 24px 6px #ffdd0066, inset 0 0 10px #ffdd0066; }
+  42%  { border-color: #00cc44; box-shadow: 0 0 14px 3px #00cc44ee, 0 0 24px 6px #00cc4466, inset 0 0 10px #00cc4466; }
+  57%  { border-color: #00ddff; box-shadow: 0 0 14px 3px #00ddffee, 0 0 24px 6px #00ddff66, inset 0 0 10px #00ddff66; }
+  71%  { border-color: #2266ff; box-shadow: 0 0 14px 3px #2266ffee, 0 0 24px 6px #2266ff66, inset 0 0 10px #2266ff66; }
+  85%  { border-color: #cc44ff; box-shadow: 0 0 14px 3px #cc44ffee, 0 0 24px 6px #cc44ff66, inset 0 0 10px #cc44ff66; }
+  100% { border-color: #ff0000; box-shadow: 0 0 14px 3px #ff0000ee, 0 0 24px 6px #ff000066, inset 0 0 10px #ff000044; }
+}
+
+.vehicle_slot-led {
+  animation: vehicle_slot-led-rainbow 2s linear infinite;
+  z-index: 10;
+  border-width: 2px !important;
+}
+
+/* ── Parking Map Layout ── */
+/* ═══════════ Parking Map Layout ═══════════ */
+.parkmap_container {
+  width: 100%;
+  background: linear-gradient(145deg, #1e2328 0%, #2a2f36 50%, #1e2328 100%);
+  border-radius: 14px;
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+.parkmap_layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Top parking strip (P1) ── */
+.parkmap_topstrip {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 6px 12px 10px;
+  text-align: center;
+}
+
+/* ── Slot row (1 row of cars) ── */
+.parkmap_slot-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ── 3-column grid ── */
+.parkmap_3col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+/* Widen both vertical corridors between 3 parking groups (and align buildings row). */
+.parkmap_3col--parking > :nth-child(1),
+.parkmap_3col--parking > :nth-child(2),
+.parkmap_3col--buildings > :nth-child(1),
+.parkmap_3col--buildings > :nth-child(2) {
+  margin-right: 22px;
+}
+
+.parkmap_3col--buildings {
+  gap: 20px;
+}
+
+/* ── Parking block (2 facing rows + inner lane) ── */
+.parkmap_block {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 6px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+
+.parkmap_block-label {
+  color: #64748b;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 4px;
+  user-select: none;
+}
+
+.parkmap_block-lane {
+  width: 100%;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+}
+
+.parkmap_block-lane-dash {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, #475569 0px, #475569 6px, transparent 6px, transparent 12px);
+  opacity: 0.6;
+}
+
+/* ── Horizontal road lane ── */
+.parkmap_lane-h {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  width: 100%;
+}
+
+.parkmap_lane-dash {
+  flex: 1;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #fbbf24 0px, #fbbf24 14px, transparent 14px, transparent 24px);
+  opacity: 0.45;
+}
+
+.parkmap_lane-arrow {
+  color: #fbbf24;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  flex-shrink: 0;
+  user-select: none;
+  text-shadow: 0 0 8px rgba(251,191,36,0.3);
+  opacity: 0.7;
+}
+
+/* ── Building blocks (A, B, C) ── */
+.parkmap_bldg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 18px 12px;
+  border: 2px solid #4a5568;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.parkmap_bldg--main {
+  border-color: #4a6fa5;
+  background: linear-gradient(135deg, #2c3e63 0%, #1a2744 100%);
+  box-shadow: 0 4px 16px rgba(74,111,165,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.parkmap_bldg[role="button"] {
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.parkmap_bldg[role="button"]:hover {
+  box-shadow: 0 4px 20px rgba(255,255,255,0.12);
+}
+
+.parkmap_bldg--selected {
+  border-color: #1677ff !important;
+  box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.35), 0 4px 20px rgba(22, 119, 255, 0.25) !important;
+  outline: none;
+}
+
+.parkmap_bldg-name {
+  color: #e2e8f0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.parkmap_bldg-sub {
+  color: #64748b;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+/* ── Entrance / Exit row ── */
+.parkmap_entrance-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 40px;
+}
+
+.parkmap_entrance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 20px;
+  border: 1.5px dashed #64748b;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+}
+
+.parkmap_entrance span {
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.parkmap_entrance-arrow {
+  color: #10b981;
+  font-size: 20px;
+  font-weight: 700;
+  animation: parkmap_entrance-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes parkmap_entrance-pulse {
+  0%, 100% { opacity: 1; transform: translateY(0); }
+  50% { opacity: 0.5; transform: translateY(-3px); }
+}
+
+/* ── Path overlay ── */
+.parkmap_svg-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.parkmap_path-glow {
+  fill: none;
+  stroke: rgba(22, 119, 255, 0.15);
+  stroke-width: 10;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.parkmap_path-line {
+  fill: none;
+  stroke: #1677ff;
+  stroke-width: 2.5;
+  stroke-dasharray: 8 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  animation: parkmap_dash-flow 0.8s linear infinite;
+  filter: drop-shadow(0 0 3px rgba(22, 119, 255, 0.6));
+}
+
+@keyframes parkmap_dash-flow {
+  to { stroke-dashoffset: -12; }
+}
+
+.parkmap_path-dot {
+  animation: parkmap_dot-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes parkmap_dot-pulse {
+  0%, 100% { r: 5; opacity: 1; }
+  50% { r: 8; opacity: 0.6; }
+}
+
 .vehicle_filter-select-w100 {
   width: 100px;
 }
@@ -717,6 +982,40 @@
 
 .camera_feed-video--live {
   background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 100%);
+}
+
+/* Fullscreen: fill viewport so embed/video expands */
+.camera_feed-video:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+}
+.camera_feed-video:fullscreen .camera_feed-embed-wrap,
+.camera_feed-video:fullscreen .security_yt-crop-wrap {
+  width: 100%;
+  height: 100%;
+}
+.camera_feed-video:fullscreen .camera_feed-embed-wrap iframe,
+.camera_feed-video:fullscreen .security_yt-crop-wrap iframe {
+  width: 100%;
+  height: 100%;
+}
+
+/* Embed page (EarthCam, SkylineWebcams): iframe fills container, clickable */
+.camera_feed-embed-wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.camera_feed-embed-wrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: auto;
 }
 
 .camera_feed-video-element {

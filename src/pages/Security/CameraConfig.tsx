@@ -426,8 +426,11 @@ export default function CameraConfig() {
                 }
                 onChange={(vals: string[]) => setEditForm(prev => ({ ...prev, viewPermission: vals.join(', ') }))}
                 options={[
-                  { value: 'admin', label: t('cameraConfig.roleAdmin', 'Quản trị viên') },
-                  { value: 'user', label: t('cameraConfig.roleUser', 'Người dùng') },
+                  { value: 'user1', label: 'user1' },
+                  { value: 'user2', label: 'user2' },
+                  { value: 'user3', label: 'user3' },
+                  { value: 'user4', label: 'user4' },
+                  { value: 'user5', label: 'user5' },
                 ]}
                 placeholder={t('cameraConfig.viewPermissionPlaceholder', 'Chọn quyền xem')}
                 className="w-full"

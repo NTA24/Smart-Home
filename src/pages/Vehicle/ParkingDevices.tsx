@@ -11,6 +11,8 @@ import {
   Select,
   Popconfirm,
   message,
+  Modal,
+  Table,
 } from 'antd'
 import {
   ApiOutlined,
@@ -59,6 +61,11 @@ interface ParkingDevice {
   lastHeartbeat: string
   ip?: string
   firmware?: string
+  nameKey?: string
+  locationKey?: string
+  locationFloor?: string
+  locationZone?: string
+  locationSlot?: string
 }
 
 const STATUS_CONFIG: Record<DeviceStatus, { color: string; badge: 'success' | 'error' | 'warning' | 'default'; icon: React.ReactNode }> = {
@@ -75,37 +82,41 @@ const TYPE_CONFIG: Record<DeviceType, { color: string; icon: React.ReactNode; la
 }
 
 const mockDevices: ParkingDevice[] = [
-  { key: '1', name: 'Gate Entrance 1', type: 'gate', location: 'B1 - Main Entry', status: 'online', lastHeartbeat: '2026-02-10 10:45:20', ip: '192.168.1.101', firmware: 'v2.4.1' },
-  { key: '2', name: 'Gate Entrance 2', type: 'gate', location: 'B1 - Side Entry', status: 'online', lastHeartbeat: '2026-02-10 10:45:18', ip: '192.168.1.102', firmware: 'v2.4.1' },
-  { key: '3', name: 'Gate Exit 1', type: 'gate', location: 'B1 - Main Exit', status: 'online', lastHeartbeat: '2026-02-10 10:45:22', ip: '192.168.1.103', firmware: 'v2.4.1' },
-  { key: '4', name: 'Gate Exit 2', type: 'gate', location: 'B1 - Side Exit', status: 'online', lastHeartbeat: '2026-02-10 10:45:15', ip: '192.168.1.104', firmware: 'v2.4.1' },
-  { key: '5', name: 'Gate Entrance 3', type: 'gate', location: 'B2 - Entry', status: 'online', lastHeartbeat: '2026-02-10 10:44:50', ip: '192.168.1.105', firmware: 'v2.3.8' },
-  { key: '6', name: 'Gate Exit 3', type: 'gate', location: 'B2 - Exit', status: 'warning', lastHeartbeat: '2026-02-10 10:30:00', ip: '192.168.1.106', firmware: 'v2.3.8' },
-  { key: '7', name: 'CAM-ENT-01', type: 'camera', location: 'B1 - Main Entry', status: 'online', lastHeartbeat: '2026-02-10 10:45:21', ip: '192.168.2.1', firmware: 'v5.1.2' },
-  { key: '8', name: 'CAM-ENT-02', type: 'camera', location: 'B1 - Side Entry', status: 'online', lastHeartbeat: '2026-02-10 10:45:19', ip: '192.168.2.2', firmware: 'v5.1.2' },
-  { key: '9', name: 'CAM-EXIT-01', type: 'camera', location: 'B1 - Main Exit', status: 'online', lastHeartbeat: '2026-02-10 10:45:20', ip: '192.168.2.3', firmware: 'v5.1.2' },
-  { key: '10', name: 'CAM-EXIT-02', type: 'camera', location: 'B1 - Side Exit', status: 'online', lastHeartbeat: '2026-02-10 10:45:17', ip: '192.168.2.4', firmware: 'v5.1.2' },
-  { key: '11', name: 'CAM-B1-ZONE-A', type: 'camera', location: 'B1 - Zone A', status: 'online', lastHeartbeat: '2026-02-10 10:45:10', ip: '192.168.2.5', firmware: 'v5.1.2' },
-  { key: '12', name: 'CAM-B1-ZONE-B', type: 'camera', location: 'B1 - Zone B', status: 'online', lastHeartbeat: '2026-02-10 10:45:12', ip: '192.168.2.6', firmware: 'v5.1.2' },
-  { key: '13', name: 'CAM-B2-ZONE-A', type: 'camera', location: 'B2 - Zone A', status: 'online', lastHeartbeat: '2026-02-10 10:45:08', ip: '192.168.2.7', firmware: 'v5.1.2' },
-  { key: '14', name: 'CAM-B2-ZONE-B', type: 'camera', location: 'B2 - Zone B', status: 'online', lastHeartbeat: '2026-02-10 10:45:05', ip: '192.168.2.8', firmware: 'v5.1.2' },
-  { key: '15', name: 'CAM-B2-ZONE-C', type: 'camera', location: 'B2 - Zone C', status: 'online', lastHeartbeat: '2026-02-10 10:44:55', ip: '192.168.2.9', firmware: 'v5.0.9' },
-  { key: '16', name: 'CAM-B3-ZONE-A', type: 'camera', location: 'B3 - Zone A', status: 'online', lastHeartbeat: '2026-02-10 10:44:50', ip: '192.168.2.10', firmware: 'v5.0.9' },
-  { key: '17', name: 'CAM-B3-ZONE-B', type: 'camera', location: 'B3 - Zone B', status: 'online', lastHeartbeat: '2026-02-10 10:44:48', ip: '192.168.2.11', firmware: 'v5.0.9' },
-  { key: '18', name: 'CAM-B3-ZONE-C', type: 'camera', location: 'B3 - Zone C', status: 'online', lastHeartbeat: '2026-02-10 10:44:45', ip: '192.168.2.12', firmware: 'v5.0.9' },
+  { key: '1', name: '', type: 'gate', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:20', ip: '192.168.1.101', firmware: 'v2.4.1', nameKey: 'device_gateEntrance1', locationKey: 'loc_B1MainEntry' },
+  { key: '2', name: '', type: 'gate', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:18', ip: '192.168.1.102', firmware: 'v2.4.1', nameKey: 'device_gateEntrance2', locationKey: 'loc_B1SideEntry' },
+  { key: '3', name: '', type: 'gate', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:22', ip: '192.168.1.103', firmware: 'v2.4.1', nameKey: 'device_gateExit1', locationKey: 'loc_B1MainExit' },
+  { key: '4', name: '', type: 'gate', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:15', ip: '192.168.1.104', firmware: 'v2.4.1', nameKey: 'device_gateExit2', locationKey: 'loc_B1SideExit' },
+  { key: '5', name: '', type: 'gate', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:44:50', ip: '192.168.1.105', firmware: 'v2.3.8', nameKey: 'device_gateEntrance3', locationKey: 'loc_B2Entry' },
+  { key: '6', name: '', type: 'gate', location: '', status: 'warning', lastHeartbeat: '2026-02-10 10:30:00', ip: '192.168.1.106', firmware: 'v2.3.8', nameKey: 'device_gateExit3', locationKey: 'loc_B2Exit' },
+  { key: '7', name: 'CAM-ENT-01', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:21', ip: '192.168.2.1', firmware: 'v5.1.2', nameKey: 'device_camEnt01', locationKey: 'loc_B1MainEntry' },
+  { key: '8', name: 'CAM-ENT-02', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:19', ip: '192.168.2.2', firmware: 'v5.1.2', nameKey: 'device_camEnt02', locationKey: 'loc_B1SideEntry' },
+  { key: '9', name: 'CAM-EXIT-01', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:20', ip: '192.168.2.3', firmware: 'v5.1.2', nameKey: 'device_camExit01', locationKey: 'loc_B1MainExit' },
+  { key: '10', name: 'CAM-EXIT-02', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:17', ip: '192.168.2.4', firmware: 'v5.1.2', nameKey: 'device_camExit02', locationKey: 'loc_B1SideExit' },
+  { key: '11', name: '', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:10', ip: '192.168.2.5', firmware: 'v5.1.2', nameKey: 'device_camB1ZoneA', locationKey: 'loc_B1ZoneA' },
+  { key: '12', name: '', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:12', ip: '192.168.2.6', firmware: 'v5.1.2', nameKey: 'device_camB1ZoneB', locationKey: 'loc_B1ZoneB' },
+  { key: '13', name: '', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:08', ip: '192.168.2.7', firmware: 'v5.1.2', nameKey: 'device_camB2ZoneA', locationKey: 'loc_B2ZoneA' },
+  { key: '14', name: '', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:45:05', ip: '192.168.2.8', firmware: 'v5.1.2', nameKey: 'device_camB2ZoneB', locationKey: 'loc_B2ZoneB' },
+  { key: '15', name: '', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:44:55', ip: '192.168.2.9', firmware: 'v5.0.9', nameKey: 'device_camB2ZoneC', locationKey: 'loc_B2ZoneC' },
+  { key: '16', name: '', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:44:50', ip: '192.168.2.10', firmware: 'v5.0.9', nameKey: 'device_camB3ZoneA', locationKey: 'loc_B3ZoneA' },
+  { key: '17', name: '', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:44:48', ip: '192.168.2.11', firmware: 'v5.0.9', nameKey: 'device_camB3ZoneB', locationKey: 'loc_B3ZoneB' },
+  { key: '18', name: '', type: 'camera', location: '', status: 'online', lastHeartbeat: '2026-02-10 10:44:45', ip: '192.168.2.12', firmware: 'v5.0.9', nameKey: 'device_camB3ZoneC', locationKey: 'loc_B3ZoneC' },
   ...Array.from({ length: 480 }, (_, i) => {
     const zone = ['A', 'B', 'C'][i % 3]
     const floor = ['B1', 'B2', 'B3'][Math.floor(i / 160)]
     const status: DeviceStatus = i === 42 || i === 105 || i === 200 || i === 310 || i === 410 ? 'faulty' : 'online'
+    const slot = `${zone}${String((i % 53) + 1).padStart(2, '0')}`
     return {
       key: `s-${i}`,
       name: `SENS-${floor}-${zone}-${String((i % 160) + 1).padStart(3, '0')}`,
       type: 'sensor' as DeviceType,
-      location: `${floor} - Zone ${zone} - Slot ${zone}${String((i % 53) + 1).padStart(2, '0')}`,
+      location: '',
       status,
       lastHeartbeat: status === 'faulty' ? '2026-02-10 08:15:00' : `2026-02-10 10:${String(40 + (i % 6)).padStart(2, '0')}:${String(i % 60).padStart(2, '0')}`,
       ip: `192.168.3.${i + 1}`,
       firmware: 'v1.2.0',
+      locationFloor: floor,
+      locationZone: zone,
+      locationSlot: slot,
     }
   }),
 ]
@@ -156,12 +167,44 @@ export default function ParkingDevices() {
 
   const handleRestart = (device: ParkingDevice) => {
     message.loading(`${t('parkingDevices.restarting')} ${device.name}...`, 2)
-    setTimeout(() => message.success(`${device.name} ${t('parkingDevices.restartSuccess')}`), 2000)
+    setTimeout(() => message.success(`${getDeviceDisplayName(device)} ${t('parkingDevices.restartSuccess')}`), 2000)
   }
 
   const handleTest = (device: ParkingDevice) => {
-    message.loading(`${t('parkingDevices.testing')} ${device.name}...`, 1.5)
-    setTimeout(() => message.success(`${device.name} ${t('parkingDevices.testOk')}`), 1500)
+    const displayName = device.nameKey ? t(`parkingDevices.${device.nameKey}`) : device.name
+    message.loading(`${t('parkingDevices.testing')} ${displayName}...`, 1.5)
+    setTimeout(() => message.success(`${displayName} ${t('parkingDevices.testOk')}`), 1500)
+  }
+
+  const [logsModalVisible, setLogsModalVisible] = useState(false)
+  const [logsModalDevice, setLogsModalDevice] = useState<ParkingDevice | null>(null)
+
+  const getDeviceDisplayName = (device: ParkingDevice) => device.nameKey ? t(`parkingDevices.${device.nameKey}`) : device.name
+
+  const getFakeLogs = (deviceKey: string): Array<{ key: string; time: string; level: 'info' | 'warn' | 'error'; message: string }> => {
+    const now = dayjs()
+    const levels: Array<'info' | 'warn' | 'error'> = ['info', 'info', 'info', 'warn', 'info', 'error', 'info', 'info']
+    const msgKeys = [
+      'log_heartbeat',
+      'log_statusOk',
+      'log_connection',
+      'log_retry',
+      'log_restart',
+      'log_timeout',
+      'log_firmware',
+      'log_sync',
+    ]
+    return Array.from({ length: 12 }, (_, i) => ({
+      key: `${deviceKey}-log-${i}`,
+      time: now.subtract(i * 2, 'hour').format('YYYY-MM-DD HH:mm:ss'),
+      level: levels[i % levels.length],
+      message: msgKeys[i % msgKeys.length],
+    }))
+  }
+
+  const handleOpenLogs = (device: ParkingDevice) => {
+    setLogsModalDevice(device)
+    setLogsModalVisible(true)
   }
 
   const exportDevices = () => {
@@ -197,10 +240,11 @@ export default function ParkingDevices() {
       width: 200,
       render: (name: string, record: ParkingDevice) => {
         const cfg = TYPE_CONFIG[record.type]
+        const displayName = record.nameKey ? t(`parkingDevices.${record.nameKey}`) : name
         return (
           <Space>
             <span style={{ color: cfg.color }}>{cfg.icon}</span>
-            <Text strong className="text-base">{name}</Text>
+            <Text strong className="text-base">{displayName}</Text>
           </Space>
         )
       },
@@ -221,6 +265,13 @@ export default function ParkingDevices() {
       key: 'location',
       width: 180,
       ellipsis: true,
+      render: (loc: string, record: ParkingDevice) => {
+        if (record.locationFloor != null && record.locationZone != null && record.locationSlot != null) {
+          return t('parkingDevices.zoneSlotFormat', { floor: record.locationFloor, zone: record.locationZone, slot: record.locationSlot })
+        }
+        if (record.locationKey) return t(`parkingDevices.${record.locationKey}`)
+        return loc
+      },
     },
     {
       title: t('common.status'),
@@ -252,7 +303,7 @@ export default function ParkingDevices() {
       render: (_: unknown, record: ParkingDevice) => (
         <Space size={4}>
           <Tooltip title={t('parkingDevices.restart')}>
-            <Popconfirm title={`${t('parkingDevices.restart')} ${record.name}?`} onConfirm={() => handleRestart(record)} okText={t('apiTest.yes')} cancelText={t('apiTest.no')}>
+            <Popconfirm title={`${t('parkingDevices.restart')} ${getDeviceDisplayName(record)}?`} onConfirm={() => handleRestart(record)} okText={t('apiTest.yes')} cancelText={t('apiTest.no')}>
               <Button type="link" size="small" icon={<PlayCircleOutlined />}>
                 {t('parkingDevices.restart')}
               </Button>
@@ -264,7 +315,7 @@ export default function ParkingDevices() {
             </Button>
           </Tooltip>
           <Tooltip title={t('parkingDevices.logs')}>
-            <Button type="link" size="small" icon={<FileTextOutlined />}>
+            <Button type="link" size="small" icon={<FileTextOutlined />} onClick={() => handleOpenLogs(record)}>
               {t('parkingDevices.logs')}
             </Button>
           </Tooltip>
@@ -394,6 +445,39 @@ export default function ParkingDevices() {
           }}
         />
       </ContentCard>
+
+      <Modal
+        title={logsModalDevice ? `${t('parkingDevices.logsTitle')}: ${getDeviceDisplayName(logsModalDevice)}` : t('parkingDevices.logsTitle')}
+        open={logsModalVisible}
+        onCancel={() => { setLogsModalVisible(false); setLogsModalDevice(null) }}
+        footer={null}
+        width={640}
+        destroyOnClose
+      >
+        {logsModalDevice && (
+          <Table
+            size="small"
+            dataSource={getFakeLogs(logsModalDevice.key)}
+            columns={[
+              { title: t('parkingDevices.logTime'), dataIndex: 'time', key: 'time', width: 180, render: (v: string) => <Text className="font-mono text-xs">{v}</Text> },
+              {
+                title: t('parkingDevices.logLevel'),
+                dataIndex: 'level',
+                key: 'level',
+                width: 90,
+                render: (level: string) => (
+                  <Tag color={level === 'error' ? 'red' : level === 'warn' ? 'orange' : 'blue'}>
+                    {t(`parkingDevices.logLevel_${level}`)}
+                  </Tag>
+                ),
+              },
+              { title: t('parkingDevices.logMessage'), dataIndex: 'message', key: 'message', render: (key: string) => t(`parkingDevices.${key}`) },
+            ]}
+            pagination={false}
+            scroll={{ y: 360 }}
+          />
+        )}
+      </Modal>
     </PageContainer>
   )
 }

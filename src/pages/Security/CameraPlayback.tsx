@@ -11,6 +11,7 @@ import {
   Slider,
   Timeline,
   Badge,
+  Modal,
   Input,
 } from 'antd'
 import { useTranslation } from 'react-i18next'
@@ -28,7 +29,7 @@ import {
   ClockCircleOutlined,
   HistoryOutlined,
   CameraOutlined,
-  SearchOutlined,
+  HighlightOutlined,
 } from '@ant-design/icons'
 import { PageContainer, PageHeader, ContentCard } from '@/components'
 import { useBuildingStore } from '@/stores'
@@ -86,6 +87,8 @@ export default function CameraPlayback() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [currentTime, setCurrentTime] = useState(42) // percentage of timeline
+  const [aiAssistantOpen, setAiAssistantOpen] = useState(false)
+  const [aiQuery, setAiQuery] = useState('')
 
   const currentCam = cameras.find(c => c.id === selectedCamera) || cameras[0]
 
@@ -99,19 +102,23 @@ export default function CameraPlayback() {
         subtitle={`${selectedBuilding?.name || t('cameraPlayback.allSites', 'All sites')} — ${t('cameraPlayback.reviewRecordings', 'Review camera recordings')}`}
         actions={
           <>
-            <Tooltip title="Tìm kiếm nội dung dựa trên AI">
-              <Input
-                prefix={<SearchOutlined style={{ color: '#1677ff' }} />}
-                placeholder="Tìm kiếm nội dung dựa trên AI"
-                allowClear
+            <Tooltip title={t('cameraPlayback.aiAssistant', 'Trợ lý AI – Tìm kiếm nội dung trong bản ghi')}>
+              <Button
+                type="default"
                 size="small"
+                icon={<HighlightOutlined style={{ color: '#1677ff' }} />}
+                onClick={() => setAiAssistantOpen(true)}
                 style={{
-                  width: 240,
                   border: '1.5px solid #1677ff',
                   borderRadius: 6,
                   boxShadow: '0 0 6px rgba(22,119,255,0.15)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
                 }}
-              />
+              >
+                {t('cameraPlayback.aiSearch', 'Tìm kiếm nội dung dựa trên AI')}
+              </Button>
             </Tooltip>
             <Select
               value={selectedCamera}
@@ -377,6 +384,39 @@ export default function CameraPlayback() {
 
         </Col>
       </Row>
+
+      <Modal
+        title={
+          <span>
+            <HighlightOutlined style={{ color: '#1677ff', marginRight: 8 }} />
+            {t('cameraPlayback.aiAssistantTitle', 'Trợ lý AI – Tìm kiếm trong bản ghi')}
+          </span>
+        }
+        open={aiAssistantOpen}
+        onCancel={() => setAiAssistantOpen(false)}
+        footer={null}
+        width={480}
+        centered
+        destroyOnClose
+      >
+        <div className="mb-12">
+          <Input
+            placeholder={t('cameraPlayback.aiSearchPlaceholder', 'Mô tả nội dung cần tìm (người, xe, hành động...)')}
+            value={aiQuery}
+            onChange={(e) => setAiQuery(e.target.value)}
+            allowClear
+            size="large"
+            style={{
+              border: '1.5px solid #1677ff',
+              borderRadius: 8,
+              boxShadow: '0 0 6px rgba(22,119,255,0.15)',
+            }}
+          />
+        </div>
+        <div className="text-secondary text-sm">
+          {t('cameraPlayback.aiAssistantHint', 'Nhập mô tả để AI tìm các đoạn tương ứng trong bản ghi camera đã chọn.')}
+        </div>
+      </Modal>
     </PageContainer>
   )
 }

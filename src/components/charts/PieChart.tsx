@@ -71,6 +71,10 @@ export default function PieChart({
       },
     ],
     color: ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2'],
+    animationDuration: 800,
+    animationEasing: 'cubicInOut',
+    animationDurationUpdate: 600,
+    animationEasingUpdate: 'cubicInOut',
   }
 
   if (!title) {

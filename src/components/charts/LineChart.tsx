@@ -102,6 +102,10 @@ export default function LineChart({
           }
         : undefined,
     })),
+    animationDuration: 800,
+    animationEasing: 'cubicInOut',
+    animationDurationUpdate: 600,
+    animationEasingUpdate: 'cubicInOut',
   }
 
   if (!title) {

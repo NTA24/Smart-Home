@@ -551,6 +551,31 @@
   transition: all 0.3s ease;
 }
 
+/* Danh sách khách thuê: tất cả card cùng chiều cao */
+.home_tenant-row .ant-col {
+  display: flex;
+}
+.home_tenant-row .home_entity-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.home_tenant-row .home_entity-card .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.home_tenant-row .home_entity-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.home_tenant-row .home_entity-body .mt-12:last-of-type {
+  margin-top: auto;
+}
+
 .home_entity-body {
   text-align: center;
   padding: 20px 0;
@@ -743,6 +768,7 @@
   align-items: center;
   gap: 6px;
   flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .security_glass-title {
@@ -857,7 +883,7 @@
   height: 128%;
   opacity: 0;
   animation: security_yt-fadein 0.3s ease forwards;
-  animation-delay: 4s;
+  animation-delay: 0s;
 }
 
 .security_thumbnail-preview .security_thumbnail-iframe {
@@ -867,11 +893,45 @@
   border: 0;
   opacity: 0;
   animation: security_yt-fadein 0.3s ease forwards;
-  animation-delay: 4s;
+  animation-delay: 0s;
   top: -14%;
   left: -4%;
   width: 108%;
   height: 128%;
+}
+
+.security_yt-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #0a1520;
+}
+
+.security_yt-loading-overlay--thumb {
+  background: #0d1b2a;
+}
+
+.security_yt-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.28);
+  border-top-color: #40a9ff;
+  animation: security_yt-spin 0.9s linear infinite;
+}
+
+.security_yt-loading-text {
+  color: #e6f7ff !important;
+  font-size: 11px !important;
+}
+
+@keyframes security_yt-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Also hide YouTube iframe in CameraLiveView feed cards */
@@ -980,6 +1040,14 @@
   position: relative;
 }
 
+.security_face-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .security_face-tag-bar {
   position: absolute;
   bottom: 0;
@@ -1009,11 +1077,64 @@
   padding: 10px;
 }
 
+.security_quick-snapshot-panel .security_glass-header {
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-direction: column;
+  padding: 6px 10px;
+}
+
+.security_quick-snapshot-panel .security_glass-header-left {
+  min-width: 98px;
+  flex: 0 0 auto;
+}
+
+.security_quick-snapshot-panel .security_glass-title {
+  white-space: nowrap;
+}
+
+.security_quick-snapshot-panel .security_glass-header-right {
+  margin-left: 0;
+  min-width: 0;
+  justify-content: flex-start;
+  row-gap: 6px;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: none;
+  width: 100%;
+  padding-right: 0;
+}
+
+.security_snapshot-top-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  width: auto;
+}
+
+.security_snapshot-cam-select {
+  width: 220px;
+  max-width: 100%;
+}
+
+.security_snapshot-cam-select .ant-select-selector {
+  height: 26px !important;
+  border-radius: 4px !important;
+}
+
+.security_snapshot-cam-select .ant-select-selection-item {
+  line-height: 24px !important;
+  font-size: 12px;
+}
+
 
 .security_quick-snapshot-panel .security_snapshot-capture-btn {
-  font-size: 11px;
+  font-size: 10px;
   height: 26px;
-  padding-inline: 10px;
+  padding-inline: 8px;
   border-radius: 4px;
   background: linear-gradient(180deg, #1890ff 0%, #096dd9 100%);
   border: none;
@@ -1050,6 +1171,26 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+@media (max-width: 1200px) {
+  .security_quick-snapshot-panel .security_glass-header {
+    flex-wrap: wrap;
+  }
+
+  .security_quick-snapshot-panel .security_glass-header-right {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+    align-items: flex-start;
+    max-width: none;
+    padding-right: 0;
+  }
+
+  .security_snapshot-cam-select {
+    width: 100%;
+    max-width: none;
+  }
 }
 
 .security_snapshot-label-tl {

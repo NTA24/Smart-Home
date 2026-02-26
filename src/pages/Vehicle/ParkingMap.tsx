@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Typography,
   Select,
@@ -51,14 +51,37 @@ const STATUS_CONFIG: Record<SlotStatus, { color: string; bg: string; label: stri
   reserved: { color: '#faad14', bg: '#fffbe6', label: 'reserved' },
 }
 
+function generateUniquePlates(count: number): string[] {
+  const prefixes = ['29A', '29B', '29C', '29D', '29G', '29H', '30A', '30B', '30D', '30E', '30F', '30G', '30H', '30K', '30L', '51A', '51B', '51C', '51D', '51F', '51G', '51H']
+  const used = new Set<string>()
+  const plates: string[] = []
+  while (plates.length < count) {
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)]
+    const num1 = String(100 + Math.floor(Math.random() * 900))
+    const num2 = String(10 + Math.floor(Math.random() * 90))
+    const plate = `${prefix}-${num1}.${num2}`
+    if (!used.has(plate)) {
+      used.add(plate)
+      plates.push(plate)
+    }
+  }
+  return plates
+}
+
 function generateSlots(): ParkingSlot[] {
   const slots: ParkingSlot[] = []
   const statuses: SlotStatus[] = ['free', 'occupied', 'reserved']
-  const plates = ['51A-123.45', '30G-789.01', '29B-456.78', '51H-222.33', '30A-444.55', '29C-666.77']
-  let idx = 0
-  const count = 100
+  const count = 94
+  const tempStatuses: SlotStatus[] = []
+  for (let i = 0; i < count; i++) {
+    tempStatuses.push(statuses[Math.floor(Math.random() * 10) < 5 ? 0 : Math.floor(Math.random() * 10) < 8 ? 1 : 2])
+  }
+  const occupiedCount = tempStatuses.filter(s => s === 'occupied').length
+  const uniquePlates = generateUniquePlates(occupiedCount)
+  let plateIdx = 0
+
   for (let i = 1; i <= count; i++) {
-    const status = statuses[Math.floor(Math.random() * 10) < 5 ? 0 : Math.floor(Math.random() * 10) < 8 ? 1 : 2]
+    const status = tempStatuses[i - 1]
     const code = `${i <= 50 ? 'A' : 'B'}${String(i <= 50 ? i : i - 50).padStart(2, '0')}`
     slots.push({
       id: `B1-${code}`,
@@ -67,7 +90,7 @@ function generateSlots(): ParkingSlot[] {
       code,
       status,
       vehicleType: status === 'occupied' ? (Math.random() > 0.3 ? 'car' : 'motorbike') : undefined,
-      plate: status === 'occupied' ? plates[idx++ % plates.length] : undefined,
+      plate: status === 'occupied' ? uniquePlates[plateIdx++] : undefined,
       entryTime: status === 'occupied' ? `${7 + Math.floor(Math.random() * 4)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}` : undefined,
       reservation: status === 'reserved' ? `RES-${1000 + Math.floor(Math.random() * 9000)}` : undefined,
     })
@@ -84,10 +107,16 @@ export default function ParkingMap() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
   const [allSlots] = useState<ParkingSlot[]>(() =>
-    getVehicleSlots<any>(generateSlots()).map((slot: any) => ({
-      ...slot,
-      status: normalizeSlotStatus(slot?.status),
-    })),
+    getVehicleSlots<any>(generateSlots()).map((slot: any) => {
+      const status = normalizeSlotStatus(slot?.status)
+      const vehicleType =
+        status === 'occupied'
+          ? (slot?.vehicleType === 'car' || slot?.vehicleType === 'motorbike'
+            ? slot.vehicleType
+            : (Math.random() > 0.5 ? 'car' : 'motorbike'))
+          : undefined
+      return { ...slot, status, vehicleType }
+    }),
   )
   const [vehicleFilter, setVehicleFilter] = useState<string>('all')
   const [plateInput, setPlateInput] = useState<string>('')
@@ -127,23 +156,149 @@ export default function ParkingMap() {
     ? allSlots.filter(s => (s.plate || '').toLowerCase().replace(/\s/g, '').includes(plateSearchApplied.trim().toLowerCase().replace(/\s/g, '')))
     : []
 
-  const highlightedIds = new Set(searchResultSlots.map(s => s.id))
+  const highlightedIds = useMemo(() => {
+    if (searchResultSlots.length > 0) return new Set(searchResultSlots.map(s => s.id))
+    if (vehicleFilter !== 'all' && filteredSlots.length > 0) return new Set(filteredSlots.map(s => s.id))
+    return new Set<string>()
+  }, [searchResultSlots, vehicleFilter, filteredSlots])
 
-  const mapSlots = allSlots.slice(0, 100)
-  const topRow = mapSlots.slice(0, 16)
-  const bottomRow = mapSlots.slice(16, 32)
-  const leftCol = mapSlots.slice(32, 44)
-  const rightCol = mapSlots.slice(44, 56)
-  const centerLeft = mapSlots.slice(56, 68)
-  const centerRight = mapSlots.slice(68, 80)
-  const innerTop = mapSlots.slice(80, 90)
-  const innerBottom = mapSlots.slice(90, 100)
+  const mapSlots = allSlots.slice(0, 94)
+  let _si = 0
+  const take = (n: number) => { const s = mapSlots.slice(_si, _si + n); _si += n; return s }
+  const p1  = take(22)
+  const p2  = take(6), p3  = take(6)
+  const p4  = take(6), p5  = take(6)
+  const p6  = take(6), p7  = take(6)
+  const p8  = take(6), p9  = take(6)
+  const p10 = take(6), p11 = take(6)
+  const p12 = take(6), p13 = take(6)
 
   const stats = {
     free: allSlots.filter(s => s.status === 'free').length,
     occupied: allSlots.filter(s => s.status === 'occupied').length,
     reserved: allSlots.filter(s => s.status === 'reserved').length,
   }
+
+  type BuildingKey = 'A' | 'B' | 'C'
+  const [selectedBuildingKey, setSelectedBuildingKey] = useState<BuildingKey | null>(null)
+  const buildingARef = useRef<HTMLDivElement>(null)
+  const buildingBRef = useRef<HTMLDivElement>(null)
+  const buildingCRef = useRef<HTMLDivElement>(null)
+  const buildingRefs = useMemo(
+    () => ({ A: buildingARef, B: buildingBRef, C: buildingCRef }) as const,
+    [],
+  )
+
+  const mapContainerRef = useRef<HTMLDivElement>(null)
+  const buildingRef = useRef<HTMLDivElement>(null)
+
+  interface PathRoute { id: string; pts: [number, number][] }
+  const [pathRoutes, setPathRoutes] = useState<PathRoute[]>([])
+
+  const pathTargetIds = useMemo(() => {
+    if (plateSearchApplied.trim() && searchResultSlots.length > 0) {
+      const target = selectedSlot && searchResultSlots.some(s => s.id === selectedSlot.id)
+        ? selectedSlot.id
+        : searchResultSlots[0].id
+      return new Set([target])
+    }
+    if (selectedBuildingKey && selectedSlot) return new Set([selectedSlot.id])
+    return new Set<string>()
+  }, [plateSearchApplied, searchResultSlots, selectedBuildingKey, selectedSlot])
+
+  const highlightedIdsRef = useRef(highlightedIds)
+  highlightedIdsRef.current = highlightedIds
+  const pathTargetIdsRef = useRef(pathTargetIds)
+  pathTargetIdsRef.current = pathTargetIds
+
+  useEffect(() => {
+    const run = () => {
+      const container = mapContainerRef.current
+      const bldRow = buildingRef.current
+      const ids = pathTargetIdsRef.current
+      if (!container || ids.size === 0) { setPathRoutes([]); return }
+
+      const c = container.getBoundingClientRect()
+      const rel = (el: Element) => {
+        const r = el.getBoundingClientRect()
+        return { x: r.left + r.width / 2 - c.left, y: r.top + r.height / 2 - c.top, t: r.top - c.top, b: r.bottom - c.top, l: r.left - c.left, r: r.right - c.left }
+      }
+
+      const startEl = selectedBuildingKey && buildingRefs[selectedBuildingKey].current
+        ? buildingRefs[selectedBuildingKey].current
+        : bldRow
+      if (!startEl) { setPathRoutes([]); return }
+      const bld = rel(startEl)
+      // Chỉ dùng các đường có gạch vàng: 4 làn ngang (.parkmap_lane-h) + làn trong block (.parkmap_block-lane)
+      const lanes = Array.from(container.querySelectorAll('.parkmap_lane-h'))
+      if (lanes.length < 4) { setPathRoutes([]); return }
+
+      const hYs = lanes.map(el => rel(el).y).sort((a, b) => a - b)
+      const [roadH0, roadH1, roadH2, roadH3] = hYs
+
+      const gapXs: number[] = []
+      container.querySelectorAll('.parkmap_3col').forEach(row => {
+        const children = Array.from(row.children) as HTMLElement[]
+        for (let i = 0; i < children.length - 1; i++) {
+          const rA = children[i].getBoundingClientRect()
+          const rB = children[i + 1].getBoundingClientRect()
+          gapXs.push((rA.right + rB.left) / 2 - c.left)
+        }
+      })
+      const uniqueGaps = [...new Set(gapXs.map(x => Math.round(x)))].sort((a, b) => a - b)
+      const gapL = uniqueGaps[0] ?? bld.x - 80
+      const gapR = uniqueGaps[uniqueGaps.length - 1] ?? bld.x + 80
+      // Chọn gap gần tòa: ô bên phải tòa (vd B36) → gapR để đi gần; ô bên trái tòa → gapL
+      const pickGap = (sx: number) => (sx > bld.x ? gapR : gapL)
+
+      const getBlockLaneY = (slotEl: Element): number | null => {
+        const block = slotEl.closest('.parkmap_block')
+        if (!block) return null
+        const lane = block.querySelector('.parkmap_block-lane')
+        if (!lane) return null
+        return rel(lane).y
+      }
+
+      const routes: PathRoute[] = []
+      ids.forEach((slotId) => {
+        const el = container.querySelector(`[data-slot-id="${slotId}"]`)
+        if (!el) return
+        const s = rel(el)
+        const pts: [number, number][] = [[bld.x, bld.y]]
+        const laneY = getBlockLaneY(el)
+        const gapX = pickGap(s.x)
+        // Đi theo đúng các đường gạch vàng: đoạn ngang chỉ đặt trên roadH0/roadH1/roadH2/roadH3 hoặc lane (trong block); đoạn dọc chỉ tại bld.x, gapX hoặc vào ô.
+        if (s.y < roadH0) {
+          pts.push([bld.x, roadH1], [bld.x, roadH0], [s.x, roadH0], [s.x, s.y])
+        } else if (s.y < roadH1) {
+          if (laneY != null) {
+            pts.push([bld.x, roadH1], [gapX, roadH1], [gapX, laneY], [s.x, laneY], [s.x, s.y])
+          } else {
+            pts.push([bld.x, roadH1], [s.x, roadH1], [s.x, s.y])
+          }
+        } else if (s.y > roadH3) {
+          if (laneY != null) {
+            pts.push([bld.x, roadH2], [gapX, roadH2], [gapX, laneY], [s.x, laneY], [s.x, s.y])
+          } else {
+            pts.push([bld.x, roadH2], [s.x, roadH2], [s.x, s.y])
+          }
+        } else if (s.y > roadH2) {
+          if (laneY != null) {
+            pts.push([bld.x, roadH2], [gapX, roadH2], [gapX, laneY], [s.x, laneY], [s.x, s.y])
+          } else {
+            pts.push([bld.x, roadH2], [s.x, roadH2], [s.x, s.y])
+          }
+        } else {
+          const roadY = s.y < bld.y ? roadH1 : roadH2
+          pts.push([bld.x, roadY], [s.x, roadY], [s.x, s.y])
+        }
+        routes.push({ id: slotId, pts })
+      })
+      setPathRoutes(routes)
+    }
+    const timer = setTimeout(run, 250)
+    return () => clearTimeout(timer)
+  }, [pathTargetIds, selectedBuildingKey])
 
   const handleSlotClick = (slot: ParkingSlot) => {
     setSelectedSlot(slot)
@@ -185,16 +340,17 @@ export default function ParkingMap() {
       <button
         key={slot.id}
         type="button"
-        className={`vehicle_slot-cell${isHighlighted ? ' vehicle_slot-blink' : ''}`}
+        data-slot-id={slot.id}
+        className={`vehicle_slot-cell${isHighlighted ? ' vehicle_slot-led' : ''}`}
         onClick={() => handleSlotClick(slot)}
         style={{
           width: w,
           height: h,
           background: cfg.bg,
-          border: `2px solid ${cfg.color}`,
+          border: isHighlighted ? '2px solid transparent' : `2px solid ${cfg.color}`,
           borderRadius: 3,
           cursor: 'pointer',
-          transition: 'all 120ms ease',
+          transition: isHighlighted ? 'background 120ms ease' : 'all 120ms ease',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -206,12 +362,16 @@ export default function ParkingMap() {
         }}
         title={`${slot.code} - ${t(`parkingMap.${cfg.label}`)}`}
         onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = `0 0 8px ${cfg.color}88`
-          e.currentTarget.style.transform = 'scale(1.08)'
+          if (!isHighlighted) {
+            e.currentTarget.style.boxShadow = `0 0 8px ${cfg.color}88`
+            e.currentTarget.style.transform = 'scale(1.08)'
+          }
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = 'none'
-          e.currentTarget.style.transform = 'scale(1)'
+          if (!isHighlighted) {
+            e.currentTarget.style.boxShadow = 'none'
+            e.currentTarget.style.transform = 'scale(1)'
+          }
         }}
       >
         <span style={{ color: cfg.color, lineHeight: 1, fontSize: 9, fontWeight: 700, fontFamily: 'monospace' }}>
@@ -224,37 +384,30 @@ export default function ParkingMap() {
     )
   }
 
-  const renderHRow = (slots: ParkingSlot[]) => (
-    <div style={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
+  const renderRow = (slots: ParkingSlot[]) => (
+    <div className="parkmap_slot-row">
       {slots.map((s) => renderSlot(s, false))}
     </div>
   )
 
-  const renderVCol = (slots: ParkingSlot[]) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {slots.map((s) => renderSlot(s, true))}
+  const ParkBlock = ({ upper, lower, label }: { upper: ParkingSlot[]; lower: ParkingSlot[]; label: string }) => (
+    <div className="parkmap_block">
+      <div className="parkmap_block-label">{label}</div>
+      {renderRow(upper)}
+      <div className="parkmap_block-lane">
+        <div className="parkmap_block-lane-dash" />
+      </div>
+      {renderRow(lower)}
     </div>
   )
 
-  const renderCenterBlock = (slots: ParkingSlot[]) => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3 }}>
-      {slots.map((s) => renderSlot(s, false))}
+  const RoadH = () => (
+    <div className="parkmap_lane-h" data-road="h">
+      <div className="parkmap_lane-dash" />
+      <span className="parkmap_lane-arrow">← →</span>
+      <div className="parkmap_lane-dash" />
     </div>
   )
-
-  const roadDash: React.CSSProperties = {
-    background: 'repeating-linear-gradient(90deg, #fbbf24 0px, #fbbf24 14px, transparent 14px, transparent 24px)',
-    height: 2,
-    width: '100%',
-    opacity: 0.6,
-  }
-
-  const roadDashV: React.CSSProperties = {
-    background: 'repeating-linear-gradient(180deg, #fbbf24 0px, #fbbf24 14px, transparent 14px, transparent 24px)',
-    width: 2,
-    height: '100%',
-    opacity: 0.6,
-  }
 
   return (
     <PageContainer>
@@ -392,140 +545,121 @@ export default function ParkingMap() {
         </div>
       </ContentCard>
 
-      {/* Parking Map - full width */}
+      {/* Parking Map */}
       <div className="mb-16">
-        <div
-          style={{
-            width: '100%',
-            background: '#3a3f47',
-            borderRadius: 10,
-            padding: 16,
-            position: 'relative',
-            overflow: 'hidden',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-          }}
-        >
+        <div className="parkmap_container" ref={mapContainerRef} style={{ position: 'relative' }}>
+          {pathRoutes.length > 0 && (
+            <svg className="parkmap_svg-overlay">
+              <defs>
+                <marker id="parkmap-arrow" viewBox="0 0 10 10" refX="8" refY="5"
+                  markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#1677ff" />
+                </marker>
+              </defs>
+              {pathRoutes.map((route) => {
+                const d = route.pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ')
+                const last = route.pts[route.pts.length - 1]
+                const first = route.pts[0]
+                return (
+                  <g key={route.id}>
+                    <polyline
+                      points={route.pts.map(p => p.join(',')).join(' ')}
+                      className="parkmap_path-glow"
+                    />
+                    <path d={d} className="parkmap_path-line" markerEnd="url(#parkmap-arrow)" />
+                    <circle cx={first[0]} cy={first[1]} r="5" fill="#1677ff" className="parkmap_path-dot" />
+                    <circle cx={last[0]} cy={last[1]} r="4" fill="#ff4d4f" stroke="#fff" strokeWidth="1.5" />
+                  </g>
+                )
+              })}
+            </svg>
+          )}
           {mapSlots.length === 0 ? (
             <Text style={{ color: '#94a3b8' }}>{t('common.noData')}</Text>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {/* Top row */}
-              {renderHRow(topRow)}
-
-              {/* Road separator */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
-                <div style={roadDash} />
+            <div className="parkmap_layout">
+              {/* ── P1: Top strip ── */}
+              <div className="parkmap_topstrip">
+                <div className="parkmap_block-label">P1</div>
+                {renderRow(p1)}
               </div>
 
-              {/* Middle section: left col | center blocks | right col */}
-              <div style={{ display: 'flex', gap: 6, alignItems: 'stretch' }}>
-                {/* Left column (vertical) */}
-                {renderVCol(leftCol)}
+              <RoadH />
 
-                {/* Road + center blocks */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {/* Center area: two parking blocks separated by facility */}
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'stretch', flex: 1 }}>
-                    {/* Left center block */}
-                    {renderCenterBlock(centerLeft)}
+              {/* ── Upper parking: 3 blocks ── */}
+              <div className="parkmap_3col parkmap_3col--parking" data-road="top">
+                <ParkBlock upper={p2} lower={p3} label="P2 · P3" />
+                <ParkBlock upper={p4} lower={p5} label="P4 · P5" />
+                <ParkBlock upper={p6} lower={p7} label="P6 · P7" />
+              </div>
 
-                    {/* Vertical road dash */}
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '0 2px' }}>
-                      <div style={roadDashV} />
-                    </div>
+              <RoadH />
 
-                    {/* Building / facility area */}
-                    <div
-                      style={{
-                        flex: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 6,
-                        minHeight: 140,
-                        minWidth: 180,
-                      }}
-                    >
-                      <div style={{
-                        flex: 1,
-                        border: '1.5px solid #64748b',
-                        borderRadius: 8,
-                        background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8,
-                        padding: 12,
-                      }}>
-                        <span style={{ color: '#e2e8f0', fontSize: 12, fontWeight: 700, letterSpacing: 1.5 }}>
-                          TÒA NHÀ CHÍNH
-                        </span>
-                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                          <div style={{
-                            width: 44, height: 44, borderRadius: 6,
-                            background: '#374151', border: '1px solid #6b7280',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexDirection: 'column', gap: 2,
-                          }}>
-                            <span style={{ fontSize: 16 }}>🛗</span>
-                            <span style={{ color: '#d1d5db', fontSize: 8, fontWeight: 600 }}>Thang máy</span>
-                          </div>
-                          <div style={{
-                            width: 44, height: 44, borderRadius: 6,
-                            background: '#374151', border: '1px solid #6b7280',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexDirection: 'column', gap: 2,
-                          }}>
-                            <span style={{ fontSize: 16 }}>🚪</span>
-                            <span style={{ color: '#d1d5db', fontSize: 8, fontWeight: 600 }}>Sảnh chính</span>
-                          </div>
-                          <div style={{
-                            width: 44, height: 44, borderRadius: 6,
-                            background: '#374151', border: '1px solid #6b7280',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexDirection: 'column', gap: 2,
-                          }}>
-                            <span style={{ fontSize: 16 }}>🪜</span>
-                            <span style={{ color: '#d1d5db', fontSize: 8, fontWeight: 600 }}>Cầu thang</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Vertical road dash */}
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '0 2px' }}>
-                      <div style={roadDashV} />
-                    </div>
-
-                    {/* Right center block */}
-                    {renderCenterBlock(centerRight)}
-                  </div>
-
-                  {/* Inner parking rows */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 0' }}>
-                    <div style={roadDash} />
-                  </div>
-                  <div style={{ textAlign: 'center', marginBottom: 2 }}>
-                    <span style={{ color: '#94a3b8', fontSize: 10, fontWeight: 600, letterSpacing: 1 }}>
-                      ← → {t('parkingMap.trafficFlow', 'LÀN GIAO THÔNG NỘI BỘ')}
-                    </span>
-                  </div>
-                  {renderHRow(innerTop)}
-                  <div style={{ height: 4 }} />
-                  {renderHRow(innerBottom)}
+              {/* ── Buildings: A, B, C (click to select → path from here to selected slot) ── */}
+              <div className="parkmap_3col parkmap_3col--buildings" ref={buildingRef} data-road="mid">
+                <div
+                  ref={buildingARef}
+                  role="button"
+                  tabIndex={0}
+                  className={`parkmap_bldg ${selectedBuildingKey === 'A' ? 'parkmap_bldg--selected' : ''}`}
+                  onClick={() => setSelectedBuildingKey(k => (k === 'A' ? null : 'A'))}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedBuildingKey(k => (k === 'A' ? null : 'A')); } }}
+                  aria-pressed={selectedBuildingKey === 'A'}
+                  aria-label="Tòa A"
+                >
+                  <span className="parkmap_bldg-name">A</span>
+                  <span className="parkmap_bldg-sub">TÒA NHÀ A</span>
                 </div>
-
-                {/* Right column (vertical) */}
-                {renderVCol(rightCol)}
+                <div
+                  ref={buildingBRef}
+                  role="button"
+                  tabIndex={0}
+                  className={`parkmap_bldg ${(selectedBuildingKey === null || selectedBuildingKey === 'B') ? 'parkmap_bldg--main' : ''} ${selectedBuildingKey === 'B' ? 'parkmap_bldg--selected' : ''}`}
+                  onClick={() => setSelectedBuildingKey(k => (k === 'B' ? null : 'B'))}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedBuildingKey(k => (k === 'B' ? null : 'B')); } }}
+                  aria-pressed={selectedBuildingKey === 'B'}
+                  aria-label="Tòa B"
+                >
+                  <span className="parkmap_bldg-name">B</span>
+                  <span className="parkmap_bldg-sub">TÒA NHÀ CHÍNH</span>
+                </div>
+                <div
+                  ref={buildingCRef}
+                  role="button"
+                  tabIndex={0}
+                  className={`parkmap_bldg ${selectedBuildingKey === 'C' ? 'parkmap_bldg--selected' : ''}`}
+                  onClick={() => setSelectedBuildingKey(k => (k === 'C' ? null : 'C'))}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedBuildingKey(k => (k === 'C' ? null : 'C')); } }}
+                  aria-pressed={selectedBuildingKey === 'C'}
+                  aria-label="Tòa C"
+                >
+                  <span className="parkmap_bldg-name">C</span>
+                  <span className="parkmap_bldg-sub">TÒA NHÀ C</span>
+                </div>
               </div>
 
-              {/* Road separator */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
-                <div style={roadDash} />
+              <RoadH />
+
+              {/* ── Lower parking: 3 blocks ── */}
+              <div className="parkmap_3col parkmap_3col--parking" data-road="bottom">
+                <ParkBlock upper={p8} lower={p9} label="P8 · P9" />
+                <ParkBlock upper={p10} lower={p11} label="P10 · P11" />
+                <ParkBlock upper={p12} lower={p13} label="P12 · P13" />
               </div>
 
-              {/* Bottom row */}
-              {renderHRow(bottomRow)}
+              <RoadH />
+
+              {/* ── Entrance / Exit ── */}
+              <div className="parkmap_entrance-row">
+                <div className="parkmap_entrance">
+                  <div className="parkmap_entrance-arrow">↑</div>
+                  <span>{t('parkingMap.entrance', 'LỐI VÀO')}</span>
+                </div>
+                <div className="parkmap_entrance">
+                  <div className="parkmap_entrance-arrow">↓</div>
+                  <span>{t('parkingMap.exit', 'LỐI RA')}</span>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Row, Col, Typography, Select, DatePicker, Input, Tag, Button, Space } from 'antd'
+import { Row, Col, Typography, Select, DatePicker, Input, Tag, Button, Modal } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
   TeamOutlined,
@@ -59,45 +59,52 @@ const STRANGERS = [
   { name: 'Lý Thị Mai', id: 'KL004' },
 ]
 
+const HOURLY_PATTERN = [1, 1, 0, 0, 1, 2, 5, 12, 15, 10, 7, 6, 8, 7, 9, 11, 14, 12, 8, 5, 3, 2, 1, 1]
+const FACE_IMAGES = [
+  '/security-faces/stored-face-1.png',
+  '/security-faces/stored-face-2.png',
+  '/security-faces/stored-face-3.png',
+  '/security-faces/stored-face-4.png',
+  '/security-faces/stored-face-5.png',
+  '/security-faces/stored-face-6.png',
+  '/security-faces/stored-face-7.png',
+]
+
 function seedGateHistory(): PeopleGateRecord[] {
   const today = dayjs().format('YYYY-MM-DD')
   const records: PeopleGateRecord[] = []
   let key = 1
 
-  for (let h = 7; h <= 18; h++) {
-    const residentCount = 2 + Math.floor(Math.random() * 3)
-    for (let i = 0; i < residentCount; i++) {
-      const gate = GATES[Math.floor(Math.random() * GATES.length)]
-      const p = RESIDENTS[Math.floor(Math.random() * RESIDENTS.length)]
-      records.push({
-        key: `seed-${key++}`,
-        gateId: gate.id,
-        gateName: gate.name,
-        occurredAt: `${today} ${String(h).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`,
-        personName: p.name,
-        personId: p.id,
-        direction: Math.random() > 0.5 ? 'in' : 'out',
-        method: Math.random() > 0.2 ? 'FaceID' : 'card',
-        personType: 'resident',
-      })
+  for (let h = 0; h < 24; h++) {
+    const base = HOURLY_PATTERN[h]
+    const residentIn = Math.max(0, base + Math.floor(Math.random() * 3) - 1)
+    const residentOut = Math.max(0, base + Math.floor(Math.random() * 3) - 1)
+    const strangerIn = Math.max(0, Math.floor(base * 0.4) + Math.floor(Math.random() * 2))
+    const strangerOut = Math.max(0, Math.floor(base * 0.3) + Math.floor(Math.random() * 2))
+
+    const addRecords = (count: number, dir: 'in' | 'out', type: 'resident' | 'stranger') => {
+      const pool = type === 'resident' ? RESIDENTS : STRANGERS
+      for (let i = 0; i < count; i++) {
+        const gate = GATES[Math.floor(Math.random() * GATES.length)]
+        const p = pool[Math.floor(Math.random() * pool.length)]
+        records.push({
+          key: `seed-${key++}`,
+          gateId: gate.id,
+          gateName: gate.name,
+          occurredAt: `${today} ${String(h).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`,
+          personName: p.name,
+          personId: p.id,
+          direction: dir,
+          method: type === 'resident' ? (Math.random() > 0.2 ? 'FaceID' : 'card') : (Math.random() > 0.3 ? 'manual' : 'card'),
+          personType: type,
+        })
+      }
     }
 
-    const strangerCount = 1 + Math.floor(Math.random() * 2)
-    for (let i = 0; i < strangerCount; i++) {
-      const gate = GATES[Math.floor(Math.random() * GATES.length)]
-      const p = STRANGERS[Math.floor(Math.random() * STRANGERS.length)]
-      records.push({
-        key: `seed-${key++}`,
-        gateId: gate.id,
-        gateName: gate.name,
-        occurredAt: `${today} ${String(h).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`,
-        personName: p.name,
-        personId: p.id,
-        direction: Math.random() > 0.5 ? 'in' : 'out',
-        method: Math.random() > 0.3 ? 'manual' : 'card',
-        personType: 'stranger',
-      })
-    }
+    addRecords(residentIn, 'in', 'resident')
+    addRecords(residentOut, 'out', 'resident')
+    addRecords(strangerIn, 'in', 'stranger')
+    addRecords(strangerOut, 'out', 'stranger')
   }
   return records.sort((a, b) => dayjs(b.occurredAt).valueOf() - dayjs(a.occurredAt).valueOf())
 }
@@ -105,8 +112,8 @@ function seedGateHistory(): PeopleGateRecord[] {
 export default function PeopleReportOverview() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
-  const [history, setHistory] = useState<PeopleGateRecord[]>(() => {
-    const cached = getPeopleGateHistory<PeopleGateRecord[]>(seedGateHistory())
+  const [history] = useState<PeopleGateRecord[]>(() => {
+    const cached = getPeopleGateHistory<PeopleGateRecord>(seedGateHistory())
     const hasTypes = cached.some((r) => r.personType === 'stranger')
     return hasTypes ? cached : seedGateHistory()
   })
@@ -118,6 +125,7 @@ export default function PeopleReportOverview() {
   const [directionFilter, setDirectionFilter] = useState<'all' | 'in' | 'out'>('all')
   const [methodFilter, setMethodFilter] = useState<'all' | 'FaceID' | 'card' | 'manual'>('all')
   const [keyword, setKeyword] = useState('')
+  const [previewFace, setPreviewFace] = useState<{ src: string; name: string } | null>(null)
 
   useEffect(() => {
     savePeopleGateHistory(history)
@@ -169,12 +177,6 @@ export default function PeopleReportOverview() {
     return { inResident, inStranger, outResident, outStranger }
   }, [filteredHistory])
 
-  const setQuickDateRange = (preset: 'today' | 'last7' | 'last30') => {
-    const end = dayjs().endOf('day')
-    if (preset === 'today') setDateRange([dayjs().startOf('day'), end])
-    else if (preset === 'last7') setDateRange([dayjs().subtract(6, 'day').startOf('day'), end])
-    else setDateRange([dayjs().subtract(29, 'day').startOf('day'), end])
-  }
 
   const exportToCsv = () => {
     const rows = filteredHistory.map((r) => ({
@@ -198,6 +200,30 @@ export default function PeopleReportOverview() {
   }
 
   const columns = [
+    {
+      title: t('peopleReport.image', 'Hình ảnh'),
+      key: 'image',
+      width: 86,
+      render: (_: unknown, row: PeopleGateRecord) => {
+        let h = 0
+        const seed = `${row.personId}-${row.key}`
+        for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0
+        const src = FACE_IMAGES[h % FACE_IMAGES.length]
+        return (
+          <button
+            type="button"
+            onClick={() => setPreviewFace({ src, name: row.personName })}
+            style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
+          >
+            <img
+              src={src}
+              alt={row.personName}
+              style={{ width: 34, height: 34, borderRadius: 6, objectFit: 'cover', border: '1px solid #f0f0f0' }}
+            />
+          </button>
+        )
+      },
+    },
     {
       title: t('peopleReport.time', 'Thời gian'),
       dataIndex: 'occurredAt',
@@ -331,17 +357,6 @@ export default function PeopleReportOverview() {
         className="mb-16"
       >
         <div className="mb-12 flex flex-wrap items-center gap-8">
-          <Space wrap>
-            <Button size="small" type={dateRange?.[0]?.isSame(dayjs(), 'day') ? 'primary' : 'default'} onClick={() => setQuickDateRange('today')}>
-              {t('peopleReport.today', 'Hôm nay')}
-            </Button>
-            <Button size="small" type="default" onClick={() => setQuickDateRange('last7')}>
-              {t('peopleReport.last7Days', '7 ngày qua')}
-            </Button>
-            <Button size="small" type="default" onClick={() => setQuickDateRange('last30')}>
-              {t('peopleReport.last30Days', '30 ngày qua')}
-            </Button>
-          </Space>
           <DatePicker.RangePicker
             showTime
             value={dateRange}
@@ -394,9 +409,28 @@ export default function PeopleReportOverview() {
           pageSize={10}
           total={filteredHistory.length}
           size="small"
-          scroll={{ x: 720 }}
+          scroll={{ x: 780 }}
         />
       </ContentCard>
+
+      <Modal
+        title={previewFace?.name ?? t('peopleReport.imagePreview', 'Xem ảnh người')}
+        open={!!previewFace}
+        onCancel={() => setPreviewFace(null)}
+        footer={null}
+        width={360}
+        centered
+      >
+        {previewFace && (
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <img
+              src={previewFace.src}
+              alt={previewFace.name}
+              style={{ maxWidth: '100%', maxHeight: 420, borderRadius: 10, objectFit: 'contain' }}
+            />
+          </div>
+        )}
+      </Modal>
     </PageContainer>
   )
 }

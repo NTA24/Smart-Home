@@ -224,3 +224,205 @@
   box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
   transform: translateY(-1px);
 }
+
+/* ═══════════════════════════════════════════════
+   Alerts – Settings modal (Cài đặt)
+   ═══════════════════════════════════════════════ */
+
+.alerts-page-settings-modal.ant-modal-wrap .ant-modal {
+  padding-bottom: 0;
+}
+
+.alerts-page-settings-modal .ant-modal-content {
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.alerts-page-settings-modal .ant-modal-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.alerts-page-settings-modal .ant-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+  letter-spacing: -0.02em;
+}
+
+.alerts-page-settings-modal .ant-modal-close {
+  top: 18px;
+  right: 20px;
+  color: #8c8c8c;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.alerts-page-settings-modal .ant-modal-close:hover {
+  color: #1a1a2e;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.alerts-page-settings-modal .ant-modal-body {
+  padding: 24px 24px 20px;
+}
+
+.alerts-settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.alerts-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.alerts-settings-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #262626;
+  line-height: 1.45;
+}
+
+.alerts-settings-field {
+  margin-top: 4px;
+}
+
+.alerts-settings-field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8c8c8c;
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+
+.alerts-settings-select.ant-select {
+  width: 100%;
+}
+
+.alerts-settings-select.ant-select .ant-select-selector {
+  border-radius: 8px;
+  border-color: #d9d9d9;
+  padding: 8px 12px;
+  min-height: 40px;
+}
+
+.alerts-settings-select.ant-select:hover .ant-select-selector,
+.alerts-settings-select.ant-select.ant-select-focused .ant-select-selector {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.alerts-settings-note {
+  font-size: 13px;
+  color: #8c8c8c;
+  line-height: 1.5;
+  padding-top: 16px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.alerts-page-settings-modal .ant-modal-footer {
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  gap: 12px;
+}
+
+.alerts-page-settings-modal .ant-modal-footer .ant-btn {
+  min-width: 80px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.alerts-page-settings-modal .ant-modal-footer .ant-btn-default {
+  border-color: #d9d9d9;
+  color: #595959;
+}
+
+.alerts-page-settings-modal .ant-modal-footer .ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+}
+
+/* ═══════════════════════════════════════════════
+   Admin Audit – Filter bar & actions (đồng bộ layout)
+   ═══════════════════════════════════════════════ */
+
+.admin-audit-filter-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.admin-audit-filter-bar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 24px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin-audit-filter-bar__actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Reset filter & Export list – đồng bộ style */
+.admin-audit-reset-btn.ant-btn {
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+  color: #595959;
+  font-weight: 500;
+  padding: 6px 16px;
+  height: auto;
+  min-height: 36px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s, color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.admin-audit-reset-btn.ant-btn:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+  background: rgba(24, 144, 255, 0.04);
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.12);
+}
+
+.admin-audit-reset-btn.ant-btn:active {
+  color: #096dd9;
+  border-color: #096dd9;
+  background: rgba(24, 144, 255, 0.08);
+}
+
+.admin-audit-reset-btn.ant-btn .anticon {
+  color: inherit;
+}
+
+.admin-audit-export-btn.ant-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 6px 16px;
+  height: auto;
+  min-height: 36px;
+}
+
+.admin-audit-export-btn.ant-btn-primary {
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+}
+
+.admin-audit-export-btn.ant-btn-primary:hover {
+  box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3);
+}

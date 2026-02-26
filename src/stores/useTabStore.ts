@@ -130,7 +130,6 @@ export const routeToLabelKey: Record<string, string> = {
   '/locker-map': 'menu.lockerMap',
   '/user-management': 'menu.userManagement',
   '/smart-building/elevator-control': 'menu.elevatorControl',
-  '/elevator-by-area': 'menu.elevatorByArea',
   '/elevator-dashboard': 'menu.elevatorDashboard',
   '/elevator-live': 'menu.elevatorLive',
   '/elevator-detail': 'menu.elevatorDetail',

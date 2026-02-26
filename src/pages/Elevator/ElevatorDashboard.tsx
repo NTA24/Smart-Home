@@ -44,16 +44,18 @@ const kpiData = {
   downtimeMonth: '1h 15m',
 }
 
-// Mock wait time by hour
-const waitTimeByHour = Array.from({ length: 24 }, (_, i) => ({
+// Mock wait time by hour (deterministic)
+const WAIT_TIMES = [10, 9, 7, 6, 7, 9, 15, 32, 42, 38, 28, 22, 20, 18, 22, 26, 30, 38, 45, 34, 24, 18, 14, 11]
+const waitTimeByHour = WAIT_TIMES.map((wait, i) => ({
   hour: `${String(i).padStart(2, '0')}:00`,
-  wait: i >= 7 && i <= 9 ? 35 + Math.floor(Math.random() * 20) : i >= 17 && i <= 19 ? 30 + Math.floor(Math.random() * 15) : 15 + Math.floor(Math.random() * 15),
+  wait,
 }))
 
-// Mock trips by floor
-const tripsByFloor = Array.from({ length: 20 }, (_, i) => ({
+// Mock trips by floor (deterministic)
+const FLOOR_TRIPS = [682, 853, 1858, 1122, 1112, 970, 482, 477, 212, 472]
+const tripsByFloor = FLOOR_TRIPS.map((trips, i) => ({
   floor: i === 0 ? 'B2' : i === 1 ? 'B1' : i === 2 ? 'G' : `${i - 2}F`,
-  trips: i === 2 ? 1850 : i <= 1 ? 600 + Math.floor(Math.random() * 300) : i <= 5 ? 800 + Math.floor(Math.random() * 400) : 200 + Math.floor(Math.random() * 500),
+  trips,
 }))
 
 export default function ElevatorDashboard() {
@@ -112,9 +114,9 @@ export default function ElevatorDashboard() {
       />
 
       {/* KPI Cards */}
-      <Row gutter={[16, 16]} className="mb-16">
-        <Col xs={12} sm={8} lg={4}>
-          <ContentCard className="mb-0" bodyStyle={{ padding: '16px' }}>
+      <Row gutter={[16, 16]} className="mb-16" align="stretch">
+        <Col xs={12} sm={8} lg={4} style={{ display: 'flex' }}>
+          <ContentCard className="mb-0 elevator_kpi-card" bodyStyle={{ padding: '16px' }} style={{ width: '100%' }}>
             <Statistic
               title={t('elevatorDash.elevatorsOnline')}
               value={kpiData.elevatorsOnline}
@@ -124,28 +126,28 @@ export default function ElevatorDashboard() {
             />
           </ContentCard>
         </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <ContentCard bodyStyle={{ padding: '16px' }}>
+        <Col xs={12} sm={8} lg={4} style={{ display: 'flex' }}>
+          <ContentCard className="elevator_kpi-card" bodyStyle={{ padding: '16px' }} style={{ width: '100%' }}>
             <Statistic
               title={t('elevatorDash.activeAlarms')}
               valueRender={() => (
-                <div>
-                  <Text strong className="text-4xl" style={{ color: kpiData.alarmsCritical > 0 ? '#f5222d' : '#52c41a' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, flexWrap: 'wrap' }}>
+                  <Text strong style={{ color: kpiData.alarmsCritical > 0 ? '#f5222d' : '#52c41a', fontSize: 24 }}>
                     {kpiData.alarmsCritical}
                   </Text>
-                  <Text className="text-base text-muted"> {t('elevatorDash.critical')}</Text>
-                  <Text strong className="text-xl text-warning ml-8">
+                  <Text className="text-xs text-muted">{t('elevatorDash.critical')}</Text>
+                  <Text strong style={{ color: '#fa8c16', fontSize: 18, marginLeft: 4 }}>
                     {kpiData.alarmsWarning}
                   </Text>
-                  <Text className="text-base text-muted"> {t('elevatorDash.warningLabel')}</Text>
+                  <Text className="text-xs text-muted">{t('elevatorDash.warningLabel')}</Text>
                 </div>
               )}
               prefix={<AlertOutlined className="text-warning" />}
             />
           </ContentCard>
         </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <ContentCard bodyStyle={{ padding: '16px' }}>
+        <Col xs={12} sm={8} lg={4} style={{ display: 'flex' }}>
+          <ContentCard className="elevator_kpi-card" bodyStyle={{ padding: '16px' }} style={{ width: '100%' }}>
             <Statistic
               title={t('elevatorDash.avgWaitTime')}
               value={kpiData.avgWaitTime}
@@ -155,8 +157,8 @@ export default function ElevatorDashboard() {
             />
           </ContentCard>
         </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <ContentCard bodyStyle={{ padding: '16px' }}>
+        <Col xs={12} sm={8} lg={4} style={{ display: 'flex' }}>
+          <ContentCard className="elevator_kpi-card" bodyStyle={{ padding: '16px' }} style={{ width: '100%' }}>
             <Statistic
               title={t('elevatorDash.avgTravelTime')}
               value={kpiData.avgTravelTime}
@@ -166,8 +168,8 @@ export default function ElevatorDashboard() {
             />
           </ContentCard>
         </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <ContentCard bodyStyle={{ padding: '16px' }}>
+        <Col xs={12} sm={8} lg={4} style={{ display: 'flex' }}>
+          <ContentCard className="elevator_kpi-card" bodyStyle={{ padding: '16px' }} style={{ width: '100%' }}>
             <Statistic
               title={t('elevatorDash.totalTrips')}
               value={kpiData.totalTrips}
@@ -176,8 +178,8 @@ export default function ElevatorDashboard() {
             />
           </ContentCard>
         </Col>
-        <Col xs={12} sm={8} lg={4}>
-          <ContentCard bodyStyle={{ padding: '16px' }}>
+        <Col xs={12} sm={8} lg={4} style={{ display: 'flex' }}>
+          <ContentCard className="elevator_kpi-card" bodyStyle={{ padding: '16px' }} style={{ width: '100%' }}>
             <Statistic
               title={t('elevatorDash.downtimeMonth')}
               value={kpiData.downtimeMonth}
@@ -189,40 +191,49 @@ export default function ElevatorDashboard() {
       </Row>
 
       {/* Charts row */}
-      <Row gutter={[16, 16]} className="mb-16">
+      <Row gutter={[16, 16]} className="mb-16" align="stretch">
         {/* Wait time by hour */}
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
           <ContentCard
             title={t('elevatorDash.waitTimeByHour')}
             titleIcon={<ClockCircleOutlined />}
             titleIconColor="#1890ff"
             bodyStyle={{ padding: '12px 16px' }}
+            style={{ width: '100%' }}
           >
-            <div className="elevator_chart-bars">
-              {waitTimeByHour.map((item, i) => {
-                const h = (item.wait / 60) * 140
-                const isPeak = (i >= 7 && i <= 9) || (i >= 17 && i <= 19)
-                return (
-                  <Tooltip key={i} title={`${item.hour}: ${item.wait}s`}>
-                    <div className="flex-1 flex flex-col items-center">
-                      <div
-                        style={{
-                          width: '100%',
-                          height: h,
-                          background: isPeak ? 'linear-gradient(180deg, #ff7a45 0%, #fa541c 100%)' : 'linear-gradient(180deg, #69c0ff 0%, #1890ff 100%)',
-                          borderRadius: '3px 3px 0 0',
-                          minHeight: 4,
-                          transition: 'height 0.3s',
-                        }}
-                      />
-                      {i % 3 === 0 && (
-                        <Text className="text-xs text-muted mt-2">{item.hour.split(':')[0]}</Text>
-                      )}
-                    </div>
-                  </Tooltip>
-                )
-              })}
-            </div>
+            {(() => {
+              const maxWait = Math.max(...waitTimeByHour.map(w => w.wait))
+              return (
+                <div>
+                  <div className="elevator_chart-bars">
+                    {waitTimeByHour.map((item, i) => {
+                      const h = (item.wait / maxWait) * 150
+                      const isPeak = (i >= 7 && i <= 9) || (i >= 17 && i <= 19)
+                      return (
+                        <Tooltip key={i} title={`${item.hour}: ${item.wait}s`}>
+                          <div className="elevator_chart-bar-col">
+                            <div
+                              className="elevator_chart-bar"
+                              style={{
+                                height: h,
+                                background: isPeak ? 'linear-gradient(180deg, #ff7a45 0%, #fa541c 100%)' : 'linear-gradient(180deg, #69c0ff 0%, #1890ff 100%)',
+                              }}
+                            />
+                          </div>
+                        </Tooltip>
+                      )
+                    })}
+                  </div>
+                  <div className="elevator_chart-labels">
+                    {waitTimeByHour.map((item, i) => (
+                      <div key={i} className="elevator_chart-label">
+                        {i % 3 === 0 ? item.hour.split(':')[0] : ''}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
             <div className="flex justify-center gap-20 mt-8">
               <Space size={4}><div className="elevator_legend-dot elevator_legend-dot--blue" /><Text className="text-11">{t('elevatorDash.normal')}</Text></Space>
               <Space size={4}><div className="elevator_legend-dot elevator_legend-dot--orange" /><Text className="text-11">{t('elevatorDash.peakHours')}</Text></Space>
@@ -231,12 +242,13 @@ export default function ElevatorDashboard() {
         </Col>
 
         {/* Trips by floor (horizontal bar) */}
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
           <ContentCard
             title={t('elevatorDash.tripsByFloor')}
             titleIcon={<ArrowUpOutlined />}
             titleIconColor="#722ed1"
-            bodyStyle={{ padding: '12px 16px', maxHeight: 220, overflowY: 'auto' }}
+            bodyStyle={{ padding: '12px 16px' }}
+            style={{ width: '100%' }}
           >
             {tripsByFloor.map((floor, i) => (
               <div key={i} className="flex items-center gap-8 mb-4">

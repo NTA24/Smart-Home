@@ -119,7 +119,7 @@ export default function MainLayout() {
 
   type MenuChild = { key: string; label: React.ReactNode; children?: MenuChild[]; disabled?: boolean }
   const menuConfig: { key: string; icon: React.ReactNode; label: React.ReactNode; children?: MenuChild[]; disabled?: boolean }[] = [
-    { key: '/dashboard', icon: <HomeOutlined />, label: t('menu.home') },
+    { key: '/dashboard', icon: <HomeOutlined />, label: <span style={{ fontWeight: 600 }}>{t('menu.home')}</span> },
     {
       key: 'security-camera', icon: <VideoCameraOutlined />,
       label: groupLabel('security-camera', '/security-monitoring', t('menu.securityCamera')),
@@ -165,7 +165,6 @@ export default function MainLayout() {
         { key: '/elevator-alarms', label: t('menu.elevatorAlarms') },
         { key: '/elevator-access', label: t('menu.elevatorAccess') },
         { key: '/elevator-maintenance', label: t('menu.elevatorMaintenance') },
-        { key: '/elevator-by-area', label: t('menu.elevatorByArea') },
       ],
     },
     {
@@ -178,11 +177,11 @@ export default function MainLayout() {
     },
     {
       key: 'energy-management', icon: <ThunderboltOutlined />,
-      label: groupLabel('energy-management', '/energy-meters', t('menu.energyManagement')),
+      label: groupLabel('energy-management', '/energy-data-center', t('menu.energyManagement')),
       children: [
+        { key: '/energy-data-center', label: t('menu.energyDataCenter') },
         { key: '/alarm-statistics', label: t('menu.alarmStatistics') },
         { key: '/energy-monitoring', label: t('menu.energyMonitoring') },
-        { key: '/energy-data-center', label: t('menu.energyDataCenter') },
         { key: '/energy-meters', label: t('menu.energyMeters') },
       ],
     },
@@ -260,8 +259,8 @@ export default function MainLayout() {
       key: 'switch-user',
       label: t('header.switchUser', 'Chuyển tài khoản'),
       children: [
-        { key: 'switch-admin', label: 'Admin', disabled: currentUser === 'admin' },
-        { key: 'switch-admin1', label: 'Admin1', disabled: currentUser === 'admin1' },
+        { key: 'switch-admin', label: t('header.accountAdmin', 'Viettel Telecom'), disabled: currentUser === 'admin' },
+        { key: 'switch-admin1', label: t('header.accountAdmin1', 'Smart Building'), disabled: currentUser === 'admin1' },
       ],
     },
     { type: 'divider' },
@@ -653,7 +652,7 @@ export default function MainLayout() {
             >
               <div className="header-action_user">
                 <Avatar icon={<UserOutlined />} size={32} />
-                <span className="header-action_username">{currentUser === 'admin1' ? 'Admin1' : 'Admin'}</span>
+                <span className="header-action_username">{currentUser === 'admin1' ? t('header.accountAdmin1', 'Smart Building') : t('header.accountAdmin', 'Viettel Telecom')}</span>
               </div>
             </Dropdown>
           </div>

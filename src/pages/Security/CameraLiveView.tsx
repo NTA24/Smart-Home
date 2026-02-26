@@ -18,6 +18,7 @@ import {
   SoundOutlined,
   AudioMutedOutlined,
   FullscreenOutlined,
+  FullscreenExitOutlined,
   ReloadOutlined,
   EnvironmentOutlined,
   CloseCircleOutlined,
@@ -49,6 +50,7 @@ interface CameraOverrideConfig {
 }
 
 const CAMERA_ITEMS_STORAGE_KEY = 'securityCamera.itemConfig'
+const YOUTUBE_MIN_LOADING_MS = 4000
 
 const cameras: Camera[] = [
   {
@@ -71,16 +73,16 @@ const cameras: Camera[] = [
     resolution: '4K',
     streamUrl: resolveCameraStreamUrl('/hls/699e639f021a61a13ee1ce32/index.m3u8'),
   },
-  { id: 'CAM-03', name: 'Elevator Hall 1F', location: 'Elevator', floor: '1F', status: 'online', type: 'indoor', resolution: '1080p', streamUrl: 'https://www.youtube.com/watch?v=SCpZOgLKVfY' },
-  { id: 'CAM-04', name: 'Office Floor 3', location: 'Office', floor: '3F', status: 'recording', type: 'indoor', resolution: '1080p' },
-  { id: 'CAM-05', name: 'Rooftop', location: 'Rooftop', floor: 'RF', status: 'online', type: 'outdoor', resolution: '4K' },
-  { id: 'CAM-06', name: 'Server Room', location: 'Server', floor: 'B1', status: 'recording', type: 'indoor', resolution: '1080p' },
-  { id: 'CAM-07', name: 'Parking Gate B', location: 'Parking', floor: 'B1', status: 'offline', type: 'outdoor', resolution: '1080p' },
-  { id: 'CAM-08', name: 'Meeting Room 5F', location: 'Meeting', floor: '5F', status: 'online', type: 'ptz', resolution: '1080p' },
-  { id: 'CAM-09', name: 'Fire Escape Stair', location: 'Stairwell', floor: '2F', status: 'recording', type: 'indoor', resolution: '720p' },
-  { id: 'CAM-10', name: 'Loading Dock', location: 'Dock', floor: '1F', status: 'recording', type: 'outdoor', resolution: '4K' },
-  { id: 'CAM-11', name: 'Lobby Side Entrance', location: 'Lobby B', floor: '1F', status: 'online', type: 'indoor', resolution: '1080p' },
-  { id: 'CAM-12', name: 'Garden Area', location: 'Garden', floor: '1F', status: 'online', type: 'ptz', resolution: '4K' },
+  { id: 'CAM-03', name: '1BKOP_CSV01', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV01.stream/playlist.m3u8' },
+  { id: 'CAM-04', name: '1BKOP_CSV02', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV02.stream/playlist.m3u8' },
+  { id: 'CAM-05', name: '1BKOP_CSV03', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV03.stream/playlist.m3u8' },
+  { id: 'CAM-06', name: '1ANOP_CSV04', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1ANOP_CSV04.stream/playlist.m3u8' },
+  { id: 'CAM-07', name: '1BKOP_CSV05', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV05.stream/playlist.m3u8' },
+  { id: 'CAM-08', name: 'Elevator Hall 1F', location: 'Elevator', floor: '1F', status: 'online', type: 'indoor', resolution: '1080p', streamUrl: 'https://www.youtube.com/watch?v=SCpZOgLKVfY' },
+  { id: 'CAM-09', name: 'YouTube Live', location: 'YouTube', floor: '1F', status: 'online', type: 'indoor', resolution: '1080p', streamUrl: 'https://www.youtube.com/watch?v=CaMkzNXwVcE' },
+  { id: 'CAM-10', name: 'CCTV P2C070', location: 'Live', floor: '1F', status: 'offline', type: 'outdoor', resolution: '1080p', streamUrl: 'http://183.88.214.137:1935/livecctv/cctvp2c070.stream/playlist.m3u8' },
+  { id: 'CAM-11', name: 'Camera 11', location: '—', floor: '1F', status: 'offline', type: 'indoor', resolution: '1080p' },
+  { id: 'CAM-12', name: 'Garden Area', location: 'Garden', floor: '1F', status: 'offline', type: 'ptz', resolution: '4K' },
 ]
 
 function readCameraOverrides(): CameraOverrideConfig[] {
@@ -99,6 +101,22 @@ const statusConfig = {
   offline: { color: '#ff4d4f', label: 'offline' },
 }
 
+function isMixedContent(streamUrl: string): boolean {
+  if (typeof window === 'undefined') return false
+  const u = (streamUrl || '').trim()
+  return window.location.protocol === 'https:' && u.toLowerCase().startsWith('http://')
+}
+
+function isEmbedPageUrl(streamUrl: string): boolean {
+  const u = (streamUrl || '').trim().toLowerCase()
+  try {
+    const host = new URL(u).hostname.toLowerCase()
+    return host.includes('earthcam.net') || host.includes('earthcam.com') || host.includes('skylinewebcams.com')
+  } catch {
+    return false
+  }
+}
+
 type GridLayout = '2x2' | '3x3' | '4x4'
 
 function CameraStreamPlayer({
@@ -115,22 +133,52 @@ function CameraStreamPlayer({
   const videoRef = useRef<HTMLVideoElement>(null)
   const [streamError, setStreamError] = useState<string | null>(null)
   const [activeSource, setActiveSource] = useState('')
+  const [youtubeLoading, setYoutubeLoading] = useState(false)
+  const [youtubeLoaded, setYoutubeLoaded] = useState(false)
+  const youtubeLoadStartRef = useRef(0)
+  const youtubeHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const youtubeEmbed = getYoutubeEmbedUrl(streamUrl)
-  if (youtubeEmbed) {
-    return (
-      <div className="security_yt-crop-wrap" style={{ width: '100%', height: '100%' }}>
-        <iframe
-          src={youtubeEmbed}
-          title={cameraId}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-    )
-  }
 
   useEffect(() => {
+    if (youtubeHideTimerRef.current) {
+      clearTimeout(youtubeHideTimerRef.current)
+      youtubeHideTimerRef.current = null
+    }
+    const enabled = Boolean(youtubeEmbed)
+    setYoutubeLoading(enabled)
+    setYoutubeLoaded(false)
+    if (enabled) youtubeLoadStartRef.current = Date.now()
+    return () => {
+      if (youtubeHideTimerRef.current) {
+        clearTimeout(youtubeHideTimerRef.current)
+        youtubeHideTimerRef.current = null
+      }
+    }
+  }, [youtubeEmbed, streamUrl])
+
+  useEffect(() => {
+    if (!youtubeEmbed || !youtubeLoaded) return
+    const elapsed = Date.now() - youtubeLoadStartRef.current
+    const remain = Math.max(0, YOUTUBE_MIN_LOADING_MS - elapsed)
+    if (remain === 0) {
+      setYoutubeLoading(false)
+      return
+    }
+    youtubeHideTimerRef.current = setTimeout(() => {
+      setYoutubeLoading(false)
+      youtubeHideTimerRef.current = null
+    }, remain)
+    return () => {
+      if (youtubeHideTimerRef.current) {
+        clearTimeout(youtubeHideTimerRef.current)
+        youtubeHideTimerRef.current = null
+      }
+    }
+  }, [youtubeEmbed, youtubeLoaded])
+
+  useEffect(() => {
+    if (youtubeEmbed || isEmbedPageUrl(streamUrl)) return
     const videoEl = videoRef.current
     const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
     if (!videoEl || playableCandidates.length === 0) return
@@ -160,7 +208,10 @@ function CameraStreamPlayer({
     const trySourceAt = (index: number) => {
       if (disposed) return
       if (index >= playableCandidates.length) {
-        setStreamError(t('cameraLive.streamFailed', 'Unable to decode this stream source'))
+        const msg = isMixedContent(streamUrl)
+          ? t('cameraLive.streamFailedMixedContent', 'HTTP stream may be blocked on HTTPS (mixed content). Try opening via http:// or use HTTPS stream.')
+          : t('cameraLive.streamFailed', 'Unable to decode this stream source')
+        setStreamError(msg)
         return
       }
 
@@ -246,14 +297,51 @@ function CameraStreamPlayer({
     try {
       trySourceAt(0)
     } catch {
-      setStreamError(t('cameraLive.streamFailed', 'Unable to decode this stream source'))
+      const msg = isMixedContent(streamUrl)
+        ? t('cameraLive.streamFailedMixedContent', 'HTTP stream may be blocked on HTTPS (mixed content). Try opening via http:// or use HTTPS stream.')
+        : t('cameraLive.streamFailed', 'Unable to decode this stream source')
+      setStreamError(msg)
     }
 
     return () => {
       disposed = true
       cleanupCurrent()
     }
-  }, [streamUrl, t])
+  }, [streamUrl, t, youtubeEmbed])
+
+  if (youtubeEmbed) {
+    return (
+      <div className="security_yt-crop-wrap" style={{ width: '100%', height: '100%' }}>
+        <iframe
+          src={youtubeEmbed}
+          title={cameraId}
+          style={{ visibility: youtubeLoading ? 'hidden' : 'visible' }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          onLoad={() => setYoutubeLoaded(true)}
+        />
+        {youtubeLoading && (
+          <div className="security_yt-loading-overlay">
+            <div className="security_yt-spinner" />
+            <Text className="security_yt-loading-text">Loading stream...</Text>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (isEmbedPageUrl(streamUrl)) {
+    return (
+      <div className="camera_feed-embed-wrap" style={{ width: '100%', height: '100%' }}>
+        <iframe
+          src={streamUrl}
+          title={cameraId}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    )
+  }
 
   return (
     <>
@@ -262,7 +350,22 @@ function CameraStreamPlayer({
         <div className="camera_feed-stream-error">
           <div className="camera_feed-stream-error-title">{cameraId}</div>
           <div>{streamError}</div>
-          {activeSource ? <div className="text-11 mt-4">{activeSource}</div> : null}
+          {streamUrl && streamUrl.trim().toLowerCase().startsWith('https://') && (
+            <div className="text-11 mt-2 opacity-90">{t('cameraLive.streamFailedCorsHint', 'Stream may be blocked by CORS or unreachable. Try opening the URL in a new tab.')}</div>
+          )}
+          {(activeSource || streamUrl) && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {activeSource && <div className="text-11 break-all">{activeSource}</div>}
+              <Button
+                type="link"
+                size="small"
+                className="p-0 h-auto text-cyan"
+                onClick={() => window.open(activeSource || streamUrl || '#', '_blank', 'noopener,noreferrer')}
+              >
+                {t('cameraLive.openInNewTab', 'Open link in new tab')}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </>
@@ -281,7 +384,14 @@ function CameraFeed({
   const normalizedStatus = camera.status === 'offline' ? 'offline' : 'online'
   const stCfg = statusConfig[normalizedStatus]
   const [muted, setMuted] = useState(true)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const videoBoxRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement))
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+  }, [])
 
   const toggleFullscreen = () => {
     const el = videoBoxRef.current
@@ -290,8 +400,7 @@ function CameraFeed({
       document.exitFullscreen()
       return
     }
-    el.requestFullscreen().catch(() => {
-    })
+    el.requestFullscreen().catch(() => {})
   }
 
   return (
@@ -321,11 +430,11 @@ function CameraFeed({
 
             {/* Controls overlay */}
             <div className="camera_feed-controls">
-              <Tooltip title={t('cameraLive.fullscreen', 'Fullscreen')}>
+              <Tooltip title={isFullscreen ? t('cameraLive.exitFullscreen', 'Thoát toàn màn hình') : t('cameraLive.fullscreen', 'Fullscreen')}>
                 <Button
                   size="small"
                   type="text"
-                  icon={<FullscreenOutlined />}
+                  icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                   className="camera_feed-btn-overlay"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -488,46 +597,19 @@ export default function CameraLiveView() {
         </Card>
       ) : (
         <>
-          {(() => {
-            const paged = filteredCameras.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-            const totalByFloor: Record<string, number> = {}
-            for (const cam of filteredCameras) {
-              totalByFloor[cam.floor] = (totalByFloor[cam.floor] || 0) + 1
-            }
-            const floorOrder: string[] = []
-            const byFloor: Record<string, Camera[]> = {}
-            for (const cam of paged) {
-              if (!byFloor[cam.floor]) {
-                byFloor[cam.floor] = []
-                floorOrder.push(cam.floor)
-              }
-              byFloor[cam.floor].push(cam)
-            }
-            return floorOrder.map(floor => (
-              <div key={floor} className="camera_floor-group">
-                <div className="camera_floor-label">
-                  <EnvironmentOutlined />
-                  <Text strong className="text-sm">
-                    {t('cameraLive.floor', 'Tầng')} {floor}
-                  </Text>
-                  <Text type="secondary" className="text-12">
-                    — {totalByFloor[floor]} camera
-                  </Text>
-                </div>
-                <Row gutter={[12, 12]}>
-                  {byFloor[floor].map((camera) => (
-                    <Col xs={24} sm={12} lg={colSpan} key={camera.id}>
-                      <CameraFeed
-                        camera={camera}
-                        t={t}
-                        compact={gridLayout === '4x4'}
-                      />
-                    </Col>
-                  ))}
-                </Row>
-              </div>
-            ))
-          })()}
+          <Row gutter={[12, 12]}>
+            {filteredCameras
+              .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+              .map((camera) => (
+                <Col xs={24} sm={12} lg={colSpan} key={camera.id}>
+                  <CameraFeed
+                    camera={camera}
+                    t={t}
+                    compact={gridLayout === '4x4'}
+                  />
+                </Col>
+              ))}
+          </Row>
           {filteredCameras.length > pageSize && (
             <div className="mt-12 flex justify-end">
               <Pagination
