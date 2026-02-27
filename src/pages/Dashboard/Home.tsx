@@ -63,7 +63,7 @@ export default function Home() {
   useEffect(() => { fetchTenants() }, [])
 
   const fetchTenants = async () => {
-    setLoading(true)
+    if (tenants.length === 0) setLoading(true)
     try {
       const res = await tenantApi.getList({ limit: 50, offset: 0 })
       setTenants(res?.items || [])
@@ -78,6 +78,7 @@ export default function Home() {
   const handleSelectTenant = async (tenant: Tenant) => {
     setSelectedTenantState(tenant)
     setStep('campuses')
+    navigate('/home/campus')
     setCampuses([])
     setBuildings([])
     setSelectedCampusState(null)
@@ -171,6 +172,7 @@ export default function Home() {
   const handleSelectCampus = async (campus: Campus) => {
     setSelectedCampusState(campus)
     setStep('buildings')
+    navigate('/home/building')
     setBuildings([])
     setLoading(true)
     try {
@@ -374,10 +376,12 @@ export default function Home() {
   const goBack = () => {
     if (step === 'buildings') {
       setStep('campuses')
+      navigate('/home/campus')
       setBuildings([])
       setSelectedCampusState(null)
     } else if (step === 'campuses') {
       setStep('tenants')
+      navigate('/home/tenant')
       setCampuses([])
       setSelectedTenantState(null)
     }
@@ -420,7 +424,7 @@ export default function Home() {
                   <span
                     className={step !== 'tenants' ? 'cursor-pointer' : ''}
                     style={{ color: step === 'tenants' ? '#fff' : 'rgba(255,255,255,0.7)' }}
-                    onClick={() => { if (step !== 'tenants') { setStep('tenants'); setCampuses([]); setBuildings([]); setSelectedTenantState(null); setSelectedCampusState(null) } }}
+                    onClick={() => { if (step !== 'tenants') { setStep('tenants'); navigate('/home/tenant'); setCampuses([]); setBuildings([]); setSelectedTenantState(null); setSelectedCampusState(null) } }}
                   >
                     <CloudServerOutlined /> {t('home.tenant')}
                   </span>
@@ -432,7 +436,7 @@ export default function Home() {
                       <span
                         className={step === 'buildings' ? 'cursor-pointer' : ''}
                         style={{ color: step === 'campuses' ? '#fff' : 'rgba(255,255,255,0.7)' }}
-                        onClick={() => { if (step === 'buildings') { setStep('campuses'); setBuildings([]); setSelectedCampusState(null) } }}
+                        onClick={() => { if (step === 'buildings') { setStep('campuses'); navigate('/home/campus'); setBuildings([]); setSelectedCampusState(null) } }}
                       >
                         <BankOutlined /> {selectedTenant?.name}
                       </span>
@@ -495,7 +499,8 @@ export default function Home() {
               icon={<ArrowLeftOutlined />}
               color="default"
               className="home_back-tag cursor-pointer"
-              onClick={goBack}
+              onClick={() => !loading && goBack()}
+              style={{ opacity: loading ? 0.6 : 1, pointerEvents: loading ? 'none' : 'auto' }}
             >
               {t('apiTest.back')}
             </Tag>
@@ -509,27 +514,27 @@ export default function Home() {
         </Title>
         {step === 'tenants' && (
           <div className="mb-12">
-            <Button type="primary" onClick={openCreateTenant}>
+            <Button type="primary" onClick={openCreateTenant} disabled={loading}>
               Thêm khách thuê
             </Button>
           </div>
         )}
         {step === 'campuses' && (
           <div className="mb-12">
-            <Button type="primary" onClick={openCreateCampus}>
+            <Button type="primary" onClick={openCreateCampus} disabled={loading}>
               Thêm khu viên
             </Button>
           </div>
         )}
         {step === 'buildings' && (
           <div className="mb-12">
-            <Button type="primary" onClick={openCreateBuilding}>
+            <Button type="primary" onClick={openCreateBuilding} disabled={loading}>
               Thêm tòa nhà
             </Button>
           </div>
         )}
 
-        <Spin spinning={loading}>
+        <Spin spinning={loading && !((step === 'tenants' && tenants.length > 0) || (step === 'campuses' && campuses.length > 0) || (step === 'buildings' && buildings.length > 0))}>
           {/* Tenants */}
           {step === 'tenants' && (
             <Row className="home_tenant-row" gutter={[24, 24]}>

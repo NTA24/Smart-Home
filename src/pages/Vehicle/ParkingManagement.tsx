@@ -103,7 +103,7 @@ export default function ParkingManagement() {
       </div>
 
       {/* Stat Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+      <Row gutter={[16, 16]} className="mb-20">
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title={t('parking.totalSpots')}
@@ -142,7 +142,7 @@ export default function ParkingManagement() {
       </Row>
 
       {/* Day/Month traffic and revenue */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+      <Row gutter={[16, 16]} className="mb-20">
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title={t('parking.inCountDay', 'Lượt vào (ngày)')}
@@ -178,7 +178,7 @@ export default function ParkingManagement() {
       </Row>
 
       <Row gutter={[16, 16]} className="mb-20" align="stretch">
-        <Col xs={24} lg={12} style={{ display: 'flex' }}>
+        <Col xs={24} lg={12} className="flex">
           <BarChart
             title={t('parking.hourlyTraffic')}
             categories={hourlyData}
@@ -187,12 +187,12 @@ export default function ParkingManagement() {
             cardStyle={{ width: '100%', height: '100%' }}
           />
         </Col>
-        <Col xs={24} lg={12} style={{ display: 'flex' }}>
+        <Col xs={24} lg={12} className="flex">
           <ContentCard
             title={t('parking.parkingZones')}
             titleIcon={<EnvironmentOutlined />}
             titleIconColor="#1890ff"
-            style={{ width: '100%' }}
+            className="w-full"
           >
             {parkingZones.map((zone) => {
               const percent = Math.round((zone.used / zone.total) * 100)
@@ -244,9 +244,9 @@ export default function ParkingManagement() {
             />
           </Col>
         </Row>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <Text strong style={{ fontSize: 15 }}>
-            <BarChartOutlined style={{ marginRight: 6 }} />
+        <div className="flex-between mb-12">
+          <Text strong className="text-15">
+            <BarChartOutlined className="mr-6" />
             {revenueMode === 'day'
               ? t('parking.revenueByHour', 'Doanh thu theo giờ (hôm nay)')
               : t('parking.revenueByDayOfMonth', 'Doanh thu theo ngày (tháng này)')}

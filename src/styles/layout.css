@@ -2,6 +2,20 @@
    MAIN LAYOUT STYLES
    ═══════════════════════════════════════════════ */
 
+/* ── Main layout wrapper ── */
+.main-layout-root {
+  min-height: 100vh;
+}
+
+.main-layout-inner {
+  transition: margin-left 0.2s;
+}
+
+.main-layout-content {
+  min-height: 280px;
+  overflow: auto;
+}
+
 /* ── Left Navbar ── */
 .left-nav {
   background: linear-gradient(180deg, #0d1b2a 0%, #1b263b 100%);
@@ -506,6 +520,19 @@
   object-fit: contain;
   filter: brightness(1.1);
   transition: opacity 0.3s ease;
+}
+
+/* ── Middle sidebar: dashboard label + selected menu item semi-bold ── */
+.middle-sidebar-menu_dashboard-label {
+  font-weight: 500;
+}
+
+.middle-sidebar-menu.ant-menu-inline .ant-menu-item.ant-menu-item-selected {
+  font-weight: 500;
+}
+
+.middle-sidebar-menu.ant-menu-inline .ant-menu-item.ant-menu-item-selected .ant-menu-title-content {
+  font-weight: 500;
 }
 
 /* ── Sidebar submenu group headers – bolder text ── */

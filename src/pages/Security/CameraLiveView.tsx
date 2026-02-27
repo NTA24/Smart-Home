@@ -28,7 +28,8 @@ import { ContentCard } from '@/components'
 import { useBuildingStore } from '@/stores'
 import mpegts from 'mpegts.js'
 import Hls from 'hls.js'
-import { getWebPlayableStreamCandidates, getYoutubeEmbedUrl, resolveCameraStreamUrl } from '@/utils/streamUrl'
+import { getWebPlayableStreamCandidates, getYoutubeEmbedUrl } from '@/utils/streamUrl'
+import { DEMO_CAMERAS } from './cameraConfig'
 
 const { Title, Text } = Typography
 
@@ -53,36 +54,10 @@ const CAMERA_ITEMS_STORAGE_KEY = 'securityCamera.itemConfig'
 const YOUTUBE_MIN_LOADING_MS = 4000
 
 const cameras: Camera[] = [
-  {
-    id: 'CAM-01',
-    name: 'Lobby Main Entrance',
-    location: 'Lobby A',
-    floor: '1F',
-    status: 'recording',
-    type: 'indoor',
-    resolution: '1080p',
-    streamUrl: 'https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/manifest/video.m3u8',
-  },
-  {
-    id: 'CAM-02',
-    name: 'Parking Gate A',
-    location: 'Parking',
-    floor: 'B1',
-    status: 'recording',
-    type: 'outdoor',
-    resolution: '4K',
-    streamUrl: resolveCameraStreamUrl('/hls/699e639f021a61a13ee1ce32/index.m3u8'),
-  },
-  { id: 'CAM-03', name: '1BKOP_CSV01', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV01.stream/playlist.m3u8' },
-  { id: 'CAM-04', name: '1BKOP_CSV02', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV02.stream/playlist.m3u8' },
-  { id: 'CAM-05', name: '1BKOP_CSV03', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV03.stream/playlist.m3u8' },
-  { id: 'CAM-06', name: '1ANOP_CSV04', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1ANOP_CSV04.stream/playlist.m3u8' },
-  { id: 'CAM-07', name: '1BKOP_CSV05', location: 'Highway Traffic', floor: '1F', status: 'online', type: 'outdoor', resolution: '1080p', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV05.stream/playlist.m3u8' },
-  { id: 'CAM-08', name: 'Elevator Hall 1F', location: 'Elevator', floor: '1F', status: 'online', type: 'indoor', resolution: '1080p', streamUrl: 'https://www.youtube.com/watch?v=SCpZOgLKVfY' },
-  { id: 'CAM-09', name: 'YouTube Live', location: 'YouTube', floor: '1F', status: 'online', type: 'indoor', resolution: '1080p', streamUrl: 'https://www.youtube.com/watch?v=CaMkzNXwVcE' },
-  { id: 'CAM-10', name: 'CCTV P2C070', location: 'Live', floor: '1F', status: 'offline', type: 'outdoor', resolution: '1080p', streamUrl: 'http://183.88.214.137:1935/livecctv/cctvp2c070.stream/playlist.m3u8' },
-  { id: 'CAM-11', name: 'Camera 11', location: '—', floor: '1F', status: 'offline', type: 'indoor', resolution: '1080p' },
-  { id: 'CAM-12', name: 'Garden Area', location: 'Garden', floor: '1F', status: 'offline', type: 'ptz', resolution: '4K' },
+  ...DEMO_CAMERAS,
+  // Các camera chưa có stream thật — giữ nguyên để UI đủ slots
+  { id: 'CAM-11', name: 'Camera 11',   location: '—',      floor: '1F', status: 'offline', type: 'indoor',  resolution: '1080p' },
+  { id: 'CAM-12', name: 'Garden Area', location: 'Garden', floor: '1F', status: 'offline', type: 'ptz',     resolution: '4K'    },
 ]
 
 function readCameraOverrides(): CameraOverrideConfig[] {
@@ -99,12 +74,6 @@ function readCameraOverrides(): CameraOverrideConfig[] {
 const statusConfig = {
   online: { color: '#52c41a', label: 'online' },
   offline: { color: '#ff4d4f', label: 'offline' },
-}
-
-function isMixedContent(streamUrl: string): boolean {
-  if (typeof window === 'undefined') return false
-  const u = (streamUrl || '').trim()
-  return window.location.protocol === 'https:' && u.toLowerCase().startsWith('http://')
 }
 
 function isEmbedPageUrl(streamUrl: string): boolean {
@@ -124,11 +93,13 @@ function CameraStreamPlayer({
   cameraId,
   muted,
   t,
+  onStreamError,
 }: {
   streamUrl: string
   cameraId: string
   muted: boolean
   t: any
+  onStreamError?: (hasError: boolean) => void
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [streamError, setStreamError] = useState<string | null>(null)
@@ -184,6 +155,7 @@ function CameraStreamPlayer({
     if (!videoEl || playableCandidates.length === 0) return
 
     setStreamError(null)
+    onStreamError?.(false)
     setActiveSource('')
     let player: mpegts.Player | null = null
     let hls: Hls | null = null
@@ -208,10 +180,8 @@ function CameraStreamPlayer({
     const trySourceAt = (index: number) => {
       if (disposed) return
       if (index >= playableCandidates.length) {
-        const msg = isMixedContent(streamUrl)
-          ? t('cameraLive.streamFailedMixedContent', 'HTTP stream may be blocked on HTTPS (mixed content). Try opening via http:// or use HTTPS stream.')
-          : t('cameraLive.streamFailed', 'Unable to decode this stream source')
-        setStreamError(msg)
+        setStreamError(t('cameraLive.lostConnection', 'Mất kết nối'))
+        onStreamError?.(true)
         return
       }
 
@@ -297,17 +267,15 @@ function CameraStreamPlayer({
     try {
       trySourceAt(0)
     } catch {
-      const msg = isMixedContent(streamUrl)
-        ? t('cameraLive.streamFailedMixedContent', 'HTTP stream may be blocked on HTTPS (mixed content). Try opening via http:// or use HTTPS stream.')
-        : t('cameraLive.streamFailed', 'Unable to decode this stream source')
-      setStreamError(msg)
+      setStreamError(t('cameraLive.lostConnection', 'Mất kết nối'))
+      onStreamError?.(true)
     }
 
     return () => {
       disposed = true
       cleanupCurrent()
     }
-  }, [streamUrl, t, youtubeEmbed])
+  }, [streamUrl, t, youtubeEmbed, onStreamError])
 
   if (youtubeEmbed) {
     return (
@@ -347,25 +315,9 @@ function CameraStreamPlayer({
     <>
       <video ref={videoRef} className="camera_feed-video-element" autoPlay muted={muted} playsInline controls={false} />
       {streamError && (
-        <div className="camera_feed-stream-error">
-          <div className="camera_feed-stream-error-title">{cameraId}</div>
-          <div>{streamError}</div>
-          {streamUrl && streamUrl.trim().toLowerCase().startsWith('https://') && (
-            <div className="text-11 mt-2 opacity-90">{t('cameraLive.streamFailedCorsHint', 'Stream may be blocked by CORS or unreachable. Try opening the URL in a new tab.')}</div>
-          )}
-          {(activeSource || streamUrl) && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {activeSource && <div className="text-11 break-all">{activeSource}</div>}
-              <Button
-                type="link"
-                size="small"
-                className="p-0 h-auto text-cyan"
-                onClick={() => window.open(activeSource || streamUrl || '#', '_blank', 'noopener,noreferrer')}
-              >
-                {t('cameraLive.openInNewTab', 'Open link in new tab')}
-              </Button>
-            </div>
-          )}
+        <div className="camera_feed-stream-error camera_feed-stream-error--signal">
+          <CloseCircleOutlined className="camera_feed-stream-error-icon" />
+          <div className="camera_feed-stream-error-text">{streamError}</div>
         </div>
       )}
     </>
@@ -381,7 +333,8 @@ function CameraFeed({
   t: any
   compact?: boolean
 }) {
-  const normalizedStatus = camera.status === 'offline' ? 'offline' : 'online'
+  const [hasStreamError, setHasStreamError] = useState(false)
+  const normalizedStatus = camera.status === 'offline' || hasStreamError ? 'offline' : 'online'
   const stCfg = statusConfig[normalizedStatus]
   const [muted, setMuted] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -412,7 +365,7 @@ function CameraFeed({
       {/* Video area placeholder */}
       <div
         ref={videoBoxRef}
-        className={`camera_feed-video ${camera.status === 'offline' ? 'camera_feed-video--offline' : 'camera_feed-video--live'}`}
+        className={`camera_feed-video ${normalizedStatus === 'offline' ? 'camera_feed-video--offline' : 'camera_feed-video--live'}`}
         style={{ height: compact ? 140 : 180 }}
       >
         {camera.status === 'offline' ? (
@@ -423,7 +376,13 @@ function CameraFeed({
         ) : (
           <>
             {camera.streamUrl ? (
-              <CameraStreamPlayer streamUrl={camera.streamUrl} cameraId={camera.id} muted={muted} t={t} />
+              <CameraStreamPlayer
+                streamUrl={camera.streamUrl}
+                cameraId={camera.id}
+                muted={muted}
+                t={t}
+                onStreamError={setHasStreamError}
+              />
             ) : (
               <VideoCameraOutlined style={{ fontSize: 40, color: 'rgba(255,255,255,0.15)' }} />
             )}

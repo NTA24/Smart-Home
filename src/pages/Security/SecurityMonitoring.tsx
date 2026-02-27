@@ -7,6 +7,7 @@ import {
   UserOutlined,
   EnvironmentOutlined,
   CloseOutlined,
+  CloseCircleOutlined,
   PlayCircleOutlined
 } from '@ant-design/icons'
 import securityBg from '../../assets/security-bg-2.png'
@@ -89,14 +90,21 @@ const CameraVideoModal: React.FC<{
   streamUrl?: string
   onClose: () => void
 }> = ({ visible, camera, streamUrl, onClose }) => {
+  const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [streamError, setStreamError] = useState(false)
   const youtubeEmbed = getYoutubeEmbedUrl(streamUrl)
 
   useEffect(() => {
+    if (!visible) return
+    setStreamError(false)
     if (isYoutubeUrl(streamUrl)) return
     const videoEl = videoRef.current
     const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
-    if (!visible || !videoEl || playableCandidates.length === 0) return
+    if (!videoEl || playableCandidates.length === 0) {
+      setStreamError(true)
+      return
+    }
 
     let hls: Hls | null = null
     let player: mpegts.Player | null = null
@@ -117,7 +125,10 @@ const CameraVideoModal: React.FC<{
 
     const trySourceAt = (index: number) => {
       if (disposed) return
-      if (index >= playableCandidates.length) return
+      if (index >= playableCandidates.length) {
+        setStreamError(true)
+        return
+      }
       const source = playableCandidates[index]
       cleanupCurrent()
 
@@ -191,7 +202,11 @@ const CameraVideoModal: React.FC<{
       trySourceAt(index + 1)
     }
 
-    trySourceAt(0)
+    try {
+      trySourceAt(0)
+    } catch {
+      setStreamError(true)
+    }
 
     return () => {
       disposed = true
@@ -231,14 +246,22 @@ const CameraVideoModal: React.FC<{
               />
             </div>
           ) : streamUrl ? (
-            <video
-              ref={videoRef}
-              className="camera_feed-video-element"
-              autoPlay
-              muted
-              playsInline
-              controls={false}
-            />
+            <>
+              <video
+                ref={videoRef}
+                className="camera_feed-video-element"
+                autoPlay
+                muted
+                playsInline
+                controls={false}
+              />
+              {streamError && (
+                <div className="camera_feed-stream-error camera_feed-stream-error--signal security_modal-stream-error">
+                  <CloseCircleOutlined className="camera_feed-stream-error-icon" />
+                  <div className="camera_feed-stream-error-text">{t('cameraLive.lostConnection', 'Mất kết nối')}</div>
+                </div>
+              )}
+            </>
           ) : (
             <PlayCircleOutlined className="security_play-icon cursor-pointer transition-all text-4xl opacity-90" />
           )}
@@ -297,14 +320,20 @@ const CameraThumbnail: React.FC<{
   streamUrl?: string
   onClick?: () => void
 }> = ({ label, sublabel, isLive, camId, streamUrl, onClick }) => {
+  const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [streamError, setStreamError] = useState(false)
   const youtubeEmbed = getYoutubeEmbedUrl(streamUrl)
 
   useEffect(() => {
+    setStreamError(false)
     if (isYoutubeUrl(streamUrl)) return
     const videoEl = videoRef.current
     const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
-    if (!videoEl || playableCandidates.length === 0) return
+    if (!videoEl || playableCandidates.length === 0) {
+      setStreamError(true)
+      return
+    }
 
     let hls: Hls | null = null
     let player: mpegts.Player | null = null
@@ -327,7 +356,10 @@ const CameraThumbnail: React.FC<{
 
     const trySourceAt = (index: number) => {
       if (disposed) return
-      if (index >= playableCandidates.length) return
+      if (index >= playableCandidates.length) {
+        setStreamError(true)
+        return
+      }
       const source = playableCandidates[index]
       cleanupCurrent()
 
@@ -401,7 +433,11 @@ const CameraThumbnail: React.FC<{
       trySourceAt(index + 1)
     }
 
-    trySourceAt(0)
+    try {
+      trySourceAt(0)
+    } catch {
+      setStreamError(true)
+    }
 
     return () => {
       disposed = true
@@ -428,14 +464,22 @@ const CameraThumbnail: React.FC<{
             allowFullScreen
           />
         ) : streamUrl ? (
-          <video
-            ref={videoRef}
-            className="camera_feed-video-element"
-            autoPlay
-            muted
-            playsInline
-            controls={false}
-          />
+          <>
+            <video
+              ref={videoRef}
+              className="camera_feed-video-element"
+              autoPlay
+              muted
+              playsInline
+              controls={false}
+            />
+            {streamError && (
+              <div className="camera_feed-stream-error camera_feed-stream-error--signal">
+                <CloseCircleOutlined className="camera_feed-stream-error-icon" />
+                <div className="camera_feed-stream-error-text">{t('cameraLive.lostConnection', 'Mất kết nối')}</div>
+              </div>
+            )}
+          </>
         ) : null}
         {isLive && (
           <div className="security_thumbnail-live-badge">
@@ -522,14 +566,20 @@ const SnapshotVideo: React.FC<{
   onClick?: () => void
   onVideoRef?: (el: HTMLVideoElement | null) => void
 }> = ({ streamUrl, onClick, onVideoRef }) => {
+  const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [streamError, setStreamError] = useState(false)
   const youtubeEmbed = getYoutubeEmbedUrl(streamUrl)
 
   useEffect(() => {
+    setStreamError(false)
     if (isYoutubeUrl(streamUrl)) return
     const videoEl = videoRef.current
     const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
-    if (!videoEl || playableCandidates.length === 0) return
+    if (!videoEl || playableCandidates.length === 0) {
+      setStreamError(true)
+      return
+    }
 
     let hls: Hls | null = null
     let player: mpegts.Player | null = null
@@ -550,7 +600,10 @@ const SnapshotVideo: React.FC<{
 
     const trySourceAt = (index: number) => {
       if (disposed) return
-      if (index >= playableCandidates.length) return
+      if (index >= playableCandidates.length) {
+        setStreamError(true)
+        return
+      }
       const source = playableCandidates[index]
       cleanupCurrent()
 
@@ -614,7 +667,11 @@ const SnapshotVideo: React.FC<{
       trySourceAt(index + 1)
     }
 
-    trySourceAt(0)
+    try {
+      trySourceAt(0)
+    } catch {
+      setStreamError(true)
+    }
     return () => {
       disposed = true
       cleanupCurrent()
@@ -659,6 +716,12 @@ const SnapshotVideo: React.FC<{
         playsInline
         controls={false}
       />
+      {streamError && (
+        <div className="camera_feed-stream-error camera_feed-stream-error--signal">
+          <CloseCircleOutlined className="camera_feed-stream-error-icon" />
+          <div className="camera_feed-stream-error-text">{t('cameraLive.lostConnection', 'Mất kết nối')}</div>
+        </div>
+      )}
     </div>
   )
 }

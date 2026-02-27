@@ -15,7 +15,7 @@ import { PieChart, LineChart, PageContainer, PageHeader, ContentCard, ChartCard 
 import { useBuildingStore } from '@/stores'
 import building3dImage from '@/assets/building-3d.png'
 
-const { Text } = Typography
+const { Text, Title } = Typography
 
 function StatCard({
   icon,
@@ -144,6 +144,9 @@ export default function Dashboard() {
 
   return (
     <PageContainer>
+      <Title level={3} className="dashboard_page-title">
+        {t('menu.dashboard')}
+      </Title>
       <PageHeader
         title={selectedBuilding?.name || t('dashboard.mainOfficeBuilding')}
         icon={
@@ -154,20 +157,20 @@ export default function Dashboard() {
         subtitle={<><ClockCircleOutlined /> {t('dashboard.lastUpdated')}: 11:25</>}
         actions={
           <>
-            <Select defaultValue="main" style={{ width: 180 }} size="middle">
+            <Select defaultValue="main" className="dashboard_select-w180" size="middle">
               <Select.Option value="main">{t('dashboard.mainOfficeBuilding')}</Select.Option>
               <Select.Option value="tower">Viettel Tower</Select.Option>
             </Select>
-            <Select defaultValue="all" style={{ width: 120 }}>
+            <Select defaultValue="all" className="dashboard_select-w120">
               <Select.Option value="all">{t('dashboard.allFloors')}</Select.Option>
               <Select.Option value="1">{t('dashboard.floor')} 1</Select.Option>
               <Select.Option value="2">{t('dashboard.floor')} 2</Select.Option>
             </Select>
-            <Select defaultValue="today" style={{ width: 100 }}>
+            <Select defaultValue="today" className="dashboard_select-w100">
               <Select.Option value="today">{t('dashboard.today')}</Select.Option>
               <Select.Option value="week">{t('dashboard.thisWeek')}</Select.Option>
             </Select>
-            <Select defaultValue="10" style={{ width: 100 }}>
+            <Select defaultValue="10" className="dashboard_select-w100">
               <Select.Option value="10">10 {t('dashboard.day')}</Select.Option>
               <Select.Option value="30">30 {t('dashboard.day')}</Select.Option>
             </Select>

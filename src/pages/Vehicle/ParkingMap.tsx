@@ -203,8 +203,10 @@ export default function ParkingMap() {
       return new Set([target])
     }
     if (selectedBuildingKey && selectedSlot) return new Set([selectedSlot.id])
+    // Khi filter theo loại xe (có xe): vẽ đường đi tới các ô được highlight, tối đa 10 ô
+    if (highlightedIds.size > 0) return new Set([...highlightedIds].slice(0, 10))
     return new Set<string>()
-  }, [plateSearchApplied, searchResultSlots, selectedBuildingKey, selectedSlot])
+  }, [plateSearchApplied, searchResultSlots, selectedBuildingKey, selectedSlot, highlightedIds])
 
   const highlightedIdsRef = useRef(highlightedIds)
   highlightedIdsRef.current = highlightedIds
@@ -229,7 +231,7 @@ export default function ParkingMap() {
         : bldRow
       if (!startEl) { setPathRoutes([]); return }
       const bld = rel(startEl)
-      // Chỉ dùng các đường có gạch vàng: 4 làn ngang (.parkmap_lane-h) + làn trong block (.parkmap_block-lane)
+      // Đường đi chỉ chạy theo vạch vàng ngang: 4 làn .parkmap_lane-h (roadH0–roadH3) + làn trong block .parkmap_block-lane
       const lanes = Array.from(container.querySelectorAll('.parkmap_lane-h'))
       if (lanes.length < 4) { setPathRoutes([]); return }
 
@@ -267,7 +269,7 @@ export default function ParkingMap() {
         const pts: [number, number][] = [[bld.x, bld.y]]
         const laneY = getBlockLaneY(el)
         const gapX = pickGap(s.x)
-        // Đi theo đúng các đường gạch vàng: đoạn ngang chỉ đặt trên roadH0/roadH1/roadH2/roadH3 hoặc lane (trong block); đoạn dọc chỉ tại bld.x, gapX hoặc vào ô.
+        // Đoạn ngang chỉ trên vạch vàng: roadH0|roadH1|roadH2|roadH3 hoặc lane trong block; đoạn dọc chỉ tại bld.x hoặc gapX.
         if (s.y < roadH0) {
           pts.push([bld.x, roadH1], [bld.x, roadH0], [s.x, roadH0], [s.x, s.y])
         } else if (s.y < roadH1) {
@@ -289,8 +291,13 @@ export default function ParkingMap() {
             pts.push([bld.x, roadH2], [s.x, roadH2], [s.x, s.y])
           }
         } else {
+          // Ô nằm giữa (band building): vẫn đi theo vạch vàng — road → gap → lane → ô
           const roadY = s.y < bld.y ? roadH1 : roadH2
-          pts.push([bld.x, roadY], [s.x, roadY], [s.x, s.y])
+          if (laneY != null) {
+            pts.push([bld.x, roadY], [gapX, roadY], [gapX, laneY], [s.x, laneY], [s.x, s.y])
+          } else {
+            pts.push([bld.x, roadY], [s.x, roadY], [s.x, s.y])
+          }
         }
         routes.push({ id: slotId, pts })
       })
@@ -404,8 +411,12 @@ export default function ParkingMap() {
   const RoadH = () => (
     <div className="parkmap_lane-h" data-road="h">
       <div className="parkmap_lane-dash" />
-      <span className="parkmap_lane-arrow">← →</span>
-      <div className="parkmap_lane-dash" />
+    </div>
+  )
+
+  const RoadV = () => (
+    <div className="parkmap_lane-v" data-road="v" aria-hidden>
+      <div className="parkmap_lane-v-dash" />
     </div>
   )
 
@@ -586,17 +597,19 @@ export default function ParkingMap() {
 
               <RoadH />
 
-              {/* ── Upper parking: 3 blocks ── */}
-              <div className="parkmap_3col parkmap_3col--parking" data-road="top">
-                <ParkBlock upper={p2} lower={p3} label="P2 · P3" />
-                <ParkBlock upper={p4} lower={p5} label="P4 · P5" />
-                <ParkBlock upper={p6} lower={p7} label="P6 · P7" />
+              {/* ── Upper parking: 3 blocks + đường vàng giữa các P ── */}
+              <div className="parkmap_3col parkmap_3col--parking parkmap_3col--with-vlanes" data-road="top">
+                <ParkBlock upper={p2} lower={p3} label="P2" />
+                <RoadV />
+                <ParkBlock upper={p4} lower={p5} label="P3" />
+                <RoadV />
+                <ParkBlock upper={p6} lower={p7} label="P4" />
               </div>
 
               <RoadH />
 
-              {/* ── Buildings: A, B, C (click to select → path from here to selected slot) ── */}
-              <div className="parkmap_3col parkmap_3col--buildings" ref={buildingRef} data-road="mid">
+              {/* ── Buildings: A, B, C (cùng grid 5 cột như hàng P để đường vàng thẳng hàng) ── */}
+              <div className="parkmap_3col parkmap_3col--buildings parkmap_3col--with-vlanes" ref={buildingRef} data-road="mid">
                 <div
                   ref={buildingARef}
                   role="button"
@@ -610,6 +623,7 @@ export default function ParkingMap() {
                   <span className="parkmap_bldg-name">A</span>
                   <span className="parkmap_bldg-sub">TÒA NHÀ A</span>
                 </div>
+                <RoadV />
                 <div
                   ref={buildingBRef}
                   role="button"
@@ -623,6 +637,7 @@ export default function ParkingMap() {
                   <span className="parkmap_bldg-name">B</span>
                   <span className="parkmap_bldg-sub">TÒA NHÀ CHÍNH</span>
                 </div>
+                <RoadV />
                 <div
                   ref={buildingCRef}
                   role="button"
@@ -640,11 +655,13 @@ export default function ParkingMap() {
 
               <RoadH />
 
-              {/* ── Lower parking: 3 blocks ── */}
-              <div className="parkmap_3col parkmap_3col--parking" data-road="bottom">
-                <ParkBlock upper={p8} lower={p9} label="P8 · P9" />
-                <ParkBlock upper={p10} lower={p11} label="P10 · P11" />
-                <ParkBlock upper={p12} lower={p13} label="P12 · P13" />
+              {/* ── Lower parking: 3 blocks + đường vàng giữa các P ── */}
+              <div className="parkmap_3col parkmap_3col--parking parkmap_3col--with-vlanes" data-road="bottom">
+                <ParkBlock upper={p8} lower={p9} label="P5" />
+                <RoadV />
+                <ParkBlock upper={p10} lower={p11} label="P6" />
+                <RoadV />
+                <ParkBlock upper={p12} lower={p13} label="P7" />
               </div>
 
               <RoadH />

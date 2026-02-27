@@ -1620,6 +1620,7 @@
     "streamFailed": "Unable to decode this stream source",
     "streamFailedMixedContent": "HTTP stream may be blocked by the browser on HTTPS pages (mixed content). Try opening the page via http:// or use an HTTPS stream.",
     "streamFailedCorsHint": "Streams from other domains may be blocked by CORS or unreachable from your network. Try opening the URL in a new tab to verify.",
+    "lostConnection": "Lost connection",
     "openInNewTab": "Open link in new tab",
     "noCameras": "No cameras found",
     "floor": "Floor"

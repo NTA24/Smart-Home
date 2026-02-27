@@ -3,6 +3,16 @@
    ═══════════════════════════════════════════════ */
 
 /* ── Dashboard ── */
+.dashboard_page-title {
+  font-weight: 500;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.dashboard_select-w180 { width: 180px; }
+.dashboard_select-w120 { width: 120px; }
+.dashboard_select-w100 { width: 100px; }
+
 .dashboard_stat-card {
   border-radius: 16px;
   height: 100%;

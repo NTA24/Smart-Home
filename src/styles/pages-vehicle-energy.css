@@ -526,12 +526,37 @@
   gap: 16px;
 }
 
-/* Widen both vertical corridors between 3 parking groups (and align buildings row). */
-.parkmap_3col--parking > :nth-child(1),
-.parkmap_3col--parking > :nth-child(2),
-.parkmap_3col--buildings > :nth-child(1),
-.parkmap_3col--buildings > :nth-child(2) {
+/* Widen both vertical corridors between 3 parking groups (chỉ khi không dùng grid 5 cột). */
+.parkmap_3col--parking:not(.parkmap_3col--with-vlanes) > :nth-child(1),
+.parkmap_3col--parking:not(.parkmap_3col--with-vlanes) > :nth-child(2),
+.parkmap_3col--buildings:not(.parkmap_3col--with-vlanes) > :nth-child(1),
+.parkmap_3col--buildings:not(.parkmap_3col--with-vlanes) > :nth-child(2) {
   margin-right: 22px;
+}
+
+/* 5 cột khi có đường vàng dọc giữa các P: [P] [lane] [P] [lane] [P] */
+.parkmap_3col--with-vlanes {
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: 0 24px;
+}
+
+/* ── Đường vàng dọc giữa các khu P (thể hiện lối đi): cao hết cỡ, ngang hẹp ── */
+.parkmap_lane-v {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  width: 6px;
+  min-width: 6px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.parkmap_lane-v-dash {
+  flex: 1;
+  min-height: 0;
+  width: 1px;
+  background: repeating-linear-gradient(180deg, #fbbf24 0px, #fbbf24 8px, transparent 8px, transparent 16px);
+  opacity: 0.4;
 }
 
 .parkmap_3col--buildings {
@@ -583,13 +608,21 @@
   gap: 12px;
   padding: 10px 0;
   width: 100%;
+  min-height: 24px;
+  box-sizing: border-box;
 }
 
 .parkmap_lane-dash {
   flex: 1;
+  min-width: 0;
   height: 2px;
+  min-height: 2px;
+  align-self: center;
+  flex-shrink: 1;
   background: repeating-linear-gradient(90deg, #fbbf24 0px, #fbbf24 14px, transparent 14px, transparent 24px);
   opacity: 0.45;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .parkmap_lane-arrow {
@@ -1038,6 +1071,24 @@
   background: rgba(0, 0, 0, 0.45);
   text-align: center;
   padding: 12px;
+}
+
+.camera_feed-stream-error--signal {
+  background: transparent;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.camera_feed-stream-error-icon {
+  font-size: 40px;
+  color: #ff4d4f;
+  margin-bottom: 4px;
+}
+
+.camera_feed-stream-error-text {
+  font-size: 13px;
+  color: #ff4d4f;
+  font-weight: 500;
 }
 
 .camera_feed-stream-error-title {

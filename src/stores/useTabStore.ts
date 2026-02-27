@@ -3,8 +3,8 @@ import { persist } from 'zustand/middleware'
 
 export interface Tab {
   key: string
-  labelKey?: string // Translation key for dynamic label
-  label?: string // Fallback static label
+  labelKey?: string  // i18n key
+  label?: string     // fallback static label
   closable?: boolean
 }
 
@@ -16,10 +16,9 @@ interface TabState {
   setActiveKey: (key: string) => void
 }
 
-// Default tab - Dashboard không thể đóng
 const defaultTab: Tab = {
   key: '/dashboard',
-  labelKey: 'menu.dashboard', // Use translation key
+  labelKey: 'menu.dashboard',
   closable: false,
 }
 
@@ -31,13 +30,9 @@ export const useTabStore = create<TabState>()(
 
       addTab: (tab) => {
         const { tabs } = get()
-        const exists = tabs.find((t) => t.key === tab.key)
-
+        const exists = tabs.find(t => t.key === tab.key)
         if (!exists) {
-          set({
-            tabs: [...tabs, { ...tab, closable: tab.closable !== false }],
-            activeKey: tab.key
-          })
+          set({ tabs: [...tabs, { ...tab, closable: tab.closable !== false }], activeKey: tab.key })
         } else {
           set({ activeKey: tab.key })
         }
@@ -45,9 +40,8 @@ export const useTabStore = create<TabState>()(
 
       removeTab: (key) => {
         const { tabs, activeKey } = get()
-        const targetIndex = tabs.findIndex((t) => t.key === key)
-        const newTabs = tabs.filter((t) => t.key !== key)
-
+        const targetIndex = tabs.findIndex(t => t.key === key)
+        const newTabs = tabs.filter(t => t.key !== key)
         let newActiveKey: string | null = null
         if (key === activeKey && newTabs.length > 0) {
           const newIndex = targetIndex >= newTabs.length ? newTabs.length - 1 : targetIndex
@@ -56,7 +50,6 @@ export const useTabStore = create<TabState>()(
         } else {
           set({ tabs: newTabs })
         }
-
         return newActiveKey
       },
 
@@ -69,95 +62,15 @@ export const useTabStore = create<TabState>()(
           const str = sessionStorage.getItem(name)
           return str ? JSON.parse(str) : null
         },
-        setItem: (name, value) => {
-          sessionStorage.setItem(name, JSON.stringify(value))
-        },
-        removeItem: (name) => {
-          sessionStorage.removeItem(name)
-        },
+        setItem: (name, value) => sessionStorage.setItem(name, JSON.stringify(value)),
+        removeItem: (name) => sessionStorage.removeItem(name),
       },
     }
   )
 )
 
-// Map route key to translation key
-export const routeToLabelKey: Record<string, string> = {
-  '/dashboard': 'menu.dashboard',
-  '/parking': 'menu.parkingList',
-  '/vehicle-access-control': 'menu.vehicleAccessControl',
-  '/live-entrance': 'menu.liveEntrance',
-  '/live-exit': 'menu.liveExit',
-  '/parking-map': 'menu.parkingMap',
-  '/parking-tickets': 'menu.parkingTickets',
-  '/parking-subscription': 'menu.parkingSubscription',
-  '/parking-devices': 'menu.parkingDevices',
-  '/vehicle-config': 'menu.vehicleConfig',
-  '/devices': 'menu.deviceManagement',
-  '/energy': 'menu.energyMonitor',
-  '/alarm-statistics': 'menu.alarmStatistics',
-  '/energy-monitoring': 'menu.energyMonitoring',
-  '/equipment-operation': 'menu.equipmentOperation',
-  '/visitor-distribution': 'menu.visitorDistribution',
-  '/smart-building': 'menu.smartBuildingOverview',
-  '/smart-building/architecture': 'menu.architecture',
-  '/smart-building/journeys': 'menu.journeys',
-  '/smart-building/solutions': 'menu.solutions',
-  '/smart-building/investment': 'menu.investment',
-  '/smart-building/implementation': 'menu.implementation',
-  '/smart-building/contact': 'menu.contact',
-  '/energy-data-center': 'menu.energyDataCenter',
-  '/energy-meters': 'menu.energyMeters',
-  '/hvac-assets': 'menu.hvacAssets',
-  '/iaq-sensors': 'menu.iaqSensors',
-  '/energy-aggregates': 'menu.energyAggregates',
-  '/energy-telemetry': 'menu.energyTelemetry',
-  '/iaq-telemetry': 'menu.iaqTelemetry',
-  '/hvac-telemetry': 'menu.hvacTelemetry',
-  '/security-monitoring': 'menu.securityCenter',
-  '/camera-live': 'menu.cameraLive',
-  '/camera-playback': 'menu.cameraPlayback',
-  '/camera-config': 'menu.cameraConfig',
-  '/people-directory': 'menu.peopleDirectory',
-  '/people-visitors': 'menu.peopleVisitors',
-  '/people-access-logs': 'menu.peopleAccessLogs',
-  '/people-alerts': 'menu.peopleAlerts',
-  '/people-admin-audit': 'menu.peopleAdminAudit',
-  '/personnel-management': 'menu.personnelManagement',
-  '/people-report-overview': 'menu.peopleReportOverview',
-  '/robot-management': 'menu.robotManagement',
-  '/luggage-control': 'menu.luggageControl',
-  '/item-control': 'menu.itemControlDashboard',
-  '/locker-map': 'menu.lockerMap',
-  '/user-management': 'menu.userManagement',
-  '/smart-building/elevator-control': 'menu.elevatorControl',
-  '/elevator-dashboard': 'menu.elevatorDashboard',
-  '/elevator-live': 'menu.elevatorLive',
-  '/elevator-detail': 'menu.elevatorDetail',
-  '/elevator-alarms': 'menu.elevatorAlarms',
-  '/elevator-access': 'menu.elevatorAccess',
-  '/elevator-maintenance': 'menu.elevatorMaintenance',
-  '/robot-dashboard': 'menu.robotDashboard',
-  '/robot-live-fleet': 'menu.robotLiveFleet',
-  '/robot-detail': 'menu.robotDetail',
-  '/robot-create-mission': 'menu.robotCreateMission',
-  '/robot-alerts': 'menu.robotAlerts',
-  '/robot-maintenance': 'menu.robotMaintenance',
-  '/energy-device-management': 'menu.energyDeviceManagement',
-  '/smart-meeting-room/dashboard': 'menu.dashboard',
-  '/smart-meeting-room/meeting-room': 'menu.smartMeetingRoom',
-  '/smart-meeting-room/room-detail': 'menu.roomDetail',
-  '/smart-meeting-room/booking-calendar': 'menu.bookingCalendar',
-  '/smart-meeting-room/create-booking': 'menu.createBooking',
-  '/smart-meeting-room/kiosk': 'menu.kiosk',
-  '/smart-meeting-room/report-issue': 'menu.reportIssue',
-  '/smart-meeting-room/issue-tickets': 'menu.issueTickets',
-  '/smart-workspace/dashboard': 'menu.dashboard',
-  '/smart-workspace/workspace': 'menu.workspaceRoomList',
-  '/smart-workspace/room-detail': 'menu.roomDetail',
-  '/smart-workspace/booking-calendar': 'menu.bookingCalendar',
-  '/smart-workspace/create-booking': 'menu.createBooking',
-  '/smart-workspace/kiosk': 'menu.kiosk',
-  '/smart-workspace/report-issue': 'menu.reportIssue',
-  '/smart-workspace/issue-tickets': 'menu.issueTickets',
-  '/test-api': 'menu.apiTest',
-}
+/**
+ * @deprecated Import từ '@/routes/routeConfig' thay thế.
+ * Re-export để tránh break các file đang dùng import cũ.
+ */
+export { routeToLabelKey } from '@/routes/routeConfig'

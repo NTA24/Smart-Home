@@ -1,3 +1,5 @@
+export { default as PageLoading } from './PageLoading'
+export type { PageLoadingProps } from './PageLoading'
 export { default as StatCard } from './StatCard'
 export { default as TabBar } from './TabBar'
 export { default as PageContainer } from './PageContainer'
