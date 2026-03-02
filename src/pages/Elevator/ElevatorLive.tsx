@@ -102,7 +102,7 @@ export default function ElevatorLive() {
   const [bankFilter, setBankFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [modeFilter, setModeFilter] = useState<string>('all')
-  const [floorRange] = useState<string>('all')
+  const [_floorRange] = useState<string>('all')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedElevator, setSelectedElevator] = useState<Elevator | null>(null)
 

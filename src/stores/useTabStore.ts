@@ -22,6 +22,16 @@ const defaultTab: Tab = {
   closable: false,
 }
 
+function toStr(v: unknown): string {
+  if (v == null) return ''
+  if (typeof v === 'string') return v
+  return String(v)
+}
+
+function normalizeTab(t: Tab): Tab {
+  return { ...t, key: toStr(t.key), labelKey: t.labelKey != null ? toStr(t.labelKey) : undefined, label: t.label != null ? toStr(t.label) : undefined }
+}
+
 export const useTabStore = create<TabState>()(
   persist(
     (set, get) => ({
@@ -29,21 +39,26 @@ export const useTabStore = create<TabState>()(
       activeKey: '/dashboard',
 
       addTab: (tab) => {
+        const normalized = normalizeTab(tab)
+        const key = normalized.key
         const { tabs } = get()
-        const exists = tabs.find(t => t.key === tab.key)
+        const normalizedTabs = tabs.map(normalizeTab)
+        const exists = normalizedTabs.find(t => t.key === key)
         if (!exists) {
-          set({ tabs: [...tabs, { ...tab, closable: tab.closable !== false }], activeKey: tab.key })
+          set({ tabs: [...normalizedTabs, { ...normalized, closable: normalized.closable !== false }], activeKey: key })
         } else {
-          set({ activeKey: tab.key })
+          set({ activeKey: key })
         }
       },
 
       removeTab: (key) => {
+        const sk = toStr(key)
         const { tabs, activeKey } = get()
-        const targetIndex = tabs.findIndex(t => t.key === key)
-        const newTabs = tabs.filter(t => t.key !== key)
+        const normalizedTabs = tabs.map(normalizeTab)
+        const targetIndex = normalizedTabs.findIndex(t => t.key === sk)
+        const newTabs = normalizedTabs.filter(t => t.key !== sk)
         let newActiveKey: string | null = null
-        if (key === activeKey && newTabs.length > 0) {
+        if (sk === toStr(activeKey) && newTabs.length > 0) {
           const newIndex = targetIndex >= newTabs.length ? newTabs.length - 1 : targetIndex
           newActiveKey = newTabs[newIndex].key
           set({ tabs: newTabs, activeKey: newActiveKey })
@@ -53,14 +68,24 @@ export const useTabStore = create<TabState>()(
         return newActiveKey
       },
 
-      setActiveKey: (key) => set({ activeKey: key }),
+      setActiveKey: (key) => set({ activeKey: toStr(key) }),
     }),
     {
       name: 'tab-store',
       storage: {
         getItem: (name) => {
           const str = sessionStorage.getItem(name)
-          return str ? JSON.parse(str) : null
+          if (!str) return null
+          try {
+            const data = JSON.parse(str)
+            if (data?.state?.tabs) {
+              data.state.tabs = data.state.tabs.map((t: Tab) => ({ ...t, key: toStr(t?.key), labelKey: t?.labelKey != null ? toStr(t.labelKey) : undefined, label: t?.label != null ? toStr(t.label) : undefined }))
+            }
+            if (data?.state?.activeKey != null) data.state.activeKey = toStr(data.state.activeKey)
+            return data
+          } catch {
+            return null
+          }
         },
         setItem: (name, value) => sessionStorage.setItem(name, JSON.stringify(value)),
         removeItem: (name) => sessionStorage.removeItem(name),

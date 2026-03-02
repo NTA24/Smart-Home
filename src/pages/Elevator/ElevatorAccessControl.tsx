@@ -211,15 +211,20 @@ export default function ElevatorAccessControl() {
 
   const handleSubmit = () => {
     form.validateFields().then(values => {
+      const expirationStr = values.isTemporary && values.expiration
+        ? (typeof values.expiration === 'string' ? values.expiration : (values.expiration as { format?: (f: string) => string })?.format?.('YYYY-MM-DD') ?? null)
+        : null
       if (editingRule) {
-        setRules(prev => prev.map(r => r.key === editingRule.key ? { ...r, ...values, exceptions: [] } : r))
+        setRules(prev => prev.map(r => r.key === editingRule.key
+          ? { ...r, ...values, exceptions: [], expiration: expirationStr }
+          : r))
         message.success(t('elevatorAccess.updateSuccess'))
       } else {
         const newRule: AccessRule = {
           key: Date.now().toString(),
           ...values,
           exceptions: [],
-          expiration: values.isTemporary ? values.expiration?.format('YYYY-MM-DD') || null : null,
+          expiration: expirationStr,
         }
         setRules(prev => [...prev, newRule])
         message.success(t('elevatorAccess.createSuccess'))
@@ -230,9 +235,10 @@ export default function ElevatorAccessControl() {
   }
 
   const summarizeFloors = (floors: string[]) => {
-    if (floors.length === ALL_FLOOR_KEYS.length) return t('elevatorAccess.allFloors')
-    if (floors.length > 6) return `${floors.slice(0, 5).join(', ')}… +${floors.length - 5}`
-    return floors.join(', ')
+    const arr = Array.isArray(floors) ? floors.map(f => String(f ?? '')) : []
+    if (arr.length === ALL_FLOOR_KEYS.length) return t('elevatorAccess.allFloors')
+    if (arr.length > 6) return `${arr.slice(0, 5).join(', ')}… +${arr.length - 5}`
+    return arr.join(', ')
   }
 
   const columns = [
@@ -248,12 +254,12 @@ export default function ElevatorAccessControl() {
             : <UserOutlined style={{ color: '#722ed1' }} />
           }
           <div>
-            <Text strong style={{ fontSize: 13 }}>{subject}</Text>
+            <Text strong style={{ fontSize: 13 }}>{subject != null ? String(subject) : ''}</Text>
             {record.isTemporary && (
               <div>
                 <Tag color="gold" style={{ borderRadius: 6, fontSize: 10, marginTop: 2 }}>
                   <ClockCircleOutlined style={{ marginRight: 2 }} />
-                  {record.expiration}
+                  {record.expiration != null ? String(record.expiration) : ''}
                 </Tag>
               </div>
             )}
@@ -267,7 +273,7 @@ export default function ElevatorAccessControl() {
       key: 'allowedFloors',
       width: 200,
       render: (floors: string[]) => (
-        <Tooltip title={floors.join(', ')}>
+        <Tooltip title={Array.isArray(floors) ? floors.map(f => String(f ?? '')).join(', ') : ''}>
           <Text style={{ fontSize: 12, fontFamily: 'monospace' }}>{summarizeFloors(floors)}</Text>
         </Tooltip>
       ),
@@ -280,7 +286,7 @@ export default function ElevatorAccessControl() {
       render: (ts: string) => (
         <Space size={4}>
           <ClockCircleOutlined style={{ color: '#8c8c8c', fontSize: 11 }} />
-          <Text style={{ fontSize: 12 }}>{ts}</Text>
+          <Text style={{ fontSize: 12 }}>{ts != null ? String(ts) : ''}</Text>
         </Space>
       ),
     },
@@ -292,7 +298,7 @@ export default function ElevatorAccessControl() {
       render: (method: string) => (
         <Tag color={METHOD_COLORS[method] || 'default'} className="rounded-sm">
           <KeyOutlined className="mr-4" />
-          {method}
+          {method != null ? String(method) : ''}
         </Tag>
       ),
     },
@@ -302,11 +308,11 @@ export default function ElevatorAccessControl() {
       key: 'exceptions',
       width: 160,
       render: (exceptions: string[]) =>
-        exceptions.length > 0 ? (
+        Array.isArray(exceptions) && exceptions.length > 0 ? (
           <Space direction="vertical" size={2}>
             {exceptions.map((ex, i) => (
               <Tag key={i} color="orange" className="rounded-sm text-11">
-                <ExclamationCircleOutlined className="mr-2" /> {ex}
+                <ExclamationCircleOutlined className="mr-2" /> {ex != null ? String(ex) : ''}
               </Tag>
             ))}
           </Space>
@@ -400,7 +406,8 @@ export default function ElevatorAccessControl() {
             titleIcon={<LockOutlined />}
             titleIconColor="#1890ff"
           >
-            <DataTable
+            <DataTable<AccessRule>
+              rowKey={(record) => String(record?.key ?? '')}
               columns={columns}
               dataSource={filteredRules}
               pageSize={10}

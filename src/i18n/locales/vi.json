@@ -1715,7 +1715,14 @@
     "aiSearch": "Tìm kiếm nội dung dựa trên AI",
     "aiAssistantTitle": "Trợ lý AI – Tìm kiếm trong bản ghi",
     "aiSearchPlaceholder": "Mô tả nội dung cần tìm (người, xe, hành động...)",
-    "aiAssistantHint": "Nhập mô tả để AI tìm các đoạn tương ứng trong bản ghi camera đã chọn."
+    "aiAssistantHint": "Nhập mô tả để AI tìm các đoạn tương ứng trong bản ghi camera đã chọn.",
+    "aiSearchButton": "Tìm kiếm",
+    "aiCancel": "Hủy bỏ",
+    "aiSearchEmpty": "Vui lòng nhập nội dung cần tìm",
+    "aiNoResult": "Không có kết quả",
+    "aiError": "Lỗi kết nối AI",
+    "aiSearching": "Đang tìm kiếm...",
+    "aiResultLabel": "Kết quả"
   },
   "cameraConfig": {
     "title": "Cấu hình camera",

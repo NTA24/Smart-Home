@@ -8,6 +8,7 @@ export default function TabBar() {
   const navigate = useNavigate()
   const { token } = theme.useToken()
   const { tabs, activeKey, removeTab, setActiveKey } = useTabStore()
+  const activeKeyStr = String(activeKey ?? '')
   const { t } = useTranslation()
 
   const handleTabClick = (key: string) => {
@@ -24,14 +25,17 @@ export default function TabBar() {
   }
 
   const getTabLabel = (tab: { key: string; labelKey?: string; label?: string }) => {
-    if (tab.labelKey) {
-      return t(tab.labelKey)
+    const key = String(tab?.key ?? '')
+    if (tab?.labelKey) {
+      const out = t(tab.labelKey)
+      return typeof out === 'string' ? out : key
     }
-    const mappedKey = routeToLabelKey[tab.key]
+    const mappedKey = routeToLabelKey[key]
     if (mappedKey) {
-      return t(mappedKey)
+      const out = t(mappedKey)
+      return typeof out === 'string' ? out : key
     }
-    return tab.label || tab.key
+    return (tab?.label != null ? String(tab.label) : '') || key
   }
 
   return (
@@ -42,21 +46,24 @@ export default function TabBar() {
         borderBottom: `1px solid ${token.colorBorderSecondary}`,
       }}
     >
-      {tabs.map((tab) => (
+      {tabs.map((tab) => {
+        const tabKey = String(tab?.key ?? '')
+        return (
         <div
-          key={tab.key}
-          className={`tabbar_tab ${tab.key === activeKey ? 'tabbar_tab--active' : 'tabbar_tab--inactive'} ${tab.key === '/dashboard' ? 'tabbar_tab--dashboard' : ''}`}
-          onClick={() => handleTabClick(tab.key)}
+          key={tabKey}
+          className={`tabbar_tab ${tabKey === activeKeyStr ? 'tabbar_tab--active' : 'tabbar_tab--inactive'} ${tabKey === '/dashboard' ? 'tabbar_tab--dashboard' : ''}`}
+          onClick={() => handleTabClick(tabKey)}
         >
           <span>{getTabLabel(tab)}</span>
           {tab.closable !== false && (
             <CloseOutlined
               className="tabbar_close"
-              onClick={(e) => handleClose(e, tab.key)}
+              onClick={(e) => handleClose(e, tabKey)}
             />
           )}
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

@@ -103,7 +103,7 @@ function CameraStreamPlayer({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [streamError, setStreamError] = useState<string | null>(null)
-  const [activeSource, setActiveSource] = useState('')
+  const [_activeSource, setActiveSource] = useState('')
   const [youtubeLoading, setYoutubeLoading] = useState(false)
   const [youtubeLoaded, setYoutubeLoaded] = useState(false)
   const youtubeLoadStartRef = useRef(0)
@@ -557,9 +557,7 @@ export default function CameraLiveView() {
       ) : (
         <>
           <Row gutter={[12, 12]}>
-            {filteredCameras
-              .slice((currentPage - 1) * pageSize, currentPage * pageSize)
-              .map((camera) => (
+            {visibleCameras.map((camera) => (
                 <Col xs={24} sm={12} lg={colSpan} key={camera.id}>
                   <CameraFeed
                     camera={camera}

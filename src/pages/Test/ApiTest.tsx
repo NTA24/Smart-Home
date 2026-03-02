@@ -318,7 +318,7 @@ export default function ApiTest() {
         {selectedTenant ? (
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label="ID">{selectedTenant.id}</Descriptions.Item>
-            <Descriptions.Item label={t('apiTest.code')}>{selectedTenant.code}</Descriptions.Item>
+            <Descriptions.Item label={t('apiTest.code')}>{(selectedTenant as { code?: string }).code ?? '-'}</Descriptions.Item>
             <Descriptions.Item label={t('apiTest.name')}>{selectedTenant.name}</Descriptions.Item>
             <Descriptions.Item label={t('apiTest.status')}>
               <Tag color={selectedTenant.status === 'ACTIVE' ? 'green' : 'red'}>

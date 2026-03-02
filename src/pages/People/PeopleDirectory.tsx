@@ -210,7 +210,7 @@ export default function PeopleDirectory() {
           <Button size="small">{t('peopleDirectory.moveTenant', 'Move Tenant')}</Button>
         </div>
       </ContentCard>
-      <PersonDetailDrawer open={!!drawerPerson} onClose={() => setDrawerPerson(null)} person={drawerPerson} t={t} />
+      <PersonDetailDrawer open={!!drawerPerson} onClose={() => setDrawerPerson(null)} person={drawerPerson} t={t as (key: string, fallback?: string) => string} />
     </PageContainer>
   )
 }

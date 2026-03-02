@@ -58,7 +58,7 @@ export default function WorkspaceRoomDetail() {
   const [lightLevel, setLightLevel] = useState(65)
   const [acTemp, setAcTemp] = useState(24)
   const [tvOn, setTvOn] = useState(true)
-  const [vcOn, setVcOn] = useState(false)
+  const [_vcOn, _setVcOn] = useState(false)
   const [volume, setVolume] = useState(40)
   const [outletOn, setOutletOn] = useState(true)
   const [curtainOpen, setCurtainOpen] = useState(false)
@@ -191,7 +191,7 @@ export default function WorkspaceRoomDetail() {
           </Col>
           <Col xs={12} sm={6}>
             <Text type="secondary" className="text-sm">{t('wsDetail.volume')}</Text>
-            <Slider value={volume} onChange={setVolume} min={0} max={100} size="small" />
+            <Slider value={volume} onChange={setVolume} min={0} max={100} />
           </Col>
           <Col xs={12} sm={6}>
             <div className="workspace_control-row">

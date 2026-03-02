@@ -332,7 +332,7 @@ export default function IaqSensorPage() {
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label={t('iaqSensor.deviceId')}>{selectedSensor.device_id}</Descriptions.Item>
             <Descriptions.Item label={t('iaqSensor.sensorType')}>
-              <Tag color={sensorTypeColor[selectedSensor.sensor_type?.toLowerCase()] || 'default'}>
+              <Tag color={sensorTypeColor[selectedSensor.sensor_type != null ? selectedSensor.sensor_type.toLowerCase() : ''] || 'default'}>
                 {selectedSensor.sensor_type?.toUpperCase()}
               </Tag>
             </Descriptions.Item>

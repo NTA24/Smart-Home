@@ -1654,7 +1654,14 @@
     "aiSearch": "AI-based content search",
     "aiAssistantTitle": "AI Assistant – Search in recordings",
     "aiSearchPlaceholder": "Describe what to find (person, vehicle, action...)",
-    "aiAssistantHint": "Enter a description and AI will find matching segments in the selected camera recording."
+    "aiAssistantHint": "Enter a description and AI will find matching segments in the selected camera recording.",
+    "aiSearchButton": "Search",
+    "aiCancel": "Cancel",
+    "aiSearchEmpty": "Please enter what you want to search for",
+    "aiNoResult": "No results",
+    "aiError": "AI connection error",
+    "aiSearching": "Searching...",
+    "aiResultLabel": "Result"
   },
   "cameraConfig": {
     "title": "Camera Configuration",

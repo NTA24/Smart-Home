@@ -121,7 +121,7 @@ export default function VehicleAccessControl() {
         dataIndex: 'direction',
         key: 'snapshot',
         width: 130,
-        render: (value: 'entrance' | 'exit', row: { plate: string }) => (
+        render: (_value: 'entrance' | 'exit', _row: { plate: string }) => (
           <button
             type="button"
             onClick={() => setPreviewImageOpen(true)}

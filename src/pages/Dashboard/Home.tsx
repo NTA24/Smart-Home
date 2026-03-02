@@ -364,7 +364,7 @@ export default function Home() {
       code: building.code,
       campus_id: building.campus_id,
       building_type: building.building_type,
-      status: building.status,
+      status: building.status ?? '',
       created_at: building.created_at,
       updated_at: building.updated_at,
     })
@@ -551,7 +551,7 @@ export default function Home() {
                         <CloudServerOutlined className="text-white text-2xl" />
                       </div>
                       <Title level={5} className="mb-4">{tenant.name}</Title>
-                      <Tag>{tenant.code}</Tag>
+                      <Tag>{(tenant as { code?: string }).code ?? tenant.slug ?? ''}</Tag>
                       <div className="mt-12">
                         <Tag color={tenant.status === 'ACTIVE' ? 'green' : 'red'}>{tenant.status === 'ACTIVE' ? t('home.active') : t('home.inactive')}</Tag>
                       </div>
@@ -602,7 +602,7 @@ export default function Home() {
             <Row gutter={[24, 24]}>
               {campuses.length === 0 && !loading && <Col span={24}><Empty description={t('apiTest.noData')} /></Col>}
               {campuses.map((campus, i) => (
-                <Col xs={24} sm={12} lg={8} xl={6} key={campus.id}>
+                <Col xs={24} sm={12} lg={8} xl={6} key={String(campus?.id ?? i)}>
                   <Card
                     hoverable
                     onClick={() => handleSelectCampus(campus)}
@@ -624,7 +624,7 @@ export default function Home() {
                     </div>
                     <div className="home_campus-info">
                       <Title level={5} className="mb-4">{campus.name}</Title>
-                      <Tag color="blue">{campus.code}</Tag>
+                      <Tag color="blue">{(campus as { code?: string }).code ?? ''}</Tag>
                       {campus.address && (
                         <div className="flex items-center gap-6 mt-8">
                           <EnvironmentOutlined className="text-muted text-base" />
@@ -675,7 +675,7 @@ export default function Home() {
             <Row gutter={[24, 24]}>
               {buildings.length === 0 && !loading && <Col span={24}><Empty description={t('apiTest.noData')} /></Col>}
               {buildings.map((building, i) => (
-                <Col xs={24} sm={12} lg={8} key={building.id}>
+                <Col xs={24} sm={12} lg={8} key={String(building?.id ?? i)}>
                   <Card
                     hoverable
                     onClick={() => handleSelectBuilding(building)}

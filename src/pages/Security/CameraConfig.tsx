@@ -3,11 +3,11 @@ import { Button, Input, InputNumber, Modal, Select, Space, Switch, Table, Typogr
 import type { ColumnsType } from 'antd/es/table'
 import { EditOutlined, SettingOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { ContentCard, PageContainer, PageHeader } from '@/components'
+import { ContentCard, PageContainer, PageHeader } from '../../components'
 
 const { Text } = Typography
 
-import type { RtspConversionMode } from '@/utils/streamUrl'
+import type { RtspConversionMode } from '../../utils/streamUrl'
 
 type CameraProtocol = 'hls' | 'ws-flv'
 
@@ -69,18 +69,25 @@ function readJson<T>(key: string): T | null {
   }
 }
 
+function toStr(v: unknown): string {
+  if (v == null) return ''
+  if (typeof v === 'string') return v
+  return String(v)
+}
+
 function normalizeItems(items: CameraItemConfig[] | null): CameraItemConfig[] {
   if (!Array.isArray(items) || items.length === 0) return seedCameraItems
-  const mapById = new Map(items.map(item => [item.id, item]))
+  const mapById = new Map(items.map(item => [toStr(item.id), item]))
   return seedCameraItems.map(seed => {
     const current = mapById.get(seed.id)
     if (!current) return seed
     return {
-      ...seed,
-      ...current,
+      id: seed.id,
+      name: toStr(current.name),
+      floor: toStr(current.floor),
+      enabled: current.enabled !== false,
       protocol: current.protocol === 'ws-flv' ? 'ws-flv' : 'hls',
       streamUrl: typeof current.streamUrl === 'string' ? current.streamUrl : '',
-      enabled: current.enabled !== false,
       viewPermission: typeof current.viewPermission === 'string' ? current.viewPermission : '',
     }
   })
@@ -115,7 +122,8 @@ export default function CameraConfig() {
   const enabledCount = useMemo(() => cameraItems.filter(item => item.enabled).length, [cameraItems])
 
   const updateCameraItem = (id: string, patch: Partial<CameraItemConfig>) => {
-    setCameraItems(prev => prev.map(item => (item.id === id ? { ...item, ...patch } : item)))
+    const sid = toStr(id)
+    setCameraItems(prev => prev.map(item => (toStr(item.id) === sid ? { ...item, ...patch } : item)))
   }
 
   const handleSave = () => {
@@ -135,12 +143,12 @@ export default function CameraConfig() {
   const openEditModal = (record: CameraItemConfig) => {
     setEditingCamera(record)
     setEditForm({
-      name: record.name,
-      floor: record.floor,
+      name: toStr(record.name),
+      floor: toStr(record.floor),
       enabled: record.enabled,
-      protocol: record.protocol,
-      streamUrl: record.streamUrl,
-      viewPermission: record.viewPermission ?? '',
+      protocol: record.protocol === 'ws-flv' ? 'ws-flv' : 'hls',
+      streamUrl: toStr(record.streamUrl),
+      viewPermission: toStr(record.viewPermission ?? ''),
     })
   }
 
@@ -151,7 +159,7 @@ export default function CameraConfig() {
 
   const saveEditModal = () => {
     if (!editingCamera) return
-    updateCameraItem(editingCamera.id, {
+    updateCameraItem(toStr(editingCamera.id), {
       name: editForm.name ?? editingCamera.name,
       floor: editForm.floor ?? editingCamera.floor,
       enabled: editForm.enabled ?? editingCamera.enabled,
@@ -169,8 +177,8 @@ export default function CameraConfig() {
       key: 'camera',
       render: (_, record) => (
         <div>
-          <div>{record.name}</div>
-          <Text type="secondary" className="text-12">{record.id} · {record.floor}</Text>
+          <div>{toStr(record.name)}</div>
+          <Text type="secondary" className="text-12">{toStr(record.id)} · {toStr(record.floor)}</Text>
         </div>
       ),
       width: 220,
@@ -182,8 +190,8 @@ export default function CameraConfig() {
       align: 'center',
       render: (_, record) => (
         <Switch
-          checked={record.enabled}
-          onChange={(checked) => updateCameraItem(record.id, { enabled: checked })}
+          checked={!!record.enabled}
+          onChange={(checked) => updateCameraItem(toStr(record.id), { enabled: checked })}
         />
       ),
     },
@@ -193,8 +201,8 @@ export default function CameraConfig() {
       width: 150,
       render: (_, record) => (
         <Select
-          value={record.protocol}
-          onChange={(value) => updateCameraItem(record.id, { protocol: value as CameraProtocol })}
+          value={record.protocol === 'ws-flv' ? 'ws-flv' : 'hls'}
+          onChange={(value) => updateCameraItem(toStr(record.id), { protocol: value as CameraProtocol })}
           options={[
             { value: 'hls', label: 'HLS' },
             { value: 'ws-flv', label: 'WS-FLV' },
@@ -207,9 +215,9 @@ export default function CameraConfig() {
       key: 'streamUrl',
       render: (_, record) => (
         <Input
-          value={record.streamUrl}
+          value={toStr(record.streamUrl)}
           placeholder={t('cameraConfig.streamUrlPlaceholder', 'Nhap URL stream (m3u8 / wss://...)')}
-          onChange={(event) => updateCameraItem(record.id, { streamUrl: event.target.value })}
+          onChange={(event) => updateCameraItem(toStr(record.id), { streamUrl: event.target.value })}
         />
       ),
     },
@@ -328,7 +336,7 @@ export default function CameraConfig() {
         }
       >
         <Table<CameraItemConfig>
-          rowKey="id"
+          rowKey={(record) => toStr(record.id)}
           columns={columns}
           dataSource={cameraItems}
           pagination={false}
@@ -359,12 +367,12 @@ export default function CameraConfig() {
           <Space direction="vertical" size={12} className="w-full" style={{ width: '100%' }}>
             <div>
               <Text type="secondary" className="block mb-1">{t('cameraConfig.cameraId', 'Mã camera')}</Text>
-              <Text strong>{editingCamera.id}</Text>
+              <Text strong>{toStr(editingCamera.id)}</Text>
             </div>
             <div>
               <Text type="secondary" className="block mb-1">{t('cameraConfig.name', 'Tên')}</Text>
               <Input
-                value={editForm.name}
+                value={toStr(editForm.name ?? '')}
                 onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
                 placeholder={t('cameraConfig.namePlaceholder', 'Tên camera')}
                 className="w-full"
@@ -373,7 +381,7 @@ export default function CameraConfig() {
             <div>
               <Text type="secondary" className="block mb-1">{t('cameraConfig.floor', 'Tầng')}</Text>
               <Input
-                value={editForm.floor}
+                value={toStr(editForm.floor ?? '')}
                 onChange={(e) => setEditForm(prev => ({ ...prev, floor: e.target.value }))}
                 placeholder="1F, B1, ..."
                 className="w-full"
@@ -382,7 +390,7 @@ export default function CameraConfig() {
             <div>
               <Text type="secondary" className="block mb-1">{t('cameraConfig.streamUrl', 'Đường dẫn stream')}</Text>
               <Input
-                value={editForm.streamUrl}
+                value={toStr(editForm.streamUrl ?? '')}
                 onChange={(e) => setEditForm(prev => ({ ...prev, streamUrl: e.target.value }))}
                 placeholder={t('cameraConfig.streamUrlPlaceholder', 'Nhập URL stream (m3u8 / wss/...)')}
                 className="w-full"
@@ -405,7 +413,7 @@ export default function CameraConfig() {
             <div>
               <Text type="secondary" className="block mb-1">{t('cameraConfig.protocol', 'Giao thức')}</Text>
               <Select
-                value={editForm.protocol ?? editingCamera.protocol}
+                value={(editForm.protocol ?? editingCamera.protocol) === 'ws-flv' ? 'ws-flv' : 'hls'}
                 onChange={(value) => setEditForm(prev => ({ ...prev, protocol: value as CameraProtocol }))}
                 options={[
                   { value: 'hls', label: 'HLS' },
@@ -419,7 +427,7 @@ export default function CameraConfig() {
               <Select
                 mode="multiple"
                 value={
-                  (editForm.viewPermission ?? editingCamera.viewPermission ?? '')
+                  toStr(editForm.viewPermission ?? editingCamera.viewPermission ?? '')
                     .split(',')
                     .map(s => s.trim())
                     .filter(Boolean)

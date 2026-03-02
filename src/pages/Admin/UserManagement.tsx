@@ -42,7 +42,7 @@ export default function UserManagement() {
       key: 'operation',
       width: 100,
       fixed: 'right',
-      render: (_, record) => (
+      render: () => (
         <TableActionButtons onEdit={() => { /* TODO: open edit modal */ }} />
       ),
     },

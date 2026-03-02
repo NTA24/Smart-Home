@@ -86,7 +86,7 @@ export default function EnergyTelemetryPage() {
     saveEnergyTelemetryIngestDraft(ingestItems)
   }, [ingestItems])
 
-  const totalKwh = data.reduce((acc, d) => acc + (d.kwh_delta || 0), 0)
+  const totalKwh = data.reduce((acc, d) => acc + ((d as { kwh_delta?: number; kwh?: number }).kwh_delta ?? (d as { kwh?: number }).kwh ?? 0), 0)
   const avgKw = data.length > 0 ? data.reduce((acc, d) => acc + (d.kw || 0), 0) / data.length : 0
   const maxKw = data.length > 0 ? Math.max(...data.map(d => d.kw || 0)) : 0
   const avgVoltage = data.length > 0 ? data.reduce((acc, d) => acc + (d.voltage || 0), 0) / data.length : 0
@@ -96,10 +96,9 @@ export default function EnergyTelemetryPage() {
     setLoading(true)
     try {
       const res = await energyTelemetryApi.query({
-        device_id: values.device_id,
+        meter_id: values.device_id,
         start: values.range[0].toISOString(),
         end: values.range[1].toISOString(),
-        limit: values.limit || 10000,
       })
       setData(Array.isArray(res) ? res : [])
       if (Array.isArray(res) && res.length === 0) {
@@ -116,13 +115,13 @@ export default function EnergyTelemetryPage() {
   const addIngestItem = () => {
     ingestForm.validateFields().then(values => {
       const item: EnergyTelemetryIngestItem = {
-        device_id: values.device_id,
-        ts: values.ts?.toISOString?.() || values.ts,
-        kwh_delta: values.kwh_delta || 0,
-        kw: values.kw || 0,
-        voltage: values.voltage || 0,
-        current: values.current || 0,
-        pf: values.pf || 0,
+        meter_id: values.device_id ?? '',
+        ts: String(values.ts?.toISOString?.() ?? values.ts ?? ''),
+        kwh: values.kwh_delta ?? values.kwh ?? 0,
+        kw: values.kw ?? 0,
+        voltage: values.voltage ?? 0,
+        current: values.current ?? 0,
+        pf: values.pf ?? 0,
         extra: values.extra ? (typeof values.extra === 'string' ? JSON.parse(values.extra) : values.extra) : {},
       }
       setIngestItems(prev => [...prev, item])

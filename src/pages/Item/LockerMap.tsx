@@ -580,7 +580,7 @@ export default function LockerMap() {
         <Row gutter={[16, 16]}>
           {filteredLockers.map((locker) => (
             <Col xs={24} lg={12} key={locker.id}>
-              <LockerCard locker={locker} t={t} onCellClick={handleCellClick} />
+              <LockerCard locker={locker} t={t as (key: string, fallback?: string) => string} onCellClick={handleCellClick} />
             </Col>
           ))}
         </Row>
@@ -602,7 +602,7 @@ export default function LockerMap() {
                 <Empty description={t('lockerMap.noLockersOnFloor', 'No lockers on this floor')} />
               ) : (
                 floorLockers.map((locker) => (
-                  <LockerListItem key={locker.id} locker={locker} t={t} onCellClick={handleCellClick} />
+                  <LockerListItem key={locker.id} locker={locker} t={t as (key: string, fallback?: string) => string} onCellClick={handleCellClick} />
                 ))
               ),
             }
@@ -616,7 +616,7 @@ export default function LockerMap() {
         lockerId={selectedLockerId}
         open={cellModalOpen}
         onClose={() => setCellModalOpen(false)}
-        t={t}
+        t={t as (key: string, fallback?: string) => string}
       />
     </PageContainer>
   )

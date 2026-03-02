@@ -110,25 +110,10 @@ function AlertItem({
   )
 }
 
-function ZoneInfo({ zone, temp, power, co2 }: { zone: string; temp: string; power: string; co2?: string }) {
-  return (
-    <div className="dashboard_zone-card">
-      <div className="dashboard_zone-header">
-        <EnvironmentOutlined className="text-primary" />
-        <span className="font-semibold">{zone}</span>
-      </div>
-      <div className="dashboard_zone-meta">
-        🌡 {temp} &nbsp; ⚡ {power}
-        {co2 && <span> &nbsp; CO2: {co2}</span>}
-      </div>
-    </div>
-  )
-}
-
 export default function Dashboard() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
-  const [activeTab, setActiveTab] = useState('energy')
+  const [_activeTab, _setActiveTab] = useState('energy')
 
   const energyBreakdownData = [
     { name: 'HVAC', value: 64, color: '#1890ff' },

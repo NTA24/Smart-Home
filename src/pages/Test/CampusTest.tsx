@@ -324,7 +324,7 @@ export default function CampusTest() {
         {selectedCampus ? (
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label="ID">{selectedCampus.id}</Descriptions.Item>
-            <Descriptions.Item label={t('apiTest.code')}>{selectedCampus.code}</Descriptions.Item>
+            <Descriptions.Item label={t('apiTest.code')}>{(selectedCampus as { code?: string }).code ?? '-'}</Descriptions.Item>
             <Descriptions.Item label={t('apiTest.name')}>{selectedCampus.name}</Descriptions.Item>
             <Descriptions.Item label="Tenant ID">{selectedCampus.tenant_id || '-'}</Descriptions.Item>
             <Descriptions.Item label={t('apiTest.address')}>{selectedCampus.address || '-'}</Descriptions.Item>

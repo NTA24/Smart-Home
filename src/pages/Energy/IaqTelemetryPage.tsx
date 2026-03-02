@@ -95,10 +95,9 @@ export default function IaqTelemetryPage() {
     setLoading(true)
     try {
       const res = await iaqTelemetryApi.query({
-        device_id: values.device_id,
+        sensor_id: values.device_id,
         start: values.range[0].toISOString(),
         end: values.range[1].toISOString(),
-        limit: values.limit || 10000,
       })
       setData(Array.isArray(res) ? res : [])
       if (Array.isArray(res) && res.length === 0) {
@@ -115,8 +114,8 @@ export default function IaqTelemetryPage() {
   const addIngestItem = () => {
     ingestForm.validateFields().then(values => {
       const item: IaqTelemetryIngestItem = {
-        device_id: values.device_id,
-        ts: values.ts?.toISOString?.() || values.ts,
+        sensor_id: values.device_id ?? '',
+        ts: String(values.ts?.toISOString?.() ?? values.ts ?? ''),
         temp_c: values.temp_c || 0,
         humidity: values.humidity || 0,
         co2_ppm: values.co2_ppm || 0,

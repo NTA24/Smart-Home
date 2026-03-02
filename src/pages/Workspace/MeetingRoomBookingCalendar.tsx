@@ -77,11 +77,8 @@ export default function MeetingRoomBookingCalendar() {
   const [viewMode, setViewMode] = useState('day')
   const [filterRoom, setFilterRoom] = useState<string | undefined>()
   const rooms = useMemo(() => {
-    const rawRooms = getMeetingRooms<unknown[]>(defaultRooms as unknown as unknown[])
-    const normalized = rawRooms
-      .map(toRoomName)
-      .filter((name): name is string => !!name)
-    return normalized.length > 0 ? normalized : defaultRooms
+    const rawRooms = getMeetingRooms<string>(defaultRooms)
+    return Array.isArray(rawRooms) && rawRooms.length > 0 ? rawRooms : defaultRooms
   }, [])
 
   const persistedBookings = useMemo(

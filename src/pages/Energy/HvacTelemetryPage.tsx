@@ -107,7 +107,6 @@ export default function HvacTelemetryPage() {
         asset_id: values.asset_id,
         start: values.range[0].toISOString(),
         end: values.range[1].toISOString(),
-        limit: values.limit || 10000,
       })
       setData(Array.isArray(res) ? res : [])
       if (Array.isArray(res) && res.length === 0) {

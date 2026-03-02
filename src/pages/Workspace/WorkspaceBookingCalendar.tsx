@@ -12,11 +12,6 @@ import { PageContainer, PageHeader, ContentCard } from '@/components'
 
 const { Text } = Typography
 
-interface TimeSlot {
-  room: string
-  slots: { time: string; status: 'free' | 'busy'; title?: string }[]
-}
-
 const rooms = ['A-1201', 'A-1203', 'B-0902', 'C-0701', 'B-0501']
 const times = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30']
 
@@ -112,7 +107,7 @@ export default function WorkspaceBookingCalendar() {
           </div>
 
           {/* Time Slots */}
-          {times.map((time, idx) => {
+          {times.map((time, _idx) => {
             const isHour = time.endsWith(':00')
             return (
               <div key={time} className={`workspace_calendar-row ${isHour ? 'workspace_calendar-row-hour' : 'workspace_calendar-row-half'}`}>

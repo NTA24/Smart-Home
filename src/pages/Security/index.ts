@@ -1,4 +1,5 @@
 export { default as SecurityMonitoring } from './SecurityMonitoring'
 export { default as CameraLiveView } from './CameraLiveView'
 export { default as CameraPlayback } from './CameraPlayback'
-export { default as CameraConfig } from './CameraConfig'
+export { default as CameraConfig } from './CameraConfig.tsx'
+export { DEMO_CAMERAS, type CameraConfig as CameraConfigData } from './cameraConfig'

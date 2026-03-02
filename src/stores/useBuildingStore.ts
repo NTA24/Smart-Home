@@ -19,14 +19,14 @@ export interface Building {
  */
 function toStoreBuilding(b: ApiBuilding): Building {
   return {
-    id: b.id,
-    name: b.name,
-    code: b.code,
-    campus_id: b.campus_id,
-    building_type: b.building_type,
-    status: b.status,
-    created_at: b.created_at,
-    updated_at: b.updated_at,
+    id: String(b?.id ?? ''),
+    name: String(b?.name ?? ''),
+    code: b?.code != null ? String(b.code) : undefined,
+    campus_id: b?.campus_id != null ? String(b.campus_id) : undefined,
+    building_type: b?.building_type != null ? String(b.building_type) : undefined,
+    status: b?.status != null ? String(b.status) : '',
+    created_at: b?.created_at,
+    updated_at: b?.updated_at,
   }
 }
 
@@ -88,9 +88,9 @@ export const useBuildingStore = create<BuildingState>()(
           sessionStorage.removeItem(name)
         },
       },
-      partialize: (state) => ({
-        selectedBuilding: state.selectedBuilding,
-      }),
+      partialize: (state): BuildingState => ({
+        selectedBuilding: state.selectedBuilding ?? null,
+      } as BuildingState),
     }
   )
 )

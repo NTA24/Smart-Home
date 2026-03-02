@@ -203,8 +203,8 @@ export default function HvacAssetPage() {
   const fetchDevices = async () => {
     setDevicesLoading(true)
     try {
-      const res = await deviceApi.getList({ limit: 100, offset: 0 })
-      const items = Array.isArray(res) ? res : (res as Record<string, unknown>)?.items || []
+      const res = await deviceApi.getList({ limit: 100, offset: 0 }) as unknown as { data?: unknown[] | { items?: unknown[] }; items?: unknown[] }
+      const items = Array.isArray(res) ? res : Array.isArray(res?.items) ? res.items : Array.isArray((res?.data as { items?: unknown[] })?.items) ? (res.data as { items: unknown[] }).items : Array.isArray(res?.data) ? res.data : []
       setDevices(items as Record<string, unknown>[])
     } catch {
       setDevices([])
@@ -443,7 +443,7 @@ export default function HvacAssetPage() {
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label={t('hvacAsset.deviceId')}>{selectedAsset.device_id}</Descriptions.Item>
             <Descriptions.Item label={t('hvacAsset.systemType')}>
-              <Tag color={systemTypeColor[selectedAsset.system_type?.toLowerCase()] || 'default'}>
+              <Tag color={systemTypeColor[selectedAsset.system_type != null ? selectedAsset.system_type.toLowerCase() : ''] || 'default'}>
                 {selectedAsset.system_type?.toUpperCase()}
               </Tag>
             </Descriptions.Item>

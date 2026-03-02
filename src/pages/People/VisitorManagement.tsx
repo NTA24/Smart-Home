@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Tabs, Input, Button, Card, Row, Col, Avatar, Typography, Space, List, Badge, Modal, Form, message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
-  TeamOutlined,
   BellOutlined,
   CloudOutlined,
   MailOutlined,

@@ -28,7 +28,8 @@ interface AppHeaderProps {
 export default function AppHeader({ isHomePage, collapsed, onToggleCollapse }: AppHeaderProps) {
   const { t, i18n } = useTranslation()
   const { token } = theme.useToken()
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
+  void _navigate
 
   const navStore = useHomeNavigationStore()
   const { selectedBuilding } = useBuildingStore()
@@ -140,7 +141,6 @@ export default function AppHeader({ isHomePage, collapsed, onToggleCollapse }: A
 // Tách nhỏ vào đây vì chỉ dùng trong AppHeader, không cần file riêng
 
 function Breadcrumb() {
-  const { t } = useTranslation()
   const { token } = theme.useToken()
   const navigate = useNavigate()
   const navStore = useHomeNavigationStore()

@@ -13,6 +13,8 @@ import {
   Badge,
   Modal,
   Input,
+  message,
+  Spin,
 } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
@@ -33,6 +35,7 @@ import {
 } from '@ant-design/icons'
 import { PageContainer, PageHeader, ContentCard } from '@/components'
 import { useBuildingStore } from '@/stores'
+import { api } from '@/services'
 
 const { Text } = Typography
 
@@ -89,6 +92,35 @@ export default function CameraPlayback() {
   const [currentTime, setCurrentTime] = useState(42) // percentage of timeline
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false)
   const [aiQuery, setAiQuery] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiResult, setAiResult] = useState<string | null>(null)
+
+  const handleAiSearch = async () => {
+    const text = (aiQuery || '').trim()
+    if (!text) {
+      message.warning(t('cameraPlayback.aiSearchEmpty', 'Vui lòng nhập nội dung cần tìm'))
+      return
+    }
+    setAiLoading(true)
+    setAiResult(null)
+    try {
+      const res = await api.post('/test-api/chat', { text }) as unknown as { result?: string }
+      const result = res?.result != null ? String(res.result) : (typeof res === 'string' ? res : '')
+      setAiResult(result || t('cameraPlayback.aiNoResult', 'Không có kết quả'))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      message.error(t('cameraPlayback.aiError', 'Lỗi kết nối AI') + ': ' + msg)
+      setAiResult(null)
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  const handleAiCancel = () => {
+    setAiQuery('')
+    setAiResult(null)
+    setAiAssistantOpen(false)
+  }
 
   const currentCam = cameras.find(c => c.id === selectedCamera) || cameras[0]
 
@@ -393,9 +425,18 @@ export default function CameraPlayback() {
           </span>
         }
         open={aiAssistantOpen}
-        onCancel={() => setAiAssistantOpen(false)}
-        footer={null}
-        width={480}
+        onCancel={handleAiCancel}
+        footer={
+          <div className="flex justify-end gap-8">
+            <Button onClick={handleAiCancel}>
+              {t('cameraPlayback.aiCancel', 'Hủy bỏ')}
+            </Button>
+            <Button type="primary" icon={<HighlightOutlined />} loading={aiLoading} onClick={handleAiSearch}>
+              {t('cameraPlayback.aiSearchButton', 'Tìm kiếm')}
+            </Button>
+          </div>
+        }
+        width={520}
         centered
         destroyOnClose
       >
@@ -404,8 +445,10 @@ export default function CameraPlayback() {
             placeholder={t('cameraPlayback.aiSearchPlaceholder', 'Mô tả nội dung cần tìm (người, xe, hành động...)')}
             value={aiQuery}
             onChange={(e) => setAiQuery(e.target.value)}
+            onPressEnter={handleAiSearch}
             allowClear
             size="large"
+            disabled={aiLoading}
             style={{
               border: '1.5px solid #1677ff',
               borderRadius: 8,
@@ -413,9 +456,20 @@ export default function CameraPlayback() {
             }}
           />
         </div>
-        <div className="text-secondary text-sm">
+        <div className="text-secondary text-sm mb-12">
           {t('cameraPlayback.aiAssistantHint', 'Nhập mô tả để AI tìm các đoạn tương ứng trong bản ghi camera đã chọn.')}
         </div>
+        {aiLoading && (
+          <div className="flex justify-center py-16">
+            <Spin tip={t('cameraPlayback.aiSearching', 'Đang tìm kiếm...')} />
+          </div>
+        )}
+        {!aiLoading && aiResult != null && (
+          <div className="rounded-8 p-12 bg-gray-1 border border-gray-3">
+            <Text strong className="text-sm block mb-8">{t('cameraPlayback.aiResultLabel', 'Kết quả')}:</Text>
+            <Text className="text-sm whitespace-pre-wrap">{aiResult}</Text>
+          </div>
+        )}
       </Modal>
     </PageContainer>
   )

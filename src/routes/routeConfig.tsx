@@ -1,5 +1,4 @@
 import { lazy } from 'react'
-import { Navigate } from 'react-router-dom'
 
 // ─── Lazy imports ────────────────────────────────────────────────────────────
 
@@ -11,7 +10,7 @@ const Dashboard = lazy(() => import('@/pages/Dashboard/Dashboard'))
 const SecurityMonitoring = lazy(() => import('@/pages/Security/SecurityMonitoring'))
 const CameraLiveView = lazy(() => import('@/pages/Security/CameraLiveView'))
 const CameraPlayback = lazy(() => import('@/pages/Security/CameraPlayback'))
-const CameraConfig = lazy(() => import('@/pages/Security/CameraConfig'))
+const CameraConfig = lazy(() => import('@/pages/Security/CameraConfig.tsx'))
 
 // Vehicle / Parking
 const ParkingManagement = lazy(() => import('@/pages/Vehicle/ParkingManagement'))

@@ -18,7 +18,6 @@ import type { Tab } from '@/stores'
 import { routeToParentKey, routeToLabelKey } from '@/routes/routeConfig'
 import { menuConfig, ADMIN1_HIDDEN_GROUP_KEYS } from './menuConfig'
 import type { MenuGroup } from './menuConfig'
-import { buildingApi } from '@/services'
 
 const { Sider } = Layout
 const { Text } = Typography
@@ -118,19 +117,20 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
   })
 
   const handleBuildingSelect = (buildingId: string) => {
-    const building = navStore.buildings.find(b => b.id === buildingId)
+    const sid = String(buildingId ?? '')
+    const building = navStore.buildings.find(b => String(b?.id ?? '') === sid)
     if (building) {
       setSelectedBuilding({
-        id: building.id,
-        name: building.name,
-        code: building.code,
-        campus_id: building.campus_id,
-        building_type: building.building_type,
-        status: building.status ?? '',
+        id: String(building.id ?? sid),
+        name: String(building.name ?? ''),
+        code: building.code != null ? String(building.code) : undefined,
+        campus_id: building.campus_id != null ? String(building.campus_id) : undefined,
+        building_type: building.building_type != null ? String(building.building_type) : undefined,
+        status: building.status != null ? String(building.status) : '',
         created_at: building.created_at,
         updated_at: building.updated_at,
       })
-      selectBuildingById(building.id)
+      selectBuildingById(String(building.id ?? sid))
     }
     setBuildingDropdownOpen(false)
     const tab: Tab = { key: '/dashboard', labelKey: 'menu.dashboard', closable: false }
@@ -148,19 +148,24 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
         {navStore.buildings.length === 0 ? (
           <div className="mid-dropdown_empty">{t('common.noData')}</div>
         ) : (
-          navStore.buildings.map(b => (
-            <div
-              key={b.id}
-              className={`mid-dropdown_item ${selectedBuilding?.id === b.id ? 'mid-dropdown_item--selected' : ''}`}
-              onClick={() => handleBuildingSelect(b.id)}
-            >
-              <div className="mid-dropdown_dot" />
-              <div className="mid-dropdown_item-name">{b.name}</div>
-              {selectedBuilding?.id === b.id && (
-                <Tag color="blue" className="tag--no-margin tag--sm">{t('common.selected')}</Tag>
-              )}
-            </div>
-          ))
+          navStore.buildings.map(b => {
+            const bid = String(b?.id ?? '')
+            const bname = String(b?.name ?? '')
+            const selId = selectedBuilding?.id != null ? String(selectedBuilding.id) : undefined
+            return (
+              <div
+                key={bid}
+                className={`mid-dropdown_item ${selId === bid ? 'mid-dropdown_item--selected' : ''}`}
+                onClick={() => handleBuildingSelect(bid)}
+              >
+                <div className="mid-dropdown_dot" />
+                <div className="mid-dropdown_item-name">{bname}</div>
+                {selId === bid && (
+                  <Tag color="blue" className="tag--no-margin tag--sm">{t('common.selected')}</Tag>
+                )}
+              </div>
+            )
+          })
         )}
       </div>
       <div className="mid-dropdown_footer">

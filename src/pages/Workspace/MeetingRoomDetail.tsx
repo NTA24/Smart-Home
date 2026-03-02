@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import {
   ArrowLeftOutlined, TeamOutlined, ClockCircleOutlined, EnvironmentOutlined,
   ThunderboltOutlined, CloudOutlined, SoundOutlined, BulbOutlined,
-  PoweroffOutlined, DesktopOutlined, VideoCameraOutlined, ExperimentOutlined,
+  DesktopOutlined, VideoCameraOutlined, ExperimentOutlined,
   ToolOutlined, CheckCircleOutlined, CloseCircleOutlined,
   FieldTimeOutlined, FileTextOutlined,
   ExpandOutlined, StopOutlined, ControlOutlined, WifiOutlined,
