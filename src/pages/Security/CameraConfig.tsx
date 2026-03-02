@@ -52,7 +52,7 @@ const seedCameraItems: CameraItemConfig[] = [
   { id: 'CAM-05', name: 'Rooftop', floor: 'RF', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
   { id: 'CAM-06', name: 'Server Room', floor: 'B1', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
   { id: 'CAM-07', name: 'Parking Gate B', floor: 'B1', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
-  { id: 'CAM-08', name: 'Meeting Room 5F', floor: '5F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-08', name: '1BKOP_CSV04', floor: '1F', enabled: true, protocol: 'hls', streamUrl: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP-CSV04.stream/playlist.m3u8', viewPermission: '' },
   { id: 'CAM-09', name: 'Fire Escape Stair', floor: '2F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
   { id: 'CAM-10', name: 'Loading Dock', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
   { id: 'CAM-11', name: 'Lobby Side Entrance', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },

@@ -1,27 +1,17 @@
-/**
- * Demo camera list.
- *
- * Stream URLs được đọc từ biến môi trường (.env / .env.local) thay vì hardcode.
- * Khi có backend thật, thay thế mảng này bằng API call.
- *
- * Để override URL một camera cụ thể khi dev:
- *   VITE_CAM_01_STREAM=rtmp://your-server/live/cam01  trong .env.local
- */
 
 const e = import.meta.env
 
-/** Public demo HLS URLs when env vars are not set. CAM_03–07 cùng nguồn highway traffic. CAM_02: WebSocket (wss://) — nhập URL trong Cấu hình camera. */
 const FALLBACK_STREAMS: Record<string, string> = {
   CAM_01: 'https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/manifest/video.m3u8',
-  CAM_02: '', // CAM-2 dùng WebSocket (wss://) — cấu hình trong Cấu hình camera
+  CAM_02: '',
   CAM_03: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV01.stream/playlist.m3u8',
-  CAM_04: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV01.stream/playlist.m3u8',
-  CAM_05: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV01.stream/playlist.m3u8',
-  CAM_06: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV01.stream/playlist.m3u8',
-  CAM_07: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV01.stream/playlist.m3u8',
+  CAM_04: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV02.stream/playlist.m3u8',
+  CAM_05: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV03.stream/playlist.m3u8',
+  CAM_06: 'https://streaming4.highwaytraffic.go.th/DMT/1ANOP_CSV04.stream/playlist.m3u8',
+  CAM_07: 'https://streaming4.highwaytraffic.go.th/DMT/1BKOP_CSV05.stream/playlist.m3u8',
+  CAM_08: "https://streaming4.highwaytraffic.go.th/DMT/1BKOP-CSV04.stream/playlist.m3u8",
 }
 
-/** Resolve stream URL: env trước, path tương đối thì prefix VITE_CAMERA_STREAM_BASE, không có thì dùng fallback demo */
 function resolveStream(url: string | undefined, fallbackKey?: string): string | undefined {
   if (url && url.trim()) {
     const u = url.trim()
@@ -118,13 +108,13 @@ export const DEMO_CAMERAS: CameraConfig[] = [
   },
   {
     id: 'CAM-08',
-    name: 'Elevator Hall 1F',
-    location: 'Elevator',
+    name: '1BKOP_CSV04',
+    location: 'Highway Traffic',
     floor: '1F',
     status: 'online',
-    type: 'indoor',
+    type: 'outdoor',
     resolution: '1080p',
-    streamUrl: resolveStream(e.VITE_CAM_08_STREAM),
+    streamUrl: resolveStream(e.VITE_CAM_08_STREAM, 'CAM_08'),
   },
   {
     id: 'CAM-09',
