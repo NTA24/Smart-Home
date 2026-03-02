@@ -152,7 +152,12 @@ function CameraStreamPlayer({
     if (youtubeEmbed || isEmbedPageUrl(streamUrl)) return
     const videoEl = videoRef.current
     const playableCandidates = getWebPlayableStreamCandidates(streamUrl)
-    if (!videoEl || playableCandidates.length === 0) return
+    if (!videoEl) return
+    if (playableCandidates.length === 0) {
+      setStreamError(t('cameraLive.lostConnection', 'Mất kết nối'))
+      onStreamError?.(true)
+      return
+    }
 
     setStreamError(null)
     onStreamError?.(false)
@@ -160,6 +165,14 @@ function CameraStreamPlayer({
     let player: mpegts.Player | null = null
     let hls: Hls | null = null
     let disposed = false
+    let loadTimeout: ReturnType<typeof setTimeout> | null = null
+
+    const clearLoadTimeout = () => {
+      if (loadTimeout) {
+        clearTimeout(loadTimeout)
+        loadTimeout = null
+      }
+    }
 
     const cleanupCurrent = () => {
       if (hls) {
@@ -199,6 +212,7 @@ function CameraStreamPlayer({
           hls.loadSource(source)
           hls.attachMedia(videoEl)
           hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            clearLoadTimeout()
             const playResult = videoEl.play()
             if (playResult && typeof playResult.then === 'function') {
               playResult.catch(() => {})
@@ -239,9 +253,10 @@ function CameraStreamPlayer({
         player.load()
         const playResult = player.play()
         if (playResult && typeof playResult.then === 'function') {
-          playResult.catch(() => trySourceAt(index + 1))
+          playResult.then(() => clearLoadTimeout()).catch(() => trySourceAt(index + 1))
         }
         player.on(mpegts.Events.ERROR, () => {
+          clearLoadTimeout()
           cleanupCurrent()
           trySourceAt(index + 1)
         })
@@ -264,15 +279,25 @@ function CameraStreamPlayer({
       trySourceAt(index + 1)
     }
 
+    loadTimeout = setTimeout(() => {
+      if (disposed) return
+      clearLoadTimeout()
+      setStreamError(t('cameraLive.lostConnection', 'Mất kết nối'))
+      onStreamError?.(true)
+      cleanupCurrent()
+    }, 12000)
+
     try {
       trySourceAt(0)
     } catch {
+      clearLoadTimeout()
       setStreamError(t('cameraLive.lostConnection', 'Mất kết nối'))
       onStreamError?.(true)
     }
 
     return () => {
       disposed = true
+      clearLoadTimeout()
       cleanupCurrent()
     }
   }, [streamUrl, t, youtubeEmbed, onStreamError])
@@ -384,7 +409,10 @@ function CameraFeed({
                 onStreamError={setHasStreamError}
               />
             ) : (
-              <VideoCameraOutlined style={{ fontSize: 40, color: 'rgba(255,255,255,0.15)' }} />
+              <div className="flex flex-col items-center justify-center gap-4 text-center">
+                <VideoCameraOutlined style={{ fontSize: 40, color: 'rgba(255,255,255,0.15)' }} />
+                <span className="text-11 text-muted">{t('cameraLive.noStreamUrl', 'Chưa cấu hình URL stream')}</span>
+              </div>
             )}
 
             {/* Controls overlay */}
@@ -463,8 +491,9 @@ export default function CameraLiveView() {
       })
       .map(camera => {
         const override = overrideMap.get(camera.id)
-        const streamUrl = typeof override?.streamUrl === 'string' ? override.streamUrl.trim() : ''
-        return streamUrl ? { ...camera, streamUrl } : camera
+        const overrideUrl = typeof override?.streamUrl === 'string' ? override.streamUrl.trim() : ''
+        const streamUrl = overrideUrl || (typeof camera.streamUrl === 'string' ? camera.streamUrl.trim() : '') || undefined
+        return { ...camera, streamUrl: streamUrl || undefined }
       })
   }, [configVersion])
 

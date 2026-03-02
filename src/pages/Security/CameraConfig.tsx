@@ -41,12 +41,12 @@ const defaultGlobalConfig: CameraGlobalConfig = {
   autoReconnect: true,
   rtspConversionMode: 'wss-proxy',
   rtspHlsPort: 8888,
-  rtspProxyBaseUrl: 'wss://yuanqu.smartmk.cn:19993/proxy',
+  rtspProxyBaseUrl: '',
 }
 
 const seedCameraItems: CameraItemConfig[] = [
   { id: 'CAM-01', name: 'Lobby Main Entrance', floor: '1F', enabled: true, protocol: 'hls', streamUrl: 'https://customer-f33zs165nr7gyfy4.cloudflarestream.com/6b9e68b07dfee8cc2d116e4c51d6a957/manifest/video.m3u8', viewPermission: '' },
-  { id: 'CAM-02', name: 'Parking Gate A', floor: 'B1', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
+  { id: 'CAM-02', name: 'Parking Gate A', floor: 'B1', enabled: true, protocol: 'ws-flv', streamUrl: '', viewPermission: '' },
   { id: 'CAM-03', name: 'Elevator Hall 1F', floor: '1F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
   { id: 'CAM-04', name: 'Office Floor 3', floor: '3F', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
   { id: 'CAM-05', name: 'Rooftop', floor: 'RF', enabled: true, protocol: 'hls', streamUrl: '', viewPermission: '' },
@@ -297,7 +297,7 @@ export default function CameraConfig() {
             <Text>{t('cameraConfig.autoReconnect', 'Tu dong ket noi lai')}</Text>
           </div>
           <div>
-            <Text>{t('cameraConfig.rtspConversionMode', 'Chế độ chuyển đổi RTSP')}</Text>
+            <Text>{t('cameraConfig.rtspConversionMode')}</Text>
             <Select
               className="w-full mt-4"
               value={globalConfig.rtspConversionMode}
@@ -312,7 +312,7 @@ export default function CameraConfig() {
           </div>
           {globalConfig.rtspConversionMode === 'hls-direct' && (
             <div>
-              <Text>{t('cameraConfig.rtspHlsPort', 'HLS port (mặc định 8888)')}</Text>
+              <Text>{t('cameraConfig.rtspHlsPort')}</Text>
               <InputNumber
                 min={1}
                 max={65535}
@@ -322,6 +322,24 @@ export default function CameraConfig() {
                 }
                 className="w-full mt-4"
               />
+            </div>
+          )}
+          {globalConfig.rtspConversionMode === 'wss-proxy' && (
+            <div>
+              <Text>{t('cameraConfig.rtspProxyBaseUrl')}</Text>
+              <Input
+                className="w-full mt-4"
+                value={globalConfig.rtspProxyBaseUrl}
+                onChange={(e) =>
+                  setGlobalConfig((prev) => ({ ...prev, rtspProxyBaseUrl: e.target.value.trim() }))
+                }
+                placeholder="wss://your-proxy.com:19993/proxy"
+              />
+              {cameraItems.some((c) => String(c.streamUrl || '').trim().toLowerCase().startsWith('rtsp://')) && !globalConfig.rtspProxyBaseUrl?.trim() && (
+                <Text type="warning" className="block mt-4 text-sm">
+                  {t('cameraConfig.rtspProxyRequired', 'Có camera dùng URL RTSP. Để phát qua WebSocket, nhập URL Proxy WSS ở trên rồi bấm Lưu cấu hình.')}
+                </Text>
+              )}
             </div>
           )}
         </Space>

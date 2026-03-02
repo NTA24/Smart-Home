@@ -1621,6 +1621,7 @@
     "streamFailedMixedContent": "HTTP stream may be blocked by the browser on HTTPS pages (mixed content). Try opening the page via http:// or use an HTTPS stream.",
     "streamFailedCorsHint": "Streams from other domains may be blocked by CORS or unreachable from your network. Try opening the URL in a new tab to verify.",
     "lostConnection": "Lost connection",
+    "noStreamUrl": "No stream URL configured",
     "openInNewTab": "Open link in new tab",
     "noCameras": "No cameras found",
     "floor": "Floor"
@@ -1671,6 +1672,10 @@
     "retryLimit": "Retry attempts",
     "bufferMs": "Playback buffer (ms)",
     "autoReconnect": "Auto reconnect",
+    "rtspConversionMode": "RTSP conversion mode",
+    "rtspHlsPort": "HLS port (default 8888)",
+    "rtspProxyBaseUrl": "WSS Proxy URL (RTSP → WebSocket)",
+    "rtspProxyRequired": "Some cameras use RTSP URL. To play via WebSocket, enter the WSS Proxy URL above and click Save configuration.",
     "permissions": "Permissions and security",
     "permissionsNote": "Configure camera viewing permissions by zone/floor and recording retention policies.",
     "saveConfig": "Save configuration",

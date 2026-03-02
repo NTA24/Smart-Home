@@ -1682,6 +1682,7 @@
     "streamFailedMixedContent": "Nguồn stream dùng HTTP có thể bị trình duyệt chặn khi xem trang HTTPS (mixed content). Thử mở trang bằng http:// hoặc dùng nguồn stream HTTPS.",
     "streamFailedCorsHint": "Stream từ domain khác có thể bị chặn CORS hoặc không truy cập được từ mạng hiện tại. Thử mở link trực tiếp trong tab mới để kiểm tra.",
     "lostConnection": "Mất kết nối",
+    "noStreamUrl": "Chưa cấu hình URL stream",
     "openInNewTab": "Mở link trong tab mới",
     "noCameras": "Không tìm thấy camera",
     "floor": "Tầng"
@@ -1732,6 +1733,10 @@
     "retryLimit": "Số lần thử lại",
     "bufferMs": "Bộ đệm phát (ms)",
     "autoReconnect": "Tự động kết nối lại",
+    "rtspConversionMode": "Chế độ chuyển đổi RTSP",
+    "rtspHlsPort": "Cổng HLS (mặc định 8888)",
+    "rtspProxyBaseUrl": "URL Proxy WSS (RTSP → WebSocket)",
+    "rtspProxyRequired": "Có camera dùng URL RTSP. Để phát qua WebSocket, nhập URL Proxy WSS ở trên rồi bấm Lưu cấu hình.",
     "permissions": "Quyền và bảo mật",
     "permissionsNote": "Cấu hình phân quyền xem camera theo khu vực/tầng và chính sách lưu trữ bản ghi.",
     "saveConfig": "Lưu cấu hình",

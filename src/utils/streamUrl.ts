@@ -1,6 +1,6 @@
 export type RtspConversionMode = 'hls-direct' | 'wss-proxy'
 
-const DEFAULT_RTSP_PROXY_BASE = 'wss://yuanqu.smartmk.cn:19993/proxy'
+const DEFAULT_RTSP_PROXY_BASE = ''
 const DEFAULT_HLS_PORT = 8888
 const CAMERA_GLOBAL_STORAGE_KEY = 'securityCamera.globalConfig'
 const DEFAULT_CAMERA_STREAM_BASE = '/camera-stream'
@@ -109,14 +109,17 @@ export function getWebPlayableStreamCandidates(rawUrl?: string): string[] {
 
     const port = parsed.port || '554'
     const proxyBase = (config.rtspProxyBaseUrl || DEFAULT_RTSP_PROXY_BASE).replace(/\/+$/, '')
-    const wsProxyOpenUrl = `${proxyBase}/${hostname}:${port}/openUrl/${streamPath}${query}`
-    const wsProxyDirectUrl = `${proxyBase}/${hostname}:${port}/${streamPath}${query}`
+    const wsUrls = proxyBase
+      ? [`${proxyBase}/${hostname}:${port}/openUrl/${streamPath}${query}`, `${proxyBase}/${hostname}:${port}/${streamPath}${query}`]
+      : []
+    // Chỉ thử HLS trực tiếp (camera:8888) khi user chọn "HLS trực tiếp"; tránh timeout khi chưa cấu hình.
+    const hlsMp4 = mode === 'hls-direct' ? [hlsIndexUrl, hlsDirectUrl, mp4IndexUrl, mp4DirectUrl] : []
 
     const ordered =
       mode === 'hls-direct'
-        ? [hlsIndexUrl, hlsDirectUrl, mp4IndexUrl, mp4DirectUrl, wsProxyOpenUrl, wsProxyDirectUrl]
-        : [wsProxyOpenUrl, wsProxyDirectUrl, hlsIndexUrl, hlsDirectUrl, mp4IndexUrl, mp4DirectUrl]
-    return Array.from(new Set(ordered))
+        ? [...hlsMp4, ...wsUrls]
+        : [...wsUrls, ...hlsMp4]
+    return Array.from(new Set(ordered.filter(Boolean)))
   } catch {
     return [input]
   }
