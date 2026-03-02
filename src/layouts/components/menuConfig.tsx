@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import {
   HomeOutlined,
+  SafetyCertificateOutlined,
   VideoCameraOutlined,
   CarOutlined,
   TeamOutlined,
@@ -43,6 +44,12 @@ export const menuConfig: MenuEntry[] = [
     key: '/dashboard',
     icon: <HomeOutlined />,
     labelKey: 'menu.home',
+  },
+  {
+    type: 'item',
+    key: '/fire-alarm',
+    icon: <SafetyCertificateOutlined />,
+    labelKey: 'menu.fireAlarmManagement',
   },
 
   // ── Security ──────────────────────────────────────────────────────────────
@@ -199,8 +206,9 @@ export const menuConfig: MenuEntry[] = [
   },
 ]
 
-/** Groups bị ẩn với role admin1 */
+/** Groups bị ẩn với role admin1 (user Smart Building) */
 export const ADMIN1_HIDDEN_GROUP_KEYS = new Set([
+  'item-control',
   'robot-management',
   'smart-workspace',
   'smart-meeting-room',

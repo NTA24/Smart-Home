@@ -65,7 +65,7 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     const labelKey = routeToLabelKey[key]
     if (labelKey) {
-      const tab: Tab = { key, labelKey, closable: key !== '/dashboard' }
+      const tab: Tab = { key, labelKey, closable: key !== '/dashboard' && key !== '/fire-alarm' }
       addTab(tab)
       navigate(key)
     }

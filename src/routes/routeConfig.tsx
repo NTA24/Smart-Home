@@ -5,6 +5,7 @@ import { lazy } from 'react'
 // Dashboard
 const Home = lazy(() => import('@/pages/Dashboard/Home'))
 const Dashboard = lazy(() => import('@/pages/Dashboard/Dashboard'))
+const FireAlarmManagement = lazy(() => import('@/pages/FireAlarm/FireAlarmManagement'))
 
 // Security
 const SecurityMonitoring = lazy(() => import('@/pages/Security/SecurityMonitoring'))
@@ -136,6 +137,11 @@ export const routes: RouteConfig[] = [
     path: 'dashboard',
     labelKey: 'menu.dashboard',
     element: <Dashboard />,
+  },
+  {
+    path: 'fire-alarm',
+    labelKey: 'menu.fireAlarmManagement',
+    element: <FireAlarmManagement />,
   },
 
   // ── Security / Camera ─────────────────────────────────────────────────────

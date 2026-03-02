@@ -40,6 +40,7 @@
     "floors": "tầng",
     "people": "người",
     "dashboard": "Bảng điều khiển",
+    "fireAlarmManagement": "Quản lý thiết bị báo cháy",
     "inDevelopment": "Đang phát triển",
     "parkingManagement": "Quản lý bãi đỗ xe",
     "parkingList": "Bảng điều khiển",
@@ -335,6 +336,11 @@
     "availableChargers": "Trạm trống",
     "totalVehicles": "Tổng xe trong bãi",
     "evPower": "Công suất sạc"
+  },
+  "fireAlarm": {
+    "title": "Quản lý thiết bị báo cháy",
+    "subtitle": "Giám sát và quản lý hệ thống thiết bị báo cháy",
+    "placeholder": "Nội dung quản lý thiết bị báo cháy sẽ được bổ sung tại đây."
   },
   "personnel": {
     "serialNumber": "STT",
@@ -1686,6 +1692,17 @@
     "openInNewTab": "Mở link trong tab mới",
     "noCameras": "Không tìm thấy camera",
     "floor": "Tầng"
+  },
+  "aiChat": {
+    "title": "Chat với AI",
+    "open": "Mở chat AI",
+    "hintText": "Bấm vào nút bên dưới để chat với AI. Chọn model rồi bắt đầu trò chuyện.",
+    "hintGotIt": "Đã hiểu",
+    "placeholder": "Nhập tin nhắn để bắt đầu trò chuyện với AI...",
+    "inputPlaceholder": "Nhập tin nhắn...",
+    "send": "Gửi",
+    "noResult": "Không có phản hồi",
+    "error": "Lỗi kết nối AI"
   },
   "cameraPlayback": {
     "title": "Xem Lại",

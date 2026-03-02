@@ -1,4 +1,4 @@
-export { default as api, dashboardApi, parkingApi, deviceApi, energyApi } from './api'
+export { default as api, CHAT_WITH_AI_URL, dashboardApi, parkingApi, deviceApi, energyApi } from './api'
 export { tenantApi } from './tenantApi'
 export { campusApi } from './campusApi'
 export { buildingApi } from './buildingApi'

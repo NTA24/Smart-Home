@@ -40,6 +40,7 @@
     "floors": "floors",
     "people": "people",
     "dashboard": "Dashboard",
+    "fireAlarmManagement": "Fire alarm device management",
     "inDevelopment": "In development",
     "parkingManagement": "Parking Management",
     "parkingList": "Parking List",
@@ -280,6 +281,11 @@
     "availableChargers": "Available",
     "totalVehicles": "Total Vehicles",
     "evPower": "Charging Power"
+  },
+  "fireAlarm": {
+    "title": "Fire alarm device management",
+    "subtitle": "Monitor and manage the fire alarm system",
+    "placeholder": "Fire alarm device management content will be added here."
   },
   "personnel": {
     "serialNumber": "No.",
@@ -1625,6 +1631,17 @@
     "openInNewTab": "Open link in new tab",
     "noCameras": "No cameras found",
     "floor": "Floor"
+  },
+  "aiChat": {
+    "title": "Chat with AI",
+    "open": "Open AI chat",
+    "hintText": "Click the button below to chat with AI. Choose a model and start the conversation.",
+    "hintGotIt": "Got it",
+    "placeholder": "Type a message to start chatting with AI...",
+    "inputPlaceholder": "Type a message...",
+    "send": "Send",
+    "noResult": "No response",
+    "error": "AI connection error"
   },
   "cameraPlayback": {
     "title": "Playback",

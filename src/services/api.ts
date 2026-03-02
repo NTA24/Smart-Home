@@ -38,6 +38,10 @@ api.interceptors.response.use(
 
 export default api
 
+export const CHAT_WITH_AI_URL =
+  (import.meta.env.VITE_CHAT_AI_URL as string | undefined)?.replace(/\/$/, '') ||
+  'https://campus.iot-platform.io.vn'
+
 // Example API functions
 export const dashboardApi = {
   getStats: () => api.get('/dashboard/stats'),
