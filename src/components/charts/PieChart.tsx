@@ -82,7 +82,7 @@ export default function PieChart({
   }
 
   return (
-    <Card title={title} bordered={false} style={cardStyle}>
+    <Card title={title} variant="borderless" style={cardStyle}>
       <ReactECharts option={option} style={{ height }} />
     </Card>
   )

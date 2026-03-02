@@ -25,7 +25,7 @@ export default function StatCard({
   const { token } = theme.useToken()
 
   return (
-    <Card className="stat-card" bordered={false}>
+    <Card className="stat-card" variant="borderless">
       <div className="stat-card_content">
         {icon && (
           <div className="stat-card_icon" style={{ background: iconBgColor }}>

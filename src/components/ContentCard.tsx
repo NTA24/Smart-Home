@@ -28,7 +28,7 @@ export default function ContentCard({
 
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       className={['content-card', className].filter(Boolean).join(' ')}
       title={cardTitle}
       extra={titleExtra}

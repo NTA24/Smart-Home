@@ -1066,6 +1066,9 @@
   padding: 1px 4px;
   text-align: center;
 }
+.security_face-icon-size { font-size: 28px; }
+.security_thumb-clickable { cursor: pointer; }
+.security_flex-1 { flex: 1; }
 
 .security_face-info {
   padding: 3px 4px;

@@ -210,7 +210,7 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
           trigger={['click']}
           open={buildingDropdownOpen}
           onOpenChange={setBuildingDropdownOpen}
-          dropdownRender={() => buildingDropdownContent}
+          popupRender={() => buildingDropdownContent}
         >
           <div className="building-selector">
             <div className="flex-between">

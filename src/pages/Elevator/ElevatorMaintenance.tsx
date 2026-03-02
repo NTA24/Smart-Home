@@ -379,7 +379,7 @@ export default function ElevatorMaintenance() {
           return (
             <Col key={status} xs={24} sm={12} lg={6}>
               <Card
-                bordered={false}
+                variant="borderless"
                 className="elevator_kanban-column"
                 title={
                   <div className="flex items-center gap-8">

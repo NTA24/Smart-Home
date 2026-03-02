@@ -293,22 +293,22 @@ export default function HvacTelemetryPage() {
       {data.length > 0 && (
         <Row gutter={[16, 16]} className="mb-16">
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('hvacTelemetry.avgSupplyTemp')} value={avgSupply.toFixed(1)} suffix="°C" valueStyle={{ color: '#1890ff' }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('hvacTelemetry.avgReturnTemp')} value={avgReturn.toFixed(1)} suffix="°C" valueStyle={{ color: '#fa8c16' }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('hvacTelemetry.avgKw')} value={avgKw.toFixed(2)} suffix="kW" valueStyle={{ color: '#722ed1' }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('hvacTelemetry.avgEer')} value={avgEer.toFixed(2)} valueStyle={{ color: avgEer >= 3 ? '#52c41a' : '#f5222d' }} />
             </Card>
           </Col>

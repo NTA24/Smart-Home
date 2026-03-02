@@ -385,7 +385,7 @@ export default function ParkingSubscription() {
       </div>
 
       {/* Search */}
-      <Card bordered={false} className="vehicle_search-card" bodyStyle={{ padding: '12px 20px' }}>
+      <Card variant="borderless" className="vehicle_search-card" bodyStyle={{ padding: '12px 20px' }}>
         <Input
           prefix={<SearchOutlined />}
           placeholder={t('parkingSub.searchPlaceholder')}
@@ -399,7 +399,7 @@ export default function ParkingSubscription() {
 
       {/* Table */}
       <Card
-        bordered={false}
+        variant="borderless"
         className="rounded-lg shadow"
         title={
           <span className="vehicle_table-title">

@@ -382,7 +382,7 @@ export default function CameraConfig() {
         destroyOnClose
       >
         {editingCamera && (
-          <Space direction="vertical" size={12} className="w-full" style={{ width: '100%' }}>
+          <Space direction="vertical" size={12} className="w-full camcfg_modal-space">
             <div>
               <Text type="secondary" className="block mb-1">{t('cameraConfig.cameraId', 'Mã camera')}</Text>
               <Text strong>{toStr(editingCamera.id)}</Text>

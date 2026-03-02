@@ -83,7 +83,7 @@ export default function GaugeChart({
   }
 
   return (
-    <Card title={title} bordered={false}>
+    <Card title={title} variant="borderless">
       <ReactECharts option={option} style={{ height }} />
     </Card>
   )

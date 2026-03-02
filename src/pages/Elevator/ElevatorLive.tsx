@@ -170,7 +170,7 @@ export default function ElevatorLive() {
         {filtered.map(elevator => (
           <Col key={elevator.id} xs={24} sm={12} lg={8} xl={6}>
             <Card
-              bordered={false}
+              variant="borderless"
               hoverable
               onClick={() => handleSelect(elevator)}
               style={{

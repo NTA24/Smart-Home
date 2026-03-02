@@ -89,7 +89,7 @@ export default function CameraPlayback() {
   const [selectedCamera, setSelectedCamera] = useState(cameras[0].id)
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
-  const [currentTime, setCurrentTime] = useState(42) // percentage of timeline
+  const [currentTime, setCurrentTime] = useState(42)
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false)
   const [aiQuery, setAiQuery] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
@@ -138,23 +138,16 @@ export default function CameraPlayback() {
               <Button
                 type="default"
                 size="small"
-                icon={<HighlightOutlined style={{ color: '#1677ff' }} />}
+                icon={<HighlightOutlined className="camera_playback-ai-btn-icon" />}
                 onClick={() => setAiAssistantOpen(true)}
-                style={{
-                  border: '1.5px solid #1677ff',
-                  borderRadius: 6,
-                  boxShadow: '0 0 6px rgba(22,119,255,0.15)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}
+                className="camera_playback-ai-btn"
               >
                 {t('cameraPlayback.aiSearch', 'Tìm kiếm nội dung dựa trên AI')}
               </Button>
             </Tooltip>
             <Select
               value={selectedCamera}
-              style={{ width: 200 }}
+              className="camera_playback-select-w200"
               size="small"
               onChange={setSelectedCamera}
               options={cameras.map(c => ({
@@ -168,19 +161,14 @@ export default function CameraPlayback() {
       />
 
       <Row gutter={[16, 16]}>
-        {/* Main Playback Area */}
         <Col xs={24} lg={17}>
-          {/* Video Player */}
           <ContentCard
             size="small"
             className="camera_card-rounded camera_card-mb"
             styles={{ body: { padding: 0 } }}
           >
-            {/* Video area */}
             <div className="camera_video-area">
               <VideoCameraOutlined className="camera_video-icon" />
-
-              {/* Camera info overlay */}
               <div className="camera_overlay-tag-wrap">
                 <Tag className="camera_overlay-tag">
                   {currentCam.id}
@@ -189,56 +177,25 @@ export default function CameraPlayback() {
                   {currentCam.name}
                 </span>
               </div>
-
-              {/* Timestamp overlay */}
               <div className="camera_overlay-timestamp">
                 2026-02-06 {`${8 + Math.floor(currentTime * 14 / 100)}`.padStart(2, '0')}:{`${Math.floor(Math.random() * 60)}`.padStart(2, '0')}:00
               </div>
-
-              {/* Play button overlay */}
               {!isPlaying && (
-                <div
-                  onClick={() => setIsPlaying(true)}
-                  style={{
-                    position: 'absolute',
-                    width: 64,
-                    height: 64,
-                    borderRadius: '50%',
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(24,144,255,0.7)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,0,0,0.5)' }}
-                >
-                  <PlayCircleOutlined style={{ fontSize: 32, color: '#fff' }} />
+                <div className="camera_playback-play-overlay" onClick={() => setIsPlaying(true)}>
+                  <PlayCircleOutlined className="camera_playback-play-icon" />
                 </div>
               )}
-
-              {/* Fullscreen button */}
               <Tooltip title={t('cameraPlayback.fullscreen', 'Fullscreen')}>
                 <Button
                   size="small"
                   type="text"
                   icon={<FullscreenOutlined />}
-                  style={{
-                    position: 'absolute',
-                    bottom: 12,
-                    right: 12,
-                    color: '#fff',
-                    background: 'rgba(0,0,0,0.4)',
-                    borderRadius: 6,
-                  }}
+                  className="camera_playback-fullscreen-btn"
                 />
               </Tooltip>
             </div>
 
-            {/* Playback Controls */}
-            <div style={{ padding: '12px 20px' }}>
-              {/* Timeline slider */}
+            <div className="camera_playback-controls-pad">
               <Slider
                 value={currentTime}
                 onChange={setCurrentTime}
@@ -247,8 +204,6 @@ export default function CameraPlayback() {
                   track: { background: '#1890ff' },
                 }}
               />
-
-              {/* Control buttons */}
               <div className="camera_controls-row">
                 <div className="camera_controls-left">
                   <Tooltip title={t('cameraPlayback.backward', 'Backward 10s')}>
@@ -273,7 +228,6 @@ export default function CameraPlayback() {
                 </div>
 
                 <div className="camera_controls-right">
-                  {/* Speed selector */}
                   <Text type="secondary" className="camera_speed-label">{t('cameraPlayback.speed', 'Speed')}:</Text>
                   {speedOptions.map((spd) => (
                     <Button
@@ -303,7 +257,6 @@ export default function CameraPlayback() {
             </div>
           </ContentCard>
 
-          {/* Timeline bar with event markers */}
           <ContentCard
             size="small"
             title={t('cameraPlayback.timelineBar', 'Recording Timeline')}
@@ -311,14 +264,10 @@ export default function CameraPlayback() {
             className="camera_card-rounded"
             bodyStyle={{ padding: '12px 20px' }}
           >
-            {/* 24h timeline bar */}
             <div className="camera_timeline-bar">
-              {/* Recorded segments */}
-              <div className="absolute top-0 bottom-0 rounded-l-sm" style={{ left: '0%', width: '35%', background: 'rgba(24,144,255,0.3)' }} />
-              <div className="absolute top-0 bottom-0" style={{ left: '40%', width: '25%', background: 'rgba(24,144,255,0.3)' }} />
-              <div className="absolute top-0 bottom-0" style={{ left: '70%', width: '20%', background: 'rgba(24,144,255,0.3)' }} />
-
-              {/* Event markers */}
+              <div className="camera_timeline-segment camera_timeline-segment--first" style={{ left: '0%', width: '35%' }} />
+              <div className="camera_timeline-segment" style={{ left: '40%', width: '25%' }} />
+              <div className="camera_timeline-segment" style={{ left: '70%', width: '20%' }} />
               {[15, 28, 38, 52, 61, 73, 82, 88].map((pos, i) => (
                 <Tooltip key={i} title={mockEvents[i]?.description || 'Event'}>
                   <div
@@ -332,40 +281,13 @@ export default function CameraPlayback() {
                   />
                 </Tooltip>
               ))}
-
-              {/* Current position */}
-              <div
-                className="absolute rounded-sm"
-                style={{
-                  left: `${currentTime}%`,
-                  top: -2,
-                  bottom: -2,
-                  width: 3,
-                  background: '#1890ff',
-                  zIndex: 3,
-                  boxShadow: '0 0 6px rgba(24,144,255,0.5)',
-                }}
-              />
-
-              {/* Hour labels */}
+              <div className="camera_timeline-current" style={{ left: `${currentTime}%` }} />
               {[0, 4, 8, 12, 16, 20, 24].map((h) => (
-                <div
-                  key={h}
-                  className="absolute text-xs"
-                  style={{
-                    left: `${(h / 24) * 100}%`,
-                    bottom: 2,
-                    fontSize: 8,
-                    color: '#999',
-                    transform: 'translateX(-50%)',
-                  }}
-                >
+                <div key={h} className="camera_timeline-hour absolute text-xs" style={{ left: `${(h / 24) * 100}%` }}>
                   {`${h}`.padStart(2, '0')}:00
                 </div>
               ))}
             </div>
-
-            {/* Legend */}
             <div className="camera_timeline-legend">
               <div className="camera_timeline-legend-item">
                 <div className="camera_timeline-legend-rect" />
@@ -380,10 +302,7 @@ export default function CameraPlayback() {
             </div>
           </ContentCard>
         </Col>
-
-        {/* Sidebar: Events & Camera list */}
         <Col xs={24} lg={7}>
-          {/* Events */}
           <ContentCard
             size="small"
             title={<>{t('cameraPlayback.events', 'Events')} <Badge count={mockEvents.length} size="small" className="ml-4" /></>}
@@ -420,7 +339,7 @@ export default function CameraPlayback() {
       <Modal
         title={
           <span>
-            <HighlightOutlined style={{ color: '#1677ff', marginRight: 8 }} />
+            <HighlightOutlined className="camera_playback-ai-title-icon" />
             {t('cameraPlayback.aiAssistantTitle', 'Trợ lý AI – Tìm kiếm trong bản ghi')}
           </span>
         }
@@ -449,11 +368,7 @@ export default function CameraPlayback() {
             allowClear
             size="large"
             disabled={aiLoading}
-            style={{
-              border: '1.5px solid #1677ff',
-              borderRadius: 8,
-              boxShadow: '0 0 6px rgba(22,119,255,0.15)',
-            }}
+            className="camera_playback-ai-input"
           />
         </div>
         <div className="text-secondary text-sm mb-12">
@@ -465,7 +380,7 @@ export default function CameraPlayback() {
           </div>
         )}
         {!aiLoading && aiResult != null && (
-          <div className="rounded-8 p-12 bg-gray-1 border border-gray-3">
+          <div className="camera_playback-result-box">
             <Text strong className="text-sm block mb-8">{t('cameraPlayback.aiResultLabel', 'Kết quả')}:</Text>
             <Text className="text-sm whitespace-pre-wrap">{aiResult}</Text>
           </div>

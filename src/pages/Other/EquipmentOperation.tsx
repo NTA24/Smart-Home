@@ -83,7 +83,7 @@ export default function EquipmentOperation() {
 
       <Row gutter={[16, 16]} className="other_row-mb">
         <Col xs={24} sm={8} lg={6}>
-          <Card bordered={false}>
+          <Card variant="borderless">
             <div className="other_stat-inner">
               <div className="other_stat-icon-box flex flex-center">
                 <ApiOutlined className="other_stat-icon-white" />
@@ -93,7 +93,7 @@ export default function EquipmentOperation() {
           </Card>
         </Col>
         <Col xs={24} sm={8} lg={6}>
-          <Card bordered={false}>
+          <Card variant="borderless">
             <div className="other_stat-inner">
               <Badge status="success" />
               <Statistic title={t('common.online')} value={539} valueStyle={{ fontSize: 24, color: '#52c41a' }} />
@@ -101,7 +101,7 @@ export default function EquipmentOperation() {
           </Card>
         </Col>
         <Col xs={24} sm={8} lg={6}>
-          <Card bordered={false}>
+          <Card variant="borderless">
             <div className="other_stat-inner">
               <Badge status="default" />
               <Statistic title={t('common.offline')} value={149} valueStyle={{ fontSize: 24, color: '#999' }} />
@@ -109,7 +109,7 @@ export default function EquipmentOperation() {
           </Card>
         </Col>
         <Col xs={24} sm={8} lg={6}>
-          <Card bordered={false}>
+          <Card variant="borderless">
             <div className="other_stat-inner">
               <Badge status="error" />
               <Statistic title={t('common.alarm')} value={132} valueStyle={{ fontSize: 24, color: '#f5222d' }} />

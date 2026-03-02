@@ -30,7 +30,6 @@ const FACE_IMAGES = [
   '/security-faces/stored-face-7.png',
 ]
 
-// Panel component with glass effect
 const GlassPanel: React.FC<{
   title: string
   icon?: React.ReactNode
@@ -51,7 +50,6 @@ const GlassPanel: React.FC<{
   </div>
 )
 
-// Video alarm item - matching reference design
 const VideoAlarmItem: React.FC<{
   camera: string
   location: string
@@ -82,7 +80,6 @@ const VideoAlarmItem: React.FC<{
   </div>
 )
 
-// Camera video modal component
 const CameraVideoModal: React.FC<{
   visible: boolean
   camera: string
@@ -276,7 +273,6 @@ const CameraVideoModal: React.FC<{
   )
 }
 
-// Scrolling alarm list component
 const ScrollingAlarmList: React.FC<{
   alarms: Array<{ camera: string; location: string; time: string; type: string }>
   onCameraClick: (camera: string, time: string) => void
@@ -311,7 +307,6 @@ const ScrollingAlarmList: React.FC<{
   )
 }
 
-// Camera thumbnail component
 const CameraThumbnail: React.FC<{
   label: string
   sublabel?: string
@@ -447,9 +442,8 @@ const CameraThumbnail: React.FC<{
 
   return (
     <div
-      className="security_thumbnail-card"
+      className={`security_thumbnail-card ${onClick ? 'security_thumb-clickable' : ''}`}
       onClick={onClick}
-      style={onClick ? { cursor: 'pointer' } : undefined}
     >
       <div
         className="security_thumbnail-preview"
@@ -498,7 +492,6 @@ const CameraThumbnail: React.FC<{
   )
 }
 
-// Face capture item
 const FaceCapture: React.FC<{
   tag: string
   tagColor: string
@@ -511,7 +504,7 @@ const FaceCapture: React.FC<{
       {image ? (
         <img src={image} alt="" className="security_face-img" />
       ) : (
-        <UserOutlined className="opacity-60 security_text-blue-dark" style={{ fontSize: 28 }} />
+        <UserOutlined className="opacity-60 security_text-blue-dark security_face-icon-size" />
       )}
       <div className="security_face-tag-bar" style={{ background: tagColor }}>
         <Text className="text-white text-xs">{tag}</Text>
@@ -524,7 +517,6 @@ const FaceCapture: React.FC<{
   </div>
 )
 
-// Scrolling capture list component
 const ScrollingCaptureList: React.FC<{
   captures: Array<{ tag: string; tagColor: string; location: string; time: string; image?: string }>
 }> = ({ captures }) => {
@@ -560,7 +552,6 @@ const ScrollingCaptureList: React.FC<{
   )
 }
 
-// Snapshot video box (plays stream in Smart snapshots panel)
 const SnapshotVideo: React.FC<{
   streamUrl: string
   onClick?: () => void
@@ -681,12 +672,11 @@ const SnapshotVideo: React.FC<{
   if (youtubeEmbed) {
     return (
       <div
-        className="security_snapshot-placeholder"
+        className={`security_snapshot-placeholder ${onClick ? 'security_thumb-clickable' : ''}`}
         onClick={onClick}
         role={onClick ? 'button' : undefined}
-        style={onClick ? { cursor: 'pointer' } : undefined}
       >
-        <div className="security_yt-crop-wrap" style={{ width: '100%', height: '100%' }}>
+        <div className="security_yt-crop-wrap security_yt-crop-wrap--full">
           <iframe
             src={youtubeEmbed}
             title="snapshot-camera"
@@ -700,10 +690,9 @@ const SnapshotVideo: React.FC<{
 
   return (
     <div
-      className="security_snapshot-placeholder"
+      className={`security_snapshot-placeholder ${onClick ? 'security_thumb-clickable' : ''}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
-      style={onClick ? { cursor: 'pointer' } : undefined}
     >
       <video
         ref={el => {
@@ -863,7 +852,7 @@ export default function SecurityMonitoring() {
           <GlassPanel
             title={t('security.videoAlarm', 'Video alarm')}
             icon={<AlertOutlined className="text-danger text-md" />}
-            style={{ flex: 1 }}
+            className="security_flex-1"
           >
             <ScrollingAlarmList
               alarms={alarms}

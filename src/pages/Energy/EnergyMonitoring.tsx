@@ -144,7 +144,7 @@ export default function EnergyMonitoring() {
 
       <Row gutter={[16, 16]} className="mb-16">
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false}>
+          <Card variant="borderless">
             <div className="energy_stat-row">
               <div className="energy_stat-icon-box" style={{ background: '#faad14' }}>
                 <ThunderboltOutlined className="energy_stat-icon" />
@@ -154,7 +154,7 @@ export default function EnergyMonitoring() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false}>
+          <Card variant="borderless">
             <div className="energy_stat-row">
               <div className="energy_stat-icon-box" style={{ background: '#1890ff' }}>
                 <ThunderboltOutlined className="energy_stat-icon" />
@@ -164,7 +164,7 @@ export default function EnergyMonitoring() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false}>
+          <Card variant="borderless">
             <div className="energy_stat-row">
               <div className="energy_stat-icon-box" style={{ background: '#52c41a' }}>
                 <CloudOutlined className="energy_stat-icon" />
@@ -174,7 +174,7 @@ export default function EnergyMonitoring() {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false}>
+          <Card variant="borderless">
             <div className="energy_stat-row">
               <div className="energy_stat-icon-box" style={{ background: '#722ed1' }}>
                 <BulbOutlined className="energy_stat-icon" />
@@ -190,7 +190,7 @@ export default function EnergyMonitoring() {
           <LineChart title={t('energy.dailyChart')} categories={hourlyCategories} series={hourlySeries} height={280} showArea />
         </Col>
         <Col xs={24} lg={8}>
-          <Card title={t('energy.efficiency')} bordered={false}>
+          <Card title={t('energy.efficiency')} variant="borderless">
             <GaugeChart title="" value={72} height={200} color="#52c41a" />
             <div className="text-center mt-n20">
               <Text type="secondary">{t('energy.efficiency')}</Text>

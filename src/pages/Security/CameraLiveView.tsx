@@ -55,7 +55,6 @@ const YOUTUBE_MIN_LOADING_MS = 4000
 
 const cameras: Camera[] = [
   ...DEMO_CAMERAS,
-  // Các camera chưa có stream thật — giữ nguyên để UI đủ slots
   { id: 'CAM-11', name: 'Camera 11',   location: '—',      floor: '1F', status: 'offline', type: 'indoor',  resolution: '1080p' },
   { id: 'CAM-12', name: 'Garden Area', location: 'Garden', floor: '1F', status: 'offline', type: 'ptz',     resolution: '4K'    },
 ]
@@ -304,7 +303,7 @@ function CameraStreamPlayer({
 
   if (youtubeEmbed) {
     return (
-      <div className="security_yt-crop-wrap" style={{ width: '100%', height: '100%' }}>
+      <div className="security_yt-crop-wrap security_yt-crop-wrap--full">
         <iframe
           src={youtubeEmbed}
           title={cameraId}
@@ -325,7 +324,7 @@ function CameraStreamPlayer({
 
   if (isEmbedPageUrl(streamUrl)) {
     return (
-      <div className="camera_feed-embed-wrap" style={{ width: '100%', height: '100%' }}>
+      <div className="camera_feed-embed-wrap camera_feed-embed-wrap--full">
         <iframe
           src={streamUrl}
           title={cameraId}
@@ -387,11 +386,9 @@ function CameraFeed({
       className="camera_feed-card"
       styles={{ body: { padding: 0 } }}
     >
-      {/* Video area placeholder */}
       <div
         ref={videoBoxRef}
-        className={`camera_feed-video ${normalizedStatus === 'offline' ? 'camera_feed-video--offline' : 'camera_feed-video--live'}`}
-        style={{ height: compact ? 140 : 180 }}
+        className={`camera_feed-video ${normalizedStatus === 'offline' ? 'camera_feed-video--offline' : 'camera_feed-video--live'} ${compact ? 'camera_feed-video--h140' : 'camera_feed-video--h180'}`}
       >
         {camera.status === 'offline' ? (
           <div className="text-center">
@@ -410,12 +407,11 @@ function CameraFeed({
               />
             ) : (
               <div className="flex flex-col items-center justify-center gap-4 text-center">
-                <VideoCameraOutlined style={{ fontSize: 40, color: 'rgba(255,255,255,0.15)' }} />
+                <VideoCameraOutlined className="camera_feed-no-stream-icon" />
                 <span className="text-11 text-muted">{t('cameraLive.noStreamUrl', 'Chưa cấu hình URL stream')}</span>
               </div>
             )}
 
-            {/* Controls overlay */}
             <div className="camera_feed-controls">
               <Tooltip title={isFullscreen ? t('cameraLive.exitFullscreen', 'Thoát toàn màn hình') : t('cameraLive.fullscreen', 'Fullscreen')}>
                 <Button
@@ -443,7 +439,6 @@ function CameraFeed({
               </Tooltip>
             </div>
 
-            {/* Camera name overlay */}
             <div className="camera_feed-name-overlay">
               {camera.id}
             </div>
@@ -451,11 +446,10 @@ function CameraFeed({
         )}
       </div>
 
-      {/* Info bar */}
       <div className={compact ? 'camera_feed-info-bar--compact' : 'camera_feed-info-bar'}>
         <div className="flex-between">
           <div className="flex-1 min-w-0">
-            <Text strong className={compact ? 'text-11' : 'text-base'} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <Text strong className={`camera_feed-name-truncate ${compact ? 'text-11' : 'text-base'}`}>
               {camera.name}
             </Text>
             <div className="flex items-center gap-4 text-11 text-muted mt-2">
@@ -527,7 +521,6 @@ export default function CameraLiveView() {
 
   return (
     <div className="p-0">
-      {/* Header */}
       <div className="camera_header">
         <div>
           <Title level={4} className="m-0 flex items-center gap-8">
@@ -577,8 +570,6 @@ export default function CameraLiveView() {
           </Tooltip>
         </div>
       </div>
-
-      {/* Camera Grid – grouped by floor */}
       {filteredCameras.length === 0 ? (
         <Card className="camera_empty-card">
           <Empty description={t('cameraLive.noCameras', 'No cameras found')} />
@@ -609,14 +600,6 @@ export default function CameraLiveView() {
           )}
         </>
       )}
-
-      {/* Pulse animation for REC indicator */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
-      `}</style>
     </div>
   )
 }

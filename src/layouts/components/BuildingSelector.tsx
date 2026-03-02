@@ -161,7 +161,7 @@ export default function BuildingSelector({ triggerClassName, onClose }: Building
       placement="topRight"
       open={open}
       onOpenChange={setOpen}
-      dropdownRender={() => dropdownContent}
+      popupRender={() => dropdownContent}
     >
       <div className={triggerClassName ?? 'left-nav_item'}>
         <div className="left-nav_item-icon">{stepConfig.icon}</div>

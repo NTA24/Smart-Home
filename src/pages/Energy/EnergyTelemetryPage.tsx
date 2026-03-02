@@ -289,22 +289,22 @@ export default function EnergyTelemetryPage() {
       {data.length > 0 && (
         <Row gutter={[16, 16]} className="mb-16">
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('energyTelemetry.totalKwh')} value={totalKwh.toFixed(2)} suffix="kWh" valueStyle={{ color: '#1890ff' }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('energyTelemetry.avgKw')} value={avgKw.toFixed(2)} suffix="kW" valueStyle={{ color: '#52c41a' }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('energyTelemetry.peakKw')} value={maxKw.toFixed(2)} suffix="kW" valueStyle={{ color: '#f5222d' }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('energyTelemetry.avgVoltage')} value={avgVoltage.toFixed(1)} suffix="V" valueStyle={{ color: '#722ed1' }} />
             </Card>
           </Col>

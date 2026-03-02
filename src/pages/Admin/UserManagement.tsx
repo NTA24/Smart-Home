@@ -62,7 +62,7 @@ export default function UserManagement() {
 
   return (
     <div>
-      <Card bordered={false} className="admin_card-mb">
+      <Card variant="borderless" className="admin_card-mb">
         <div className="admin_form-wrap">
           <Form form={form} layout="inline" className="admin_form-wrap flex-1">
             <Form.Item label={t('userPermission.username')} name="username">
@@ -86,7 +86,7 @@ export default function UserManagement() {
         </div>
       </Card>
 
-      <Card title={t('userPermission.dataList')} bordered={false}>
+      <Card title={t('userPermission.dataList')} variant="borderless">
         <Table
           columns={columns}
           dataSource={data}

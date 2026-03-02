@@ -272,22 +272,22 @@ export default function IaqTelemetryPage() {
       {data.length > 0 && (
         <Row gutter={[16, 16]} className="mb-16">
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('iaqTelemetry.avgTemp')} value={avgTemp.toFixed(1)} suffix="°C" valueStyle={{ color: '#fa8c16' }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('iaqTelemetry.avgHumidity')} value={avgHumidity.toFixed(1)} suffix="%" valueStyle={{ color: '#1890ff' }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('iaqTelemetry.avgCo2')} value={avgCo2.toFixed(0)} suffix="ppm" valueStyle={{ color: avgCo2 <= 800 ? '#52c41a' : '#f5222d' }} />
             </Card>
           </Col>
           <Col xs={12} sm={6}>
-            <Card bordered={false} className="content-card rounded-lg">
+            <Card variant="borderless" className="content-card rounded-lg">
               <Statistic title={t('iaqTelemetry.avgPm25')} value={avgPm25.toFixed(1)} suffix="µg/m³" valueStyle={{ color: avgPm25 <= 35 ? '#52c41a' : '#f5222d' }} />
             </Card>
           </Col>
