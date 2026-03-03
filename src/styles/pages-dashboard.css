@@ -1673,3 +1673,23 @@
   font-size: 13px;
   color: #555;
 }
+
+/* Fire Alarm Dashboard – Floor Map (schematic) */
+.fire-alarm-floor-map {
+  min-height: 300px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  overflow: hidden;
+}
+
+.fire-alarm-floor-svg {
+  width: 100%;
+  height: auto;
+  min-height: 280px;
+  display: block;
+}
+
+.fire-alarm-floor-svg .fire-alarm-device-icon {
+  color: #595959;
+}

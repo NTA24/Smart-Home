@@ -1,1 +1,7 @@
-export { default as FireAlarmManagement } from './FireAlarmManagement'
+export { default as FireAlarmDashboard } from './FireAlarmDashboard'
+export { default as FireAlarmEvents } from './FireAlarmEvents'
+export { default as FireAlarmDevices } from './FireAlarmDevices'
+export { default as FireAlarmRoles } from './FireAlarmRoles'
+export { default as FireAlarmReports } from './FireAlarmReports'
+export { default as FireAlarmNotifications } from './FireAlarmNotifications'
+export { default as FireAlarmMaintenance } from './FireAlarmMaintenance'

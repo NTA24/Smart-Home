@@ -46,10 +46,19 @@ export const menuConfig: MenuEntry[] = [
     labelKey: 'menu.home',
   },
   {
-    type: 'item',
-    key: '/fire-alarm',
+    key: 'fire-alarm',
     icon: <SafetyCertificateOutlined />,
     labelKey: 'menu.fireAlarmManagement',
+    defaultRoute: '/fire-alarm-dashboard',
+    children: [
+      { key: '/fire-alarm-dashboard', labelKey: 'fireAlarm.tab1' },
+      { key: '/fire-alarm-events', labelKey: 'fireAlarm.tab2' },
+      { key: '/fire-alarm-devices', labelKey: 'fireAlarm.tab3' },
+      { key: '/fire-alarm-roles', labelKey: 'fireAlarm.tab4' },
+      { key: '/fire-alarm-reports', labelKey: 'fireAlarm.tab5' },
+      { key: '/fire-alarm-notifications', labelKey: 'fireAlarm.tab6' },
+      { key: '/fire-alarm-maintenance', labelKey: 'fireAlarm.tab7' },
+    ],
   },
 
   // ── Security ──────────────────────────────────────────────────────────────

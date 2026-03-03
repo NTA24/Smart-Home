@@ -5,7 +5,13 @@ import { lazy } from 'react'
 // Dashboard
 const Home = lazy(() => import('@/pages/Dashboard/Home'))
 const Dashboard = lazy(() => import('@/pages/Dashboard/Dashboard'))
-const FireAlarmManagement = lazy(() => import('@/pages/FireAlarm/FireAlarmManagement'))
+const FireAlarmDashboard = lazy(() => import('@/pages/FireAlarm/FireAlarmDashboard'))
+const FireAlarmEvents = lazy(() => import('@/pages/FireAlarm/FireAlarmEvents'))
+const FireAlarmDevices = lazy(() => import('@/pages/FireAlarm/FireAlarmDevices'))
+const FireAlarmRoles = lazy(() => import('@/pages/FireAlarm/FireAlarmRoles'))
+const FireAlarmReports = lazy(() => import('@/pages/FireAlarm/FireAlarmReports'))
+const FireAlarmNotifications = lazy(() => import('@/pages/FireAlarm/FireAlarmNotifications'))
+const FireAlarmMaintenance = lazy(() => import('@/pages/FireAlarm/FireAlarmMaintenance'))
 
 // Security
 const SecurityMonitoring = lazy(() => import('@/pages/Security/SecurityMonitoring'))
@@ -139,9 +145,46 @@ export const routes: RouteConfig[] = [
     element: <Dashboard />,
   },
   {
-    path: 'fire-alarm',
-    labelKey: 'menu.fireAlarmManagement',
-    element: <FireAlarmManagement />,
+    path: 'fire-alarm-dashboard',
+    labelKey: 'fireAlarm.tab1',
+    parentKey: 'fire-alarm',
+    element: <FireAlarmDashboard />,
+  },
+  {
+    path: 'fire-alarm-events',
+    labelKey: 'fireAlarm.tab2',
+    parentKey: 'fire-alarm',
+    element: <FireAlarmEvents />,
+  },
+  {
+    path: 'fire-alarm-devices',
+    labelKey: 'fireAlarm.tab3',
+    parentKey: 'fire-alarm',
+    element: <FireAlarmDevices />,
+  },
+  {
+    path: 'fire-alarm-roles',
+    labelKey: 'fireAlarm.tab4',
+    parentKey: 'fire-alarm',
+    element: <FireAlarmRoles />,
+  },
+  {
+    path: 'fire-alarm-reports',
+    labelKey: 'fireAlarm.tab5',
+    parentKey: 'fire-alarm',
+    element: <FireAlarmReports />,
+  },
+  {
+    path: 'fire-alarm-notifications',
+    labelKey: 'fireAlarm.tab6',
+    parentKey: 'fire-alarm',
+    element: <FireAlarmNotifications />,
+  },
+  {
+    path: 'fire-alarm-maintenance',
+    labelKey: 'fireAlarm.tab7',
+    parentKey: 'fire-alarm',
+    element: <FireAlarmMaintenance />,
   },
 
   // ── Security / Camera ─────────────────────────────────────────────────────
@@ -618,6 +661,7 @@ export const routeToParentKey: Record<string, string> = Object.fromEntries(
  * Tách riêng khỏi routes để không bị đưa vào routeToLabelKey.
  */
 export const redirects: Array<{ from: string; to: string }> = [
+  { from: 'fire-alarm', to: '/fire-alarm-dashboard' },
   { from: 'live-entrance', to: '/vehicle-access-control' },
   { from: 'live-exit', to: '/vehicle-access-control' },
   { from: 'api-test', to: '/test-api' },
