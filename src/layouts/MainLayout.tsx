@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Layout, theme } from 'antd'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router'
 import { AiChatFab, AppFooter, AppHeader, LeftNav, MiddleSidebar, LEFT_NAV_WIDTH, MIDDLE_SIDEBAR_WIDTH } from './components'
 import { useHomeNavigationStore } from '@/stores'
 

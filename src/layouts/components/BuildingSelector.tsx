@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Dropdown, Tag, Typography } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import {
   TeamOutlined,
   EnvironmentOutlined,

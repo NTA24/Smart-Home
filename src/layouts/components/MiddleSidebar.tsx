@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Layout, Menu, Dropdown, Tag, Typography, theme } from 'antd'
 import type { MenuProps } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router'
 import {
   DownOutlined,
   BuildOutlined,

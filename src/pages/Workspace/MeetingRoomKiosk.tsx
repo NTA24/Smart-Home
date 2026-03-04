@@ -8,7 +8,7 @@ import {
   CalendarOutlined, WarningOutlined, EnvironmentOutlined,
   RightOutlined, ExclamationCircleOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { PageContainer, ContentCard } from '@/components'
 import { getMeetingKioskState, saveMeetingKioskState } from '@/services/mockPersistence'
 

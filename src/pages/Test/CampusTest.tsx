@@ -23,7 +23,7 @@ import {
   ArrowRightOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router'
 import { useTabStore, routeToLabelKey } from '@/stores'
 import type { Tab } from '@/stores'
 import { campusApi } from '@/services'

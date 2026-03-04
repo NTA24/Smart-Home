@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import {
   CalendarOutlined, PlusOutlined, LeftOutlined, RightOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import dayjs from 'dayjs'
 import { PageContainer, PageHeader, ContentCard } from '@/components'
 

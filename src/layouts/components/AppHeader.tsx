@@ -13,7 +13,7 @@ import {
   EnvironmentOutlined,
   BankOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { useHomeNavigationStore, useUserStore, useBuildingStore } from '@/stores'
 import type { UserRole } from '@/stores'
 

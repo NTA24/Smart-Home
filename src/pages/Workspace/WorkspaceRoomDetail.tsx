@@ -13,7 +13,7 @@ import {
   ExpandOutlined, StopOutlined, ControlOutlined, WifiOutlined,
   WarningOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { PageContainer, ContentCard } from '@/components'
 
 const { Title, Text } = Typography

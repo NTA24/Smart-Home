@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router'
 import { HomeOutlined } from '@ant-design/icons'
 import viettelLogo from '@/assets/viettel-logo.png'
 import newgenLogo from '@/assets/newgen-logo.png'

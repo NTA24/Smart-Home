@@ -8,7 +8,7 @@ import {
   EnvironmentOutlined, SendOutlined, ToolOutlined, ThunderboltOutlined,
   CoffeeOutlined, MoreOutlined, CheckCircleOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { PageContainer, PageHeader, ContentCard } from '@/components'
 import { createWorkspaceIssueTicket } from '@/services/mockPersistence'
 

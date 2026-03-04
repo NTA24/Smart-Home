@@ -9,7 +9,7 @@ import {
   CheckCircleOutlined, SendOutlined,
   EyeOutlined, InfoCircleOutlined,
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import dayjs from 'dayjs'
 import { PageContainer, PageHeader, ContentCard } from '@/components'
 import { getWorkspaceBookings, saveWorkspaceBookings } from '@/services/mockPersistence'
