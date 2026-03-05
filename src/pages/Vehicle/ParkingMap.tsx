@@ -28,6 +28,7 @@ import {
   saveVehicleMapFilters,
   saveVehicleSlots,
 } from '@/services/mockPersistence'
+import { parkingDashboardApi } from '@/services'
 
 const { Text } = Typography
 
@@ -39,16 +40,18 @@ interface ParkingSlot {
   floor: string
   code: string
   status: SlotStatus
-  vehicleType?: 'car' | 'motorbike'
+  vehicleType?: 'car' | 'motorbike' | 'truck'
   plate?: string
   entryTime?: string
   reservation?: string
+  vehicleBrand?: string
+  vehicleColor?: string
 }
 
 const STATUS_CONFIG: Record<SlotStatus, { color: string; bg: string; label: string }> = {
   free: { color: '#52c41a', bg: '#f6ffed', label: 'free' },
   occupied: { color: '#f5222d', bg: '#fff1f0', label: 'occupied' },
-  reserved: { color: '#faad14', bg: '#fffbe6', label: 'reserved' },
+  reserved: { color: '#faad14', bg: '#fffbe6', label: 'maintenance' },
 }
 
 function generateUniquePlates(count: number): string[] {
@@ -103,10 +106,13 @@ function normalizeSlotStatus(status: unknown): SlotStatus {
   return 'reserved'
 }
 
+const normalizePlate = (value: string): string =>
+  value.trim().toUpperCase().replace(/[\s\-.]/g, '')
+
 export default function ParkingMap() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
-  const [allSlots] = useState<ParkingSlot[]>(() =>
+  const [allSlots, setAllSlots] = useState<ParkingSlot[]>(() =>
     getVehicleSlots<any>(generateSlots()).map((slot: any) => {
       const status = normalizeSlotStatus(slot?.status)
       const vehicleType =
@@ -124,10 +130,98 @@ export default function ParkingMap() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<ParkingSlot | null>(null)
   const [spotImageModalOpen, setSpotImageModalOpen] = useState(false)
+  const [vehicleByPlate, setVehicleByPlate] = useState<Record<string, { plate: string; vehicleType?: 'car' | 'motorbike' | 'truck'; brand?: string; color?: string }>>({})
 
   useEffect(() => {
     saveVehicleSlots(allSlots)
   }, [allSlots])
+
+  useEffect(() => {
+    parkingDashboardApi
+      .getSpotsList({ limit: 500, offset: 0 })
+      .then((res) => {
+        const items = res.items ?? []
+        if (!Array.isArray(items) || items.length === 0) return
+        const mapped = items.map((spot, index) => {
+          const meta = (spot.meta ?? {}) as { occupied?: boolean; plate_no?: string | null; entry_time?: string | null }
+          const occupied = !!meta.occupied
+          const backendStatus = typeof spot.status === 'string' ? spot.status.toUpperCase() : 'ACTIVE'
+          const isInactive = backendStatus === 'INACTIVE'
+          const status: SlotStatus = isInactive ? 'reserved' : (occupied ? 'occupied' : 'free')
+          const code = typeof spot.spot_code === 'string' && spot.spot_code.length > 0 ? spot.spot_code : `P-${String(index + 1).padStart(3, '0')}`
+          const st = typeof spot.spot_type === 'string' ? spot.spot_type.toUpperCase() : ''
+          const vehicleType: 'car' | 'motorbike' | 'truck' | undefined =
+            st === 'CAR' || st === 'EV' ? 'car' : st === 'TRUCK' ? 'truck' : st === 'MOTORBIKE' || st === 'BIKE' ? 'motorbike' : undefined
+          return {
+            id: String(spot.id ?? code),
+            zone: String(spot.parking_zone_id ?? 'Zone'),
+            floor: String(spot.floor ?? 'B1'),
+            code,
+            status,
+            vehicleType,
+            plate: typeof meta.plate_no === 'string' ? meta.plate_no : undefined,
+            entryTime: typeof meta.entry_time === 'string' ? meta.entry_time : undefined,
+            reservation: undefined,
+          } satisfies ParkingSlot
+        })
+        setAllSlots(mapped)
+      })
+      .catch(() => {
+        // keep mock data on error
+      })
+  }, [])
+
+  useEffect(() => {
+    parkingDashboardApi
+      .getVehiclesList({ limit: 500, offset: 0 })
+      .then((res) => {
+        const map: Record<string, { plate: string; vehicleType?: 'car' | 'motorbike' | 'truck'; brand?: string; color?: string }> = {}
+        const items = res.items ?? []
+        items.forEach((v) => {
+          if (typeof v.plate_no !== 'string') return
+          const key = normalizePlate(v.plate_no)
+          if (!key) return
+          const t = typeof v.vehicle_type === 'string' ? v.vehicle_type.toUpperCase() : ''
+          const vehicleType: 'car' | 'motorbike' | 'truck' | undefined =
+            t === 'CAR'
+              ? 'car'
+              : t === 'TRUCK'
+                ? 'truck'
+                : t === 'MOTORCYCLE' || t.startsWith('MOTOR') || t === 'BIKE'
+                  ? 'motorbike'
+                  : undefined
+          const meta = (v.meta ?? {}) as { brand?: string | null; color?: string | null }
+          map[key] = {
+            plate: v.plate_no,
+            vehicleType,
+            brand: typeof meta.brand === 'string' ? meta.brand : undefined,
+            color: typeof meta.color === 'string' ? meta.color : undefined,
+          }
+        })
+        setVehicleByPlate(map)
+      })
+      .catch(() => {
+        setVehicleByPlate({})
+      })
+  }, [])
+
+  useEffect(() => {
+    if (!vehicleByPlate || Object.keys(vehicleByPlate).length === 0) return
+    setAllSlots(prev =>
+      prev.map(slot => {
+        if (!slot.plate) return slot
+        const key = normalizePlate(slot.plate)
+        const veh = vehicleByPlate[key]
+        if (!veh) return slot
+        return {
+          ...slot,
+          vehicleType: veh.vehicleType ?? slot.vehicleType,
+          vehicleBrand: veh.brand ?? slot.vehicleBrand,
+          vehicleColor: veh.color ?? slot.vehicleColor,
+        }
+      }),
+    )
+  }, [vehicleByPlate])
 
   useEffect(() => {
     saveVehicleMapFilters({
@@ -149,6 +243,7 @@ export default function ParkingMap() {
   const filteredSlots = allSlots.filter(s => {
     if (vehicleFilter === 'car' && s.vehicleType !== 'car') return false
     if (vehicleFilter === 'motorbike' && s.vehicleType !== 'motorbike') return false
+    if (vehicleFilter === 'truck' && s.vehicleType !== 'truck') return false
     return true
   })
 
@@ -261,44 +356,98 @@ export default function ParkingMap() {
         return rel(lane).y
       }
 
+
+      // Lấy tọa độ X của các đường dọc vàng (RoadV)
+      const vLaneXs: number[] = []
+      container.querySelectorAll('.parkmap_lane-v').forEach(el => {
+        const r = el.getBoundingClientRect()
+        vLaneXs.push(r.left + r.width / 2 - c.left)
+      })
+      const uniqueVLaneXs = [...new Set(vLaneXs.map(x => Math.round(x)))].sort((a, b) => a - b)
+
+      // Lấy đường dọc vàng gần tòa nhất hướng về slot
+      const pickVLaneTowardSlot = (sx: number): number => {
+        if (uniqueVLaneXs.length === 0) return pickGap(sx)
+        if (sx > bld.x) {
+          const rightLanes = uniqueVLaneXs.filter(x => x > bld.x)
+          return rightLanes.length > 0 ? rightLanes[0] : uniqueVLaneXs[uniqueVLaneXs.length - 1]
+        } else {
+          const leftLanes = uniqueVLaneXs.filter(x => x < bld.x)
+          return leftLanes.length > 0 ? leftLanes[leftLanes.length - 1] : uniqueVLaneXs[0]
+        }
+      }
+
       const routes: PathRoute[] = []
       ids.forEach((slotId) => {
         const el = container.querySelector(`[data-slot-id="${slotId}"]`)
         if (!el) return
         const s = rel(el)
-        const pts: [number, number][] = [[bld.x, bld.y]]
         const laneY = getBlockLaneY(el)
-        const gapX = pickGap(s.x)
-        // Đoạn ngang chỉ trên vạch vàng: roadH0|roadH1|roadH2|roadH3 hoặc lane trong block; đoạn dọc chỉ tại bld.x hoặc gapX.
-        if (s.y < roadH0) {
-          pts.push([bld.x, roadH1], [bld.x, roadH0], [s.x, roadH0], [s.x, s.y])
-        } else if (s.y < roadH1) {
-          if (laneY != null) {
-            pts.push([bld.x, roadH1], [gapX, roadH1], [gapX, laneY], [s.x, laneY], [s.x, s.y])
+        const vLaneX = pickVLaneTowardSlot(s.x)
+
+        // ── CHIẾN LƯỢC: Tòa → DỌC ra cạnh tòa (roadH1 hoặc roadH2) → DỌC theo vLaneX → NGANG vào slot ──
+        // QUAN TRỌNG: KHÔNG BAO GIỜ đi ngang từ bld.x sang vLaneX khi đang ở trong vùng block parking.
+        // Luôn đi DỌC từ tòa ra đường ngang vàng trước, rồi mới đi ngang.
+
+        const pts: [number, number][] = [[bld.x, bld.y]]
+
+        if (s.y < roadH1) {
+          // ── Slot ở phía TRÊN tòa (upper blocks P1/P2/P3/P4) ──
+          // Từ tòa: dọc lên roadH1 → dọc tiếp theo vLaneX lên → vào slot
+          pts.push([bld.x, roadH1])      // ra cạnh trên tòa (roadH1)
+          pts.push([vLaneX, roadH1])     // ngang theo roadH1 đến đường dọc vàng
+
+          if (s.y < roadH0) {
+            // Slot ở P1 (trên roadH0)
+            pts.push([vLaneX, roadH0])   // dọc lên roadH0
+            pts.push([s.x, roadH0])      // ngang vào cột slot
+            pts.push([s.x, s.y])         // dọc xuống slot
           } else {
-            pts.push([bld.x, roadH1], [s.x, roadH1], [s.x, s.y])
-          }
-        } else if (s.y > roadH3) {
-          if (laneY != null) {
-            pts.push([bld.x, roadH2], [gapX, roadH2], [gapX, laneY], [s.x, laneY], [s.x, s.y])
-          } else {
-            pts.push([bld.x, roadH2], [s.x, roadH2], [s.x, s.y])
-          }
-        } else if (s.y > roadH2) {
-          if (laneY != null) {
-            pts.push([bld.x, roadH2], [gapX, roadH2], [gapX, laneY], [s.x, laneY], [s.x, s.y])
-          } else {
-            pts.push([bld.x, roadH2], [s.x, roadH2], [s.x, s.y])
+            // Slot ở upper block (P2/P3/P4), giữa roadH0 và roadH1
+            // Vào từ đường dọc vàng dọc xuống (từ roadH1 xuống laneY hoặc slot)
+            if (laneY != null && s.y > laneY) {
+              // Slot ở hàng dưới của block (dưới laneY)
+              pts.push([vLaneX, laneY])  // dọc xuống đến block-lane
+              pts.push([s.x, laneY])     // ngang theo block-lane
+              pts.push([s.x, s.y])       // dọc xuống slot
+            } else if (laneY != null && s.y < laneY) {
+              // Slot ở hàng trên của block (trên laneY) — đi từ roadH1 xuống trực tiếp
+              pts.push([s.x, roadH1])    // ngang đến cột slot trên roadH1
+              pts.push([s.x, s.y])       // dọc xuống vào slot
+            } else {
+              pts.push([vLaneX, s.y])
+              pts.push([s.x, s.y])
+            }
           }
         } else {
-          // Ô nằm giữa (band building): vẫn đi theo vạch vàng — road → gap → lane → ô
-          const roadY = s.y < bld.y ? roadH1 : roadH2
-          if (laneY != null) {
-            pts.push([bld.x, roadY], [gapX, roadY], [gapX, laneY], [s.x, laneY], [s.x, s.y])
+          // ── Slot ở phía DƯỚI tòa (lower blocks P5/P6/P7) ──
+          // Từ tòa: dọc xuống roadH2 → ngang theo roadH2 đến vLaneX → dọc tiếp → vào slot
+          pts.push([bld.x, roadH2])      // ra cạnh dưới tòa (roadH2)
+          pts.push([vLaneX, roadH2])     // ngang theo roadH2 đến đường dọc vàng
+
+          if (s.y >= roadH3) {
+            // Slot ở hàng dưới lower block (dưới roadH3)
+            pts.push([vLaneX, roadH3])   // dọc xuống roadH3
+            pts.push([s.x, roadH3])      // ngang vào cột slot
+            pts.push([s.x, s.y])         // dọc xuống slot
           } else {
-            pts.push([bld.x, roadY], [s.x, roadY], [s.x, s.y])
+            // Slot ở hàng trên lower block (giữa roadH2 và roadH3)
+            if (laneY != null && s.y < laneY) {
+              // Slot ở hàng trên của block (trên laneY) — đi từ roadH2 xuống trực tiếp
+              pts.push([s.x, roadH2])
+              pts.push([s.x, s.y])
+            } else if (laneY != null) {
+              // Slot ở hàng dưới của block (dưới laneY)
+              pts.push([vLaneX, laneY])
+              pts.push([s.x, laneY])
+              pts.push([s.x, s.y])
+            } else {
+              pts.push([vLaneX, s.y])
+              pts.push([s.x, s.y])
+            }
           }
         }
+
         routes.push({ id: slotId, pts })
       })
       setPathRoutes(routes)
@@ -310,9 +459,34 @@ export default function ParkingMap() {
   const handleSlotClick = (slot: ParkingSlot) => {
     setSelectedSlot(slot)
     setDrawerOpen(true)
-    if (plateSearchApplied.trim() && searchResultSlots.some(s => s.id === slot.id)) {
-      setSpotImageModalOpen(true)
-    }
+    parkingDashboardApi
+      .getSpotDetail(slot.id)
+      .then((spot) => {
+        const meta = (spot.meta ?? {}) as { occupied?: boolean; plate_no?: string | null; entry_time?: string | null }
+        const occupied = !!meta.occupied
+        const backendStatus = typeof spot.status === 'string' ? spot.status.toUpperCase() : 'ACTIVE'
+        const isInactive = backendStatus === 'INACTIVE'
+        setSelectedSlot(prev => {
+          const base = prev ?? slot
+          const st = typeof spot.spot_type === 'string' ? spot.spot_type.toUpperCase() : ''
+          const vehicleType: 'car' | 'motorbike' | 'truck' | undefined =
+            st === 'CAR' || st === 'EV' ? 'car' : st === 'TRUCK' ? 'truck' : st === 'MOTORBIKE' || st === 'BIKE' ? 'motorbike' : base.vehicleType
+          return {
+            ...base,
+            status: isInactive ? 'reserved' : (occupied ? 'occupied' : 'free'),
+            vehicleType: vehicleType ?? base.vehicleType,
+            plate: typeof meta.plate_no === 'string' ? meta.plate_no : base.plate,
+            entryTime: typeof meta.entry_time === 'string' ? meta.entry_time : base.entryTime,
+          }
+        })
+        if (occupied && plateSearchApplied.trim() && searchResultSlots.some(s => s.id === slot.id)) {
+          setSpotImageModalOpen(true)
+        }
+      })
+      .catch(() => {
+        // ignore error, keep existing slot info
+      })
+      .finally(() => {})
   }
 
   const closeDetailAndModal = () => {
@@ -322,20 +496,24 @@ export default function ParkingMap() {
 
   const getParkedDuration = (entryTime?: string) => {
     if (!entryTime) return null
-    const [hourStr, minuteStr] = entryTime.split(':')
-    const hour = Number(hourStr)
-    const minute = Number(minuteStr)
-    if (Number.isNaN(hour) || Number.isNaN(minute)) return null
+    const entry = new Date(entryTime)
+    if (Number.isNaN(entry.getTime())) return null
 
-    const now = new Date()
-    const nowMinutes = now.getHours() * 60 + now.getMinutes()
-    const entryMinutes = hour * 60 + minute
-    let diff = nowMinutes - entryMinutes
-    if (diff < 0) diff += 24 * 60
+    const diffMs = Date.now() - entry.getTime()
+    if (diffMs < 0) return null
 
-    const h = Math.floor(diff / 60)
-    const m = diff % 60
-    return `${h}h ${String(m).padStart(2, '0')}m`
+    const totalMinutes = Math.floor(diffMs / 60000)
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+
+    return `${hours}h ${String(minutes).padStart(2, '0')}m`
+  }
+
+  const formatEntryTime = (entryTime?: string) => {
+    if (!entryTime) return ''
+    const d = new Date(entryTime)
+    if (Number.isNaN(d.getTime())) return entryTime
+    return d.toLocaleString()
   }
 
   const renderSlot = (slot: ParkingSlot, vertical = false) => {
@@ -444,6 +622,7 @@ export default function ParkingMap() {
                 { value: 'all', label: t('parkingMap.allVehicles') },
                 { value: 'car', label: `🚗 ${t('parking.car')}` },
                 { value: 'motorbike', label: `🏍️ ${t('parking.motorcycle')}` },
+                { value: 'truck', label: `🚛 ${t('parkingMap.truck', 'Xe tải')}` },
               ]}
             />
           </div>
@@ -715,7 +894,9 @@ export default function ParkingMap() {
                 </Descriptions.Item>
               )}
               {selectedSlot.entryTime && (
-                <Descriptions.Item label={t('parkingMap.entryTime')}>{selectedSlot.entryTime}</Descriptions.Item>
+                <Descriptions.Item label={t('parkingMap.entryTime')}>
+                  {formatEntryTime(selectedSlot.entryTime)}
+                </Descriptions.Item>
               )}
               {selectedSlot.entryTime && (
                 <Descriptions.Item label={t('parkingMap.parkedDuration', 'Đã đỗ')}>
@@ -724,8 +905,18 @@ export default function ParkingMap() {
               )}
               {selectedSlot.vehicleType && (
                 <Descriptions.Item label={t('parkingMap.vehicle')}>
-                  {selectedSlot.vehicleType === 'car' ? `🚗 ${t('parking.car')}` : `🏍️ ${t('parking.motorcycle')}`}
+                  {selectedSlot.vehicleType === 'car'
+                    ? `🚗 ${t('parking.car')}`
+                    : selectedSlot.vehicleType === 'truck'
+                      ? `🚛 ${t('parkingMap.truck', 'Xe tải')}`
+                      : `🏍️ ${t('parking.motorcycle')}`}
                 </Descriptions.Item>
+              )}
+              {selectedSlot.vehicleBrand && (
+                <Descriptions.Item label={t('parkingMap.vehicleBrand', 'Loại xe')}>{selectedSlot.vehicleBrand}</Descriptions.Item>
+              )}
+              {selectedSlot.vehicleColor && (
+                <Descriptions.Item label={t('parkingMap.vehicleColor', 'Màu xe')}>{selectedSlot.vehicleColor}</Descriptions.Item>
               )}
               {selectedSlot.reservation && (
                 <Descriptions.Item label={t('parkingMap.reservation')}>{selectedSlot.reservation}</Descriptions.Item>

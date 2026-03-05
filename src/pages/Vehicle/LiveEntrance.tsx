@@ -145,6 +145,15 @@ export default function LiveEntrance(props: LiveEntranceProps = {}) {
     afternoon: t('liveEntrance.shiftAfternoon', 'Ca trực chiều'),
     night: t('liveEntrance.shiftNight', 'Ca trực đêm'),
   }
+  const getGateLabel = (id: string) => {
+    const map: Record<string, string> = {
+      'gate-1': t('liveEntrance.gateEntry1'),
+      'gate-2': t('liveEntrance.gateEntry2'),
+      'gate-3': t('liveEntrance.gateExit1'),
+      'gate-4': t('liveEntrance.gateExit2'),
+    }
+    return map[id] ?? id
+  }
 
   useEffect(() => {
     if (!props.forcedGateId) return
@@ -338,7 +347,7 @@ export default function LiveEntrance(props: LiveEntranceProps = {}) {
                 label: (
                   <span className="flex items-center gap-6">
                     <Badge status={g.status === 'online' ? 'success' : 'error'} />
-                    {g.name}
+                    {getGateLabel(g.id)}
                   </span>
                 ),
               }))}
@@ -369,7 +378,7 @@ export default function LiveEntrance(props: LiveEntranceProps = {}) {
       >
         <div className="vehicle_gate-bar">
           <div className="flex items-center gap-16">
-            <Text strong className="vehicle_gate-name">{gate.name}</Text>
+            <Text strong className="vehicle_gate-name">{getGateLabel(gate.id)}</Text>
             <Badge
               status={gate.status === 'online' ? 'success' : 'error'}
               text={
@@ -414,7 +423,7 @@ export default function LiveEntrance(props: LiveEntranceProps = {}) {
               {/* Recording indicator */}
               <div className="vehicle_recording-badge">
                 <div className="vehicle_live-dot" />
-                <Text className="vehicle_live-text">LIVE</Text>
+                <Text className="vehicle_live-text">{t('liveEntrance.live')}</Text>
               </div>
               {/* Timestamp */}
               <Text className="vehicle_timestamp-overlay">

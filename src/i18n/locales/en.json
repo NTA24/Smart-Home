@@ -837,6 +837,8 @@
     "overview": "Overview",
     "vehicles": "Vehicles",
     "allZones": "All zones",
+    "filterZone": "Zone",
+    "selectZone": "Select zone",
     "revenueTitle": "Revenue",
     "byDay": "By day",
     "byMonth": "By month",
@@ -851,7 +853,18 @@
     "inCountDay": "Entries (day)",
     "outCountDay": "Exits (day)",
     "inCountMonth": "Entries (month)",
-    "outCountMonth": "Exits (month)"
+    "outCountMonth": "Exits (month)",
+    "tablesFromApi": "Data from API",
+    "apiStatsTable": "Get Dashboard Stats",
+    "apiTrafficTable": "Get Dashboard Traffic",
+    "apiRevenueTable": "Get Dashboard Revenue",
+    "zoneName": "Zone",
+    "period": "Period",
+    "periodLabel": "Period",
+    "inCount": "In count",
+    "outCount": "Out count",
+    "revenueAmount": "Revenue (VND)",
+    "total": "Total"
   },
   "liveEntrance": {
     "title": "Entry Gate",
@@ -885,9 +898,15 @@
     "type": "Type",
     "status": "Status",
     "operator": "Operator",
+    "operatorAuto": "Auto",
     "confirmed": "Confirmed",
     "manual": "Manual",
-    "blocked": "Blocked"
+    "blocked": "Blocked",
+    "live": "LIVE",
+    "gateEntry1": "Entry Gate 1",
+    "gateEntry2": "Entry Gate 2",
+    "gateExit1": "Exit Gate 1",
+    "gateExit2": "Exit Gate 2"
   },
   "liveExit": {
     "title": "Exit Gate",
@@ -930,7 +949,17 @@
     "operator": "Operator",
     "paid": "Paid",
     "pending": "Pending",
-    "exception": "Exception"
+    "exception": "Exception",
+    "gateExit1": "Exit Gate 1",
+    "gateExit2": "Exit Gate 2",
+    "gateExit3": "Exit Gate 3",
+    "subscriptionExitSuccess": "Vehicle allowed to exit with subscription",
+    "freeExitNote": "Free for first {{minutes}} minutes",
+    "manualOnly": "Manual"
+  },
+  "vehicleAccessControl": {
+    "recentTitle": "Recent entrance/exit",
+    "operatorAuto": "Auto"
   },
   "energyMeter": {
     "title": "Energy Meters",
@@ -1098,7 +1127,18 @@
     "slots": "slots",
     "slotCode": "Slot",
     "entryTime": "Entry Time",
-    "reservation": "Reservation"
+    "reservation": "Reservation",
+    "truck": "Truck",
+    "vehicleBrand": "Brand",
+    "vehicleColor": "Color",
+    "parkedDuration": "Parked",
+    "spotPreview": "Spot preview",
+    "maintenance": "Maintenance",
+    "search": "Search",
+    "searchResults": "Search results",
+    "infoPanel": "Parking info",
+    "clickToViewImage": "Click a slot to view spot image",
+    "noPlateResult": "No vehicle found with this plate number."
   },
   "parkingTickets": {
     "title": "Payment management",
@@ -1128,7 +1168,16 @@
     "cash": "Cash",
     "card": "Card",
     "wallet": "Wallet",
-    "unpaid": "Unpaid"
+    "unpaid": "Unpaid",
+    "ticketId": "Ticket ID",
+    "gateEntrance1": "Entrance 1",
+    "gateEntrance2": "Entrance 2",
+    "gateExit1": "Exit 1",
+    "gateExit2": "Exit 2",
+    "zoneA": "Zone A",
+    "zoneB": "Zone B",
+    "zoneC": "Zone C",
+    "qr": "QR"
   },
   "parkingSub": {
     "title": "Valet / parking service",
@@ -1163,7 +1212,16 @@
     "zoneRestriction": "Zone restriction",
     "createSuccess": "Subscription created successfully",
     "updateSuccess": "Subscription updated successfully",
-    "deleteSuccess": "Subscription deleted successfully"
+    "deleteSuccess": "Subscription deleted successfully",
+    "loadError": "Failed to load subscription list",
+    "createError": "Failed to create subscription",
+    "updateError": "Update failed",
+    "deleteError": "Delete failed",
+    "selectTenantFirst": "Please select a tenant from the home page to view parking subscriptions.",
+    "zoneA": "Zone A",
+    "zoneB": "Zone B",
+    "zoneC": "Zone C",
+    "zoneLabel": "Zone"
   },
   "parkingDevices": {
     "title": "Devices & Health",
@@ -1263,7 +1321,13 @@
     "byDay": "By day",
     "vehicleType": "Vehicle type",
     "pricePerHour": "Price per hour",
-    "pricePerDay": "Price per day"
+    "pricePerDay": "Price per day",
+    "selectTenantHint": "Select a tenant from the home page to sync configuration with the server.",
+    "saveError": "Failed to save configuration",
+    "gateEntry1": "Entry Gate 1",
+    "gateEntry2": "Entry Gate 2",
+    "gateExit1": "Exit Gate 1",
+    "gateExit2": "Exit Gate 2"
   },
   "devices": {
     "title": "IoT Device Management",

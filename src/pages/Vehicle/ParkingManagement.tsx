@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Row, Col, Typography, Progress, Segmented } from 'antd'
+import { useState, useEffect } from 'react'
+import { Row, Col, Typography, Progress, Segmented, Spin, Select } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
   CarOutlined,
@@ -19,6 +19,8 @@ import {
   BarChart,
 } from '@/components'
 import { useBuildingStore } from '@/stores'
+import { parkingDashboardApi } from '@/services'
+import type { ParkingDashboardStats, ParkingDashboardTraffic, ParkingDashboardRevenue, ParkingZone } from '@/services'
 import dayjs from 'dayjs'
 import {
   getVehicleRecentVehicles,
@@ -26,9 +28,67 @@ import {
 
 const { Title, Text } = Typography
 
+const DEFAULT_ZONES = [
+  { name: 'Zone A', total: 20, used: 18, color: '#f5222d' },
+  { name: 'Zone B', total: 15, used: 12, color: '#1890ff' },
+  { name: 'Zone C', total: 16, used: 10, color: '#52c41a' },
+  { name: 'Zone D', total: 10, used: 5, color: '#faad14' },
+]
+
+const DEFAULT_HOURLY = [4, 3, 2, 1, 1, 2, 6, 12, 20, 26, 31, 28, 24, 22, 27, 33, 38, 30, 23, 18, 12, 9, 7, 5, 3]
+const DEFAULT_REVENUE_DAY = [12000, 8000, 5000, 3000, 2000, 4000, 18000, 45000, 72000, 85000, 68000, 55000, 62000, 58000, 71000, 89000, 95000, 78000, 52000, 38000, 28000, 22000, 18000, 15000]
+
 export default function ParkingManagement() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
+  const buildingId = selectedBuilding?.id ?? undefined
+
+  const [apiStats, setApiStats] = useState<ParkingDashboardStats | null>(null)
+  const [apiTrafficDay, setApiTrafficDay] = useState<ParkingDashboardTraffic | null>(null)
+  const [apiTrafficMonth, setApiTrafficMonth] = useState<ParkingDashboardTraffic | null>(null)
+  const [apiRevenueDay, setApiRevenueDay] = useState<ParkingDashboardRevenue | null>(null)
+  const [apiRevenueMonth, setApiRevenueMonth] = useState<ParkingDashboardRevenue | null>(null)
+  const [zonesList, setZonesList] = useState<ParkingZone[]>([])
+  const [selectedZoneId, setSelectedZoneId] = useState<string | undefined>(undefined)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    setSelectedZoneId(undefined)
+    parkingDashboardApi
+      .getZonesList({ building_id: buildingId ?? null, limit: 500 })
+      .then((res) => setZonesList(res.items ?? []))
+      .catch(() => setZonesList([]))
+  }, [buildingId])
+
+  useEffect(() => {
+    const params: { building_id?: string; parking_zone_id?: string } = {}
+    if (buildingId) params.building_id = buildingId
+    if (selectedZoneId) params.parking_zone_id = selectedZoneId
+    const hasParams = !!params.building_id || !!params.parking_zone_id
+    setLoading(true)
+    Promise.all([
+      parkingDashboardApi.getStats(hasParams ? params : undefined),
+      parkingDashboardApi.getTraffic({ ...params, period: 'day' }),
+      parkingDashboardApi.getTraffic({ ...params, period: 'month' }),
+      parkingDashboardApi.getRevenue({ ...params, period: 'day' }),
+      parkingDashboardApi.getRevenue({ ...params, period: 'month' }),
+    ])
+      .then(([stats, trafficDay, trafficMonth, revenueDay, revenueMonth]) => {
+        setApiStats(stats)
+        setApiTrafficDay(trafficDay)
+        setApiTrafficMonth(trafficMonth)
+        setApiRevenueDay(revenueDay)
+        setApiRevenueMonth(revenueMonth)
+      })
+      .catch(() => {
+        setApiStats(null)
+        setApiTrafficDay(null)
+        setApiTrafficMonth(null)
+        setApiRevenueDay(null)
+        setApiRevenueMonth(null)
+      })
+      .finally(() => setLoading(false))
+  }, [buildingId, selectedZoneId])
 
   const recentVehicleSeed = [
     { key: '1', plate: '30A-123.45', type: 'car', time: '08:30:25', date: dayjs().format('YYYY-MM-DD'), status: 'in', zone: 'Zone A', fee: 0 },
@@ -43,51 +103,50 @@ export default function ParkingManagement() {
 
   const [recentVehicles] = useState(() => getVehicleRecentVehicles(recentVehicleSeed))
 
-  const parkingZones = [
-    { name: 'Zone A', total: 20, used: 18, color: '#f5222d' },
-    { name: 'Zone B', total: 15, used: 12, color: '#1890ff' },
-    { name: 'Zone C', total: 16, used: 10, color: '#52c41a' },
-    { name: 'Zone D', total: 10, used: 5, color: '#faad14' },
-  ]
+  const parkingZones =
+    apiStats?.zones?.length ?
+      apiStats.zones.map((z) => ({ name: z.name, total: z.total, used: z.used, color: z.color ?? '#1890ff' }))
+      : DEFAULT_ZONES
 
-  const totalSpots = parkingZones.reduce((acc, z) => acc + z.total, 0)
-  const usedSpots = parkingZones.reduce((acc, z) => acc + z.used, 0)
-  const availableSpots = totalSpots - usedSpots
-  const usageRate = ((usedSpots / totalSpots) * 100).toFixed(1)
+  const totalSpots = apiStats?.total_spots ?? parkingZones.reduce((acc, z) => acc + z.total, 0)
+  const usedSpots = apiStats?.used_spots ?? parkingZones.reduce((acc, z) => acc + z.used, 0)
+  const availableSpots = apiStats?.available_spots ?? totalSpots - usedSpots
+  const usageRate = (apiStats?.usage_rate ?? (totalSpots ? (usedSpots / totalSpots) * 100 : 0)).toFixed(1)
   const selectedDate = dayjs()
   const hourlyData = Array.from({ length: 25 }, (_, hour) => `${hour}h`)
   const isInSelectedDay = (date: string) => dayjs(date).isSame(selectedDate, 'day')
   const isInSelectedMonth = (date: string) => dayjs(date).isSame(selectedDate, 'month')
-  const hourlyVehicles = [4, 3, 2, 1, 1, 2, 6, 12, 20, 26, 31, 28, 24, 22, 27, 33, 38, 30, 23, 18, 12, 9, 7, 5, 3]
-  const dayInCount = recentVehicles.filter(v => v.status === 'in' && isInSelectedDay(v.date)).length
-  const dayOutCount = recentVehicles.filter(v => v.status === 'out' && isInSelectedDay(v.date)).length
-  const monthInCount = recentVehicles.filter(v => v.status === 'in' && isInSelectedMonth(v.date)).length
-  const monthOutCount = recentVehicles.filter(v => v.status === 'out' && isInSelectedMonth(v.date)).length
+
+  const dayInCount = apiTrafficDay?.in_count ?? recentVehicles.filter((v) => v.status === 'in' && isInSelectedDay(v.date)).length
+  const dayOutCount = apiTrafficDay?.out_count ?? recentVehicles.filter((v) => v.status === 'out' && isInSelectedDay(v.date)).length
+  const monthInCount = apiTrafficMonth?.in_count ?? recentVehicles.filter((v) => v.status === 'in' && isInSelectedMonth(v.date)).length
+  const monthOutCount = apiTrafficMonth?.out_count ?? recentVehicles.filter((v) => v.status === 'out' && isInSelectedMonth(v.date)).length
+
+  const [trafficChartMode, setTrafficChartMode] = useState<'day' | 'month'>('day')
+  const trafficDayHourly = (apiTrafficDay?.hourly?.length ? apiTrafficDay.hourly : DEFAULT_HOURLY).slice(0, 25)
+  const trafficMonthHourly = (apiTrafficMonth?.hourly?.length ? apiTrafficMonth.hourly : []).slice(0, 31)
+  const hourlyVehicles = trafficChartMode === 'day' ? trafficDayHourly : trafficMonthHourly.length ? trafficMonthHourly : trafficDayHourly
+  const trafficChartCategories = trafficChartMode === 'day' ? hourlyData : Array.from({ length: hourlyVehicles.length }, (_, i) => `${i + 1}`)
 
   const [revenueMode, setRevenueMode] = useState<'day' | 'month'>('day')
 
   const revenueDayCategories = Array.from({ length: 24 }, (_, i) => `${i}h`)
-  const revenueDayValues = [
-    12000, 8000, 5000, 3000, 2000, 4000,
-    18000, 45000, 72000, 85000, 68000, 55000,
-    62000, 58000, 71000, 89000, 95000, 78000,
-    52000, 38000, 28000, 22000, 18000, 15000,
-  ]
-
-  const revenueMonthCategories = Array.from({ length: 30 }, (_, i) => `${i + 1}`)
-  const revenueMonthValues = [
+  const revenueDayValues = (apiRevenueDay?.series?.length ? apiRevenueDay.series : DEFAULT_REVENUE_DAY).slice(0, 24)
+  const revenueMonthCategories = Array.from({ length: 31 }, (_, i) => `${i + 1}`)
+  const revenueMonthValues = (apiRevenueMonth?.series?.length ? apiRevenueMonth.series : [
     620000, 580000, 710000, 850000, 920000, 780000, 430000,
     650000, 590000, 730000, 880000, 950000, 810000, 460000,
     680000, 620000, 760000, 910000, 980000, 840000, 490000,
     700000, 640000, 780000, 930000, 1020000, 870000, 510000,
     720000, 660000,
-  ]
+  ]).slice(0, 31)
 
-  const dayRevenue = revenueDayValues.reduce((sum, v) => sum + v, 0)
-  const monthRevenue = revenueMonthValues.reduce((sum, v) => sum + v, 0)
+  const dayRevenue = apiRevenueDay?.total ?? revenueDayValues.reduce((sum, v) => sum + v, 0)
+  const monthRevenue = apiRevenueMonth?.total ?? revenueMonthValues.reduce((sum, v) => sum + v, 0)
 
   return (
     <div className="page-container">
+      <Spin spinning={loading} tip={t('common.loading', 'Đang tải...')}>
       {/* Header */}
       <div className="camera_header">
         <div>
@@ -99,7 +158,25 @@ export default function ParkingManagement() {
             {selectedBuilding?.name || t('parking.allSites')} — {usedSpots}/{totalSpots} {t('parking.spotsUsed')}
           </Text>
         </div>
-
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Text type="secondary" className="text-sm whitespace-nowrap">{t('parking.filterZone', 'Khu vực')}:</Text>
+            <Select
+              placeholder={t('parking.selectZone', 'Chọn khu vực')}
+              allowClear
+              value={selectedZoneId ?? ''}
+              onChange={(v) => setSelectedZoneId(v && v !== '' ? v : undefined)}
+              options={[
+                { value: '', label: t('parking.allZones', 'Tất cả khu vực') },
+                ...zonesList.map((z) => ({
+                  value: z.id,
+                  label: z.name || z.code || z.id,
+                })),
+              ]}
+              style={{ minWidth: 180 }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Stat Cards */}
@@ -179,13 +256,28 @@ export default function ParkingManagement() {
 
       <Row gutter={[16, 16]} className="mb-20" align="stretch">
         <Col xs={24} lg={12} className="flex">
-          <BarChart
+          <ContentCard
             title={t('parking.hourlyTraffic')}
-            categories={hourlyData}
-            data={hourlyVehicles}
-            color="#1890ff"
-            cardStyle={{ width: '100%', height: '100%' }}
-          />
+            titleExtra={
+              <Segmented
+                value={trafficChartMode}
+                onChange={(v) => setTrafficChartMode(v as 'day' | 'month')}
+                options={[
+                  { label: t('parking.viewDay', 'Ngày'), value: 'day' },
+                  { label: t('parking.viewMonth', 'Tháng'), value: 'month' },
+                ]}
+              />
+            }
+            className="w-full"
+          >
+            <BarChart
+              title=""
+              categories={trafficChartCategories}
+              data={hourlyVehicles}
+              color="#1890ff"
+              height={280}
+            />
+          </ContentCard>
         </Col>
         <Col xs={24} lg={12} className="flex">
           <ContentCard
@@ -268,6 +360,7 @@ export default function ParkingManagement() {
           height={280}
         />
       </ContentCard>
+      </Spin>
     </div>
   )
 }

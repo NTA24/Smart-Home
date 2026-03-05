@@ -1,9 +1,11 @@
-import { useState } from 'react'
-import { Button, Form, InputNumber, Select, Space, Switch, Typography, message } from 'antd'
+import { useCallback, useEffect, useState } from 'react'
+import { Button, Form, InputNumber, Select, Space, Switch, Typography, message, Spin } from 'antd'
 import { SettingOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { ContentCard, PageContainer, PageHeader } from '@/components'
+import { useHomeNavigationStore } from '@/stores'
 import { getVehicleManagementConfig, getVehiclePricingConfig, saveVehicleManagementConfig, saveVehiclePricingConfig } from '@/services/mockPersistence'
+import { parkingConfigApi, parkingPricingApi, type ParkingConfigItem, type ParkingPricingItem } from '@/services'
 
 const { Text } = Typography
 
@@ -35,10 +37,43 @@ const defaultPricingConfig: VehiclePricingConfigItem[] = [
   { vehicleType: 'Truck', hourlyRate: 30000, dailyRate: 320000 },
 ]
 
+const VEHICLE_TYPES: VehiclePricingConfigItem['vehicleType'][] = ['Car', 'Motorcycle', 'Truck']
+
 type PriceMode = 'hourly' | 'daily'
+
+function mapApiConfigToState(c: ParkingConfigItem | null): VehicleConfigState {
+  if (!c) return defaultConfig
+  return {
+    autoOpenBarrierAfterPaid: c.auto_open_barrier_after_paid ?? defaultConfig.autoOpenBarrierAfterPaid,
+    freeExitMinutes: c.free_exit_minutes ?? defaultConfig.freeExitMinutes,
+    maxPlateRetries: c.max_plate_retries ?? defaultConfig.maxPlateRetries,
+    defaultEntryGate: c.default_entry_gate ?? defaultConfig.defaultEntryGate,
+    defaultExitGate: c.default_exit_gate ?? defaultConfig.defaultExitGate,
+  }
+}
+
+function mapApiPricingToItems(items: ParkingPricingItem[]): VehiclePricingConfigItem[] {
+  const byType = new Map<string, VehiclePricingConfigItem>()
+  VEHICLE_TYPES.forEach((vt) => {
+    byType.set(vt, { vehicleType: vt, hourlyRate: 0, dailyRate: 0 })
+  })
+  items.forEach((p) => {
+    const vt = (p.vehicle_type ?? '').toUpperCase()
+    const key = vt === 'CAR' ? 'Car' : vt === 'MOTORCYCLE' || vt === 'MOTOR' ? 'Motorcycle' : vt === 'TRUCK' ? 'Truck' : null
+    if (key && byType.has(key)) {
+      byType.set(key, {
+        vehicleType: key,
+        hourlyRate: p.hourly_rate ?? 0,
+        dailyRate: p.daily_rate ?? 0,
+      })
+    }
+  })
+  return VEHICLE_TYPES.map((vt) => byType.get(vt)!)
+}
 
 export default function VehicleConfig() {
   const { t } = useTranslation()
+  const tenantId = useHomeNavigationStore((s) => s.selectedTenant?.id)
   const [config, setConfig] = useState<VehicleConfigState>(
     () => getVehicleManagementConfig<VehicleConfigState>(defaultConfig),
   )
@@ -46,20 +81,88 @@ export default function VehicleConfig() {
   const [pricingConfig, setPricingConfig] = useState<VehiclePricingConfigItem[]>(
     () => getVehiclePricingConfig<VehiclePricingConfigItem[]>(defaultPricingConfig),
   )
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [msgApi, contextHolder] = message.useMessage()
+
+  const fetchConfigAndPricing = useCallback(() => {
+    if (!tenantId) return
+    setLoading(true)
+    Promise.all([
+      parkingConfigApi.get(tenantId).catch(() => null),
+      parkingPricingApi.getList({ tenant_id: tenantId }).then((r) => r.items ?? []).catch(() => []),
+    ])
+      .then(([cfg, pricingItems]) => {
+        setConfig(mapApiConfigToState(cfg))
+        setPricingConfig(mapApiPricingToItems(pricingItems).length > 0 ? mapApiPricingToItems(pricingItems) : defaultPricingConfig)
+      })
+      .finally(() => setLoading(false))
+  }, [tenantId])
+
+  useEffect(() => {
+    if (tenantId) fetchConfigAndPricing()
+    else {
+      setConfig(getVehicleManagementConfig<VehicleConfigState>(defaultConfig))
+      setPricingConfig(getVehiclePricingConfig<VehiclePricingConfigItem[]>(defaultPricingConfig))
+    }
+  }, [tenantId, fetchConfigAndPricing])
 
   const saveConfig = () => {
     saveVehicleManagementConfig(config)
     saveVehiclePricingConfig(pricingConfig)
-    msgApi.success(t('vehicleConfig.saved', 'Đã lưu cấu hình phương tiện'))
+    if (tenantId) {
+      setSaving(true)
+      Promise.all([
+        parkingConfigApi.update({
+          tenant_id: tenantId,
+          auto_open_barrier_after_paid: config.autoOpenBarrierAfterPaid,
+          free_exit_minutes: config.freeExitMinutes,
+          max_plate_retries: config.maxPlateRetries,
+          default_entry_gate: config.defaultEntryGate,
+          default_exit_gate: config.defaultExitGate,
+        }),
+        parkingPricingApi.upsert({
+          tenant_id: tenantId,
+          items: pricingConfig.map((p) => ({
+            vehicle_type: p.vehicleType,
+            hourly_rate: p.hourlyRate,
+            daily_rate: p.dailyRate,
+          })),
+        }),
+      ])
+        .then(() => msgApi.success(t('vehicleConfig.saved', 'Đã lưu cấu hình phương tiện')))
+        .catch(() => msgApi.error(t('vehicleConfig.saveError', 'Lưu cấu hình thất bại')))
+        .finally(() => setSaving(false))
+    } else {
+      msgApi.success(t('vehicleConfig.saved', 'Đã lưu cấu hình phương tiện'))
+    }
   }
 
   const resetConfig = () => {
-    setConfig(defaultConfig)
-    setPricingConfig(defaultPricingConfig)
-    saveVehicleManagementConfig(defaultConfig)
-    saveVehiclePricingConfig(defaultPricingConfig)
-    msgApi.success(t('vehicleConfig.resetDone', 'Đã đặt lại cấu hình mặc định'))
+    if (tenantId) {
+      setSaving(true)
+      parkingConfigApi
+        .reset(tenantId)
+        .then((cfg) => {
+          setConfig(mapApiConfigToState(cfg))
+          setPricingConfig(defaultPricingConfig)
+          msgApi.success(t('vehicleConfig.resetDone', 'Đã đặt lại cấu hình mặc định'))
+        })
+        .catch(() => {
+          setConfig(defaultConfig)
+          setPricingConfig(defaultPricingConfig)
+          saveVehicleManagementConfig(defaultConfig)
+          saveVehiclePricingConfig(defaultPricingConfig)
+          msgApi.success(t('vehicleConfig.resetDone', 'Đã đặt lại cấu hình mặc định'))
+        })
+        .finally(() => setSaving(false))
+    } else {
+      setConfig(defaultConfig)
+      setPricingConfig(defaultPricingConfig)
+      saveVehicleManagementConfig(defaultConfig)
+      saveVehiclePricingConfig(defaultPricingConfig)
+      msgApi.success(t('vehicleConfig.resetDone', 'Đã đặt lại cấu hình mặc định'))
+    }
   }
 
   const vehicleTypeLabelMap: Record<VehiclePricingConfigItem['vehicleType'], string> = {
@@ -73,16 +176,17 @@ export default function VehicleConfig() {
       {contextHolder}
       <PageHeader
         title={t('vehicleConfig.title', 'Cấu hình phương tiện')}
-        subtitle={t('vehicleConfig.subtitle', 'Thiết lập tham số cho hệ thống kiểm soát phương tiện')}
+        subtitle={tenantId ? t('vehicleConfig.subtitle', 'Thiết lập tham số cho hệ thống kiểm soát phương tiện') : t('vehicleConfig.selectTenantHint', 'Chọn tenant từ trang chủ để đồng bộ cấu hình với server')}
         icon={<SettingOutlined />}
         actions={(
           <Space>
-            <Button onClick={resetConfig}>{t('common.reset', 'Đặt lại')}</Button>
-            <Button type="primary" onClick={saveConfig}>{t('vehicleConfig.save', 'Lưu cấu hình')}</Button>
+            <Button onClick={resetConfig} disabled={saving}>{t('common.reset', 'Đặt lại')}</Button>
+            <Button type="primary" onClick={saveConfig} loading={saving}>{t('vehicleConfig.save', 'Lưu cấu hình')}</Button>
           </Space>
         )}
       />
 
+      <Spin spinning={loading}>
       <ContentCard title={t('vehicleConfig.general', 'Cấu hình chung')}>
         <Form layout="vertical">
           <Form.Item label={t('vehicleConfig.autoOpenBarrierAfterPaid', 'Tự động mở barrier sau thanh toán')}>
@@ -121,8 +225,8 @@ export default function VehicleConfig() {
               value={config.defaultEntryGate}
               onChange={(value) => setConfig(prev => ({ ...prev, defaultEntryGate: value }))}
               options={[
-                { value: 'gate-1', label: 'Cổng vào 1' },
-                { value: 'gate-2', label: 'Cổng vào 2' },
+                { value: 'gate-1', label: t('vehicleConfig.gateEntry1') },
+                { value: 'gate-2', label: t('vehicleConfig.gateEntry2') },
               ]}
             />
           </Form.Item>
@@ -131,8 +235,8 @@ export default function VehicleConfig() {
               value={config.defaultExitGate}
               onChange={(value) => setConfig(prev => ({ ...prev, defaultExitGate: value }))}
               options={[
-                { value: 'gate-exit-1', label: 'Cổng ra 1' },
-                { value: 'gate-exit-2', label: 'Cổng ra 2' },
+                { value: 'gate-exit-1', label: t('vehicleConfig.gateExit1') },
+                { value: 'gate-exit-2', label: t('vehicleConfig.gateExit2') },
               ]}
             />
           </Form.Item>
@@ -214,6 +318,7 @@ export default function VehicleConfig() {
           ))}
         </Space>
       </ContentCard>
+      </Spin>
     </PageContainer>
   )
 }

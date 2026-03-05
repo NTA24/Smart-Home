@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Card,
   Modal,
@@ -18,6 +18,7 @@ import {
   message,
   Badge,
   Space,
+  Spin,
 } from 'antd'
 import {
   PlusOutlined,
@@ -30,18 +31,18 @@ import {
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { TableActionButtons } from '@/components'
-import { useBuildingStore } from '@/stores'
+import { useBuildingStore, useHomeNavigationStore } from '@/stores'
 import dayjs from 'dayjs'
 import {
   getVehicleSubscriptionFilters,
-  getVehicleSubscriptions,
   saveVehicleSubscriptionFilters,
-  saveVehicleSubscriptions,
 } from '@/services/mockPersistence'
+import { parkingSubscriptionApi, type ParkingSubscriptionItem } from '@/services'
 
 const { Title, Text } = Typography
 
 interface Subscription {
+  id: string
   key: string
   plate: string
   owner: string
@@ -56,15 +57,33 @@ interface Subscription {
   rules: string[]
 }
 
-const mockSubscriptions: Subscription[] = [
-  { key: '1', plate: '51A-123.45', owner: 'Nguyen Van A', phone: '0901234567', vehicleType: 'Car', plan: 'monthly', validFrom: '2026-01-01', validTo: '2026-02-28', status: 'active', autoRenew: true, zone: 'A', rules: ['multi-entry', 'overnight'] },
-  { key: '2', plate: '30G-789.01', owner: 'Tran Thi B', phone: '0912345678', vehicleType: 'Motorcycle', plan: 'quarterly', validFrom: '2026-01-01', validTo: '2026-03-31', status: 'active', autoRenew: true, zone: 'B', rules: ['multi-entry'] },
-  { key: '3', plate: '29B-456.78', owner: 'Le Van C', phone: '0923456789', vehicleType: 'Car', plan: 'yearly', validFrom: '2025-06-01', validTo: '2026-06-01', status: 'active', autoRenew: false, zone: 'A', rules: ['multi-entry', 'overnight', 'zone-restriction'] },
-  { key: '4', plate: '51H-222.33', owner: 'Pham Van D', phone: '0934567890', vehicleType: 'Car', plan: 'monthly', validFrom: '2025-12-01', validTo: '2026-01-31', status: 'expired', autoRenew: false, zone: 'C', rules: ['multi-entry'] },
-  { key: '5', plate: '30A-444.55', owner: 'Hoang Thi E', phone: '0945678901', vehicleType: 'Motorcycle', plan: 'monthly', validFrom: '2026-02-01', validTo: '2026-02-28', status: 'active', autoRenew: true, zone: 'B', rules: [] },
-  { key: '6', plate: '29C-666.77', owner: 'Vu Van F', phone: '0956789012', vehicleType: 'Car', plan: 'quarterly', validFrom: '2025-10-01', validTo: '2025-12-31', status: 'expired', autoRenew: false, zone: 'A', rules: ['overnight'] },
-  { key: '7', plate: '51B-888.99', owner: 'Dao Thi G', phone: '0967890123', vehicleType: 'Car', plan: 'monthly', validFrom: '2026-01-15', validTo: '2026-02-15', status: 'cancelled', autoRenew: false, zone: 'A', rules: [] },
-]
+function mapItemToSubscription(item: ParkingSubscriptionItem): Subscription {
+  const statusLower = (item.status ?? '').toLowerCase()
+  const status: Subscription['status'] =
+    statusLower === 'cancelled' ? 'cancelled'
+    : statusLower === 'expired' ? 'expired'
+    : 'active'
+  const planType = (item.plan_type ?? '').toLowerCase()
+  const plan = planType === 'monthly' || planType === 'quarterly' || planType === 'yearly'
+    ? planType
+    : (item.plan_type ?? 'monthly')
+  const rules = Array.isArray(item.rules) ? item.rules.filter((r): r is string => typeof r === 'string') : []
+  return {
+    id: String(item.id),
+    key: String(item.id),
+    plate: item.plate_no ?? '',
+    owner: item.owner_name ?? '-',
+    phone: item.phone ?? '-',
+    vehicleType: item.vehicle_type ?? 'Car',
+    plan,
+    validFrom: item.valid_from ?? '',
+    validTo: item.valid_to ?? '',
+    status,
+    autoRenew: !!item.auto_renew,
+    zone: item.zone ?? '-',
+    rules,
+  }
+}
 
 const PLAN_COLORS: Record<string, string> = {
   monthly: 'blue',
@@ -75,6 +94,7 @@ const PLAN_COLORS: Record<string, string> = {
 export default function ParkingSubscription() {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
+  const tenantId = useHomeNavigationStore((s) => s.selectedTenant?.id)
   const persistedFilters = getVehicleSubscriptionFilters<{
     searchText: string
     dateRange: [string, string] | null
@@ -91,13 +111,40 @@ export default function ParkingSubscription() {
       ? [dayjs(persistedFilters.dateRange[0]), dayjs(persistedFilters.dateRange[1])]
       : null,
   )
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => getVehicleSubscriptions<Subscription>(mockSubscriptions))
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
+  const [loading, setLoading] = useState(false)
   const [form] = Form.useForm()
   const [editForm] = Form.useForm()
 
+  const fetchList = useCallback(() => {
+    if (!tenantId) {
+      setSubscriptions([])
+      return
+    }
+    setLoading(true)
+    parkingSubscriptionApi
+      .getList({
+        tenant_id: tenantId,
+        search: searchText.trim() || undefined,
+        valid_from: filterRange?.[0]?.format('YYYY-MM-DD') ?? undefined,
+        valid_to: filterRange?.[1]?.format('YYYY-MM-DD') ?? undefined,
+        limit: 500,
+        offset: 0,
+      })
+      .then((res) => {
+        const items = res.items ?? []
+        setSubscriptions(items.map(mapItemToSubscription))
+      })
+      .catch(() => {
+        message.error(t('parkingSub.loadError', 'Không tải được danh sách đăng ký'))
+        setSubscriptions([])
+      })
+      .finally(() => setLoading(false))
+  }, [tenantId, searchText, filterRange, t])
+
   useEffect(() => {
-    saveVehicleSubscriptions(subscriptions)
-  }, [subscriptions])
+    fetchList()
+  }, [fetchList])
 
   useEffect(() => {
     saveVehicleSubscriptionFilters({
@@ -128,67 +175,97 @@ export default function ParkingSubscription() {
 
 
   const handleCreate = () => {
+    if (!tenantId) {
+      message.warning(t('parkingSub.selectTenantFirst', 'Vui lòng chọn tenant từ trang chủ'))
+      return
+    }
     form.validateFields().then(() => {
       const values = form.getFieldsValue()
       const validFrom = values.validRange?.[0] ? dayjs(values.validRange[0]).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD')
       const validTo = values.validRange?.[1] ? dayjs(values.validRange[1]).format('YYYY-MM-DD') : dayjs().add(1, 'month').format('YYYY-MM-DD')
-      const item: Subscription = {
-        key: `sub-${Date.now()}`,
-        plate: values.plate,
-        owner: values.resident || values.owner || '-',
-        phone: values.phone || '-',
-        vehicleType: values.vehicleType,
-        plan: values.plan,
-        validFrom,
-        validTo,
-        status: dayjs(validTo).isBefore(dayjs(), 'day') ? 'expired' : 'active',
-        autoRenew: !!values.autoRenew,
-        zone: values.zone || 'A',
-        rules: values.rules || [],
-      }
-      setSubscriptions((prev) => [item, ...prev])
-      message.success(t('parkingSub.createSuccess'))
-      setCreateModalVisible(false)
-      form.resetFields()
+      const planType = typeof values.plan === 'string' ? values.plan.toUpperCase() : 'MONTHLY'
+      parkingSubscriptionApi
+        .create({
+          tenant_id: tenantId,
+          plate_no: values.plate,
+          owner_name: values.resident || values.owner || undefined,
+          phone: values.phone || undefined,
+          vehicle_type: values.vehicleType || undefined,
+          plan_type: planType,
+          valid_from: validFrom,
+          valid_to: validTo,
+          status: 'ACTIVE',
+          auto_renew: !!values.autoRenew,
+          zone: values.zone || undefined,
+          rules: Array.isArray(values.rules) ? values.rules : [],
+        })
+        .then(() => {
+          message.success(t('parkingSub.createSuccess'))
+          setCreateModalVisible(false)
+          form.resetFields()
+          fetchList()
+        })
+        .catch(() => message.error(t('parkingSub.createError', 'Tạo đăng ký thất bại')))
     }).catch(() => {})
   }
 
   const handleEdit = (record: Subscription) => {
     setEditingRecord(record)
     editForm.setFieldsValue({
-      ...record,
+      plate: record.plate,
+      owner: record.owner,
+      resident: record.owner,
+      phone: record.phone,
+      vehicleType: record.vehicleType,
+      plan: record.plan,
+      zone: record.zone,
+      autoRenew: record.autoRenew,
+      rules: record.rules,
       validRange: [dayjs(record.validFrom), dayjs(record.validTo)],
     })
     setEditModalVisible(true)
   }
 
   const handleUpdate = () => {
+    if (!editingRecord) return
     editForm.validateFields().then(() => {
-      if (!editingRecord) return
       const values = editForm.getFieldsValue()
       const validFrom = values.validRange?.[0] ? dayjs(values.validRange[0]).format('YYYY-MM-DD') : editingRecord.validFrom
       const validTo = values.validRange?.[1] ? dayjs(values.validRange[1]).format('YYYY-MM-DD') : editingRecord.validTo
-      setSubscriptions((prev) => prev.map((sub) => (
-        sub.key === editingRecord.key
-          ? {
-              ...sub,
-              ...values,
-              validFrom,
-              validTo,
-              status: dayjs(validTo).isBefore(dayjs(), 'day') ? 'expired' : sub.status,
-            }
-          : sub
-      )))
-      message.success(t('parkingSub.updateSuccess'))
-      setEditModalVisible(false)
-      setEditingRecord(null)
-      editForm.resetFields()
+      const planType = typeof values.plan === 'string' ? values.plan.toUpperCase() : (editingRecord.plan ?? 'MONTHLY').toUpperCase()
+      parkingSubscriptionApi
+        .update(editingRecord.id, {
+          plate_no: values.plate,
+          owner_name: values.owner ?? values.resident,
+          phone: values.phone,
+          vehicle_type: values.vehicleType,
+          plan_type: planType,
+          valid_from: validFrom,
+          valid_to: validTo,
+          status: editingRecord.status.toUpperCase(),
+          auto_renew: !!values.autoRenew,
+          zone: values.zone,
+          rules: Array.isArray(values.rules) ? values.rules : [],
+        })
+        .then(() => {
+          message.success(t('parkingSub.updateSuccess'))
+          setEditModalVisible(false)
+          setEditingRecord(null)
+          editForm.resetFields()
+          fetchList()
+        })
+        .catch(() => message.error(t('parkingSub.updateError', 'Cập nhật thất bại')))
     }).catch(() => {})
   }
 
   const handleDelete = (record: Subscription) => {
-    setSubscriptions((prev) => prev.filter((sub) => sub.key !== record.key))
-    message.success(t('parkingSub.deleteSuccess'))
+    parkingSubscriptionApi
+      .delete(record.id)
+      .then(() => {
+        message.success(t('parkingSub.deleteSuccess'))
+        fetchList()
+      })
+      .catch(() => message.error(t('parkingSub.deleteError', 'Xóa thất bại')))
   }
 
   const exportSubscriptions = () => {
@@ -298,9 +375,13 @@ export default function ParkingSubscription() {
 
   const subscriptionForm = (formInstance: ReturnType<typeof Form.useForm>[0], isEdit = false) => (
     <Form form={formInstance} layout="vertical">
-      {!isEdit && (
+      {!isEdit ? (
         <Form.Item name="resident" label={t('parkingSub.residentTenant')} rules={[{ required: true }]}>
           <Input prefix={<SearchOutlined />} placeholder={t('parkingSub.searchResident')} />
+        </Form.Item>
+      ) : (
+        <Form.Item name="owner" label={t('parkingSub.owner')}>
+          <Input placeholder={t('parkingSub.owner')} />
         </Form.Item>
       )}
       <Row gutter={16}>
@@ -341,11 +422,11 @@ export default function ParkingSubscription() {
       </Form.Item>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name="zone" label="Zone">
-            <Select placeholder="Zone" options={[
-              { value: 'A', label: 'Zone A' },
-              { value: 'B', label: 'Zone B' },
-              { value: 'C', label: 'Zone C' },
+          <Form.Item name="zone" label={t('parkingSub.zoneLabel')}>
+            <Select placeholder={t('parkingSub.zoneLabel')} options={[
+              { value: 'A', label: t('parkingSub.zoneA') },
+              { value: 'B', label: t('parkingSub.zoneB') },
+              { value: 'C', label: t('parkingSub.zoneC') },
             ]} />
           </Form.Item>
         </Col>
@@ -378,7 +459,12 @@ export default function ParkingSubscription() {
         </div>
         <Space>
           <Button icon={<ExportOutlined />} onClick={exportSubscriptions}>{t('parkingTickets.export')}</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateModalVisible(true)}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setCreateModalVisible(true)}
+            disabled={!tenantId}
+          >
             {t('parkingSub.createSubscription')}
           </Button>
         </Space>
@@ -409,13 +495,21 @@ export default function ParkingSubscription() {
           </span>
         }
       >
-        <Table
-          columns={columns}
-          dataSource={filtered}
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${t('common.total')}: ${total}` }}
-          size="small"
-          scroll={{ x: 950 }}
-        />
+        {!tenantId ? (
+          <div className="py-8 text-center">
+            <Text type="secondary">{t('parkingSub.selectTenantFirst', 'Vui lòng chọn tenant từ trang chủ để xem danh sách đăng ký gửi xe.')}</Text>
+          </div>
+        ) : (
+          <Spin spinning={loading}>
+            <Table
+              columns={columns}
+              dataSource={filtered}
+              pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `${t('common.total')}: ${total}` }}
+              size="small"
+              scroll={{ x: 950 }}
+            />
+          </Spin>
+        )}
       </Card>
 
       {/* Create Modal */}

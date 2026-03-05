@@ -1,11 +1,39 @@
-import { useMemo, useState } from 'react'
-import { Card, Select, Space, Typography, Tag, Badge, DatePicker, Input, Modal } from 'antd'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Card, Select, Space, Typography, Tag, Badge, DatePicker, Input, Modal, Spin, Button } from 'antd'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import { ContentCard, DataTable } from '@/components'
 import { getVehicleLiveEntranceEntries, getVehicleLiveExitEntries, getVehicleManagementConfig } from '@/services/mockPersistence'
+import { parkingEventsApi, type ParkingEventItem } from '@/services'
 import LiveEntrance from './LiveEntrance'
 import LiveExit from './LiveExit'
+
+function mapEventToRow(ev: ParkingEventItem, direction: 'entrance' | 'exit'): {
+  key: string
+  direction: 'entrance' | 'exit'
+  time: string
+  plate: string
+  type: string
+  status: string
+  operator: string
+  fee: number | null
+  occurredAt: string
+} {
+  const ts = ev.ts ?? ''
+  const occurredAt = ts || dayjs().toISOString()
+  const time = dayjs(ts).isValid() ? dayjs(ts).format('HH:mm:ss') : '—'
+  return {
+    key: `${direction}-${ev.id ?? Math.random().toString(36).slice(2)}`,
+    direction,
+    time,
+    plate: ev.plate_no ?? '—',
+    type: 'Car',
+    status: (ev.status ?? 'OK').toLowerCase(),
+    operator: 'Auto',
+    fee: direction === 'exit' ? null : null,
+    occurredAt,
+  }
+}
 
 const SPOT_PREVIEW_IMAGE = '/parking-spot-preview.png'
 
@@ -38,8 +66,37 @@ export default function VehicleAccessControl() {
   const [plateKeyword, setPlateKeyword] = useState('')
   const [timeRange, setTimeRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null)
   const [previewImageOpen, setPreviewImageOpen] = useState(false)
+  const [apiEntranceRows, setApiEntranceRows] = useState<Array<ReturnType<typeof mapEventToRow>>>([])
+  const [apiExitRows, setApiExitRows] = useState<Array<ReturnType<typeof mapEventToRow>>>([])
+  const [eventsLoading, setEventsLoading] = useState(false)
   const selectedGate = gateOptions.find((gate) => gate.id === selectedGateId) || gateOptions[0]
   const mode = selectedGate.mode
+
+  const fetchEvents = useCallback(() => {
+    setEventsLoading(true)
+    const from = timeRange?.[0]?.toISOString()
+    const to = timeRange?.[1]?.toISOString()
+    const plate = plateKeyword.trim() || undefined
+    Promise.all([
+      parkingEventsApi.getEntranceList({ from, to, plate, limit: 100, offset: 0 }),
+      parkingEventsApi.getExitList({ from, to, plate, limit: 100, offset: 0 }),
+    ])
+      .then(([entranceRes, exitRes]) => {
+        const inItems = entranceRes?.items ?? []
+        const outItems = exitRes?.items ?? []
+        setApiEntranceRows(inItems.map((ev) => mapEventToRow(ev, 'entrance')))
+        setApiExitRows(outItems.map((ev) => mapEventToRow(ev, 'exit')))
+      })
+      .catch(() => {
+        setApiEntranceRows([])
+        setApiExitRows([])
+      })
+      .finally(() => setEventsLoading(false))
+  }, [timeRange, plateKeyword])
+
+  useEffect(() => {
+    fetchEvents()
+  }, [fetchEvents])
 
   const entranceSeed = useMemo(
     () => [
@@ -58,31 +115,41 @@ export default function VehicleAccessControl() {
     [],
   )
 
-  const recentRows = useMemo(() => {
-    const entranceRows = getVehicleLiveEntranceEntries<any>(entranceSeed).map((item: any) => ({
-      key: `in-${item.key}`,
-      direction: 'entrance',
-      time: item.time,
-      plate: item.plate,
-      type: item.type,
-      status: item.status,
-      operator: item.operator,
-      fee: null as number | null,
-      occurredAt: item.occurredAt || (item as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${item.time}`,
-    }))
-    const exitRows = getVehicleLiveExitEntries<any>(exitSeed).map((item: any) => ({
-      key: `out-${item.key}`,
-      direction: 'exit',
-      time: item.time,
-      plate: item.plate,
-      type: item.type,
-      status: item.status,
-      operator: item.operator,
-      fee: item.fee ?? null,
-      occurredAt: item.occurredAt || (item as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${item.time}`,
-    }))
+  const mockEntranceRows = useMemo(
+    () =>
+      getVehicleLiveEntranceEntries<any>(entranceSeed).map((item: any) => ({
+        key: `in-${item.key}`,
+        direction: 'entrance' as const,
+        time: item.time,
+        plate: item.plate,
+        type: item.type,
+        status: item.status,
+        operator: item.operator,
+        fee: null as number | null,
+        occurredAt: item.occurredAt || (item as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${item.time}`,
+      })),
+    [entranceSeed],
+  )
+  const mockExitRows = useMemo(
+    () =>
+      getVehicleLiveExitEntries<any>(exitSeed).map((item: any) => ({
+        key: `out-${item.key}`,
+        direction: 'exit' as const,
+        time: item.time,
+        plate: item.plate,
+        type: item.type,
+        status: item.status,
+        operator: item.operator,
+        fee: item.fee ?? null,
+        occurredAt: item.occurredAt || (item as { occuredAt?: string }).occuredAt || `${dayjs().format('YYYY-MM-DD')} ${item.time}`,
+      })),
+    [exitSeed],
+  )
 
-    return [...entranceRows, ...exitRows]
+  const recentRows = useMemo(() => {
+    const fromApi = [...apiEntranceRows, ...apiExitRows]
+    const source = fromApi.length > 0 ? fromApi : [...mockEntranceRows, ...mockExitRows]
+    return source
       .filter((row) => {
         if (directionFilter !== 'all' && row.direction !== directionFilter) return false
         if (plateKeyword.trim() && !row.plate.toLowerCase().includes(plateKeyword.trim().toLowerCase())) return false
@@ -93,7 +160,7 @@ export default function VehicleAccessControl() {
         return true
       })
       .sort((a, b) => dayjs(b.occurredAt).valueOf() - dayjs(a.occurredAt).valueOf())
-  }, [entranceSeed, exitSeed, directionFilter, plateKeyword, timeRange, recentVersion])
+  }, [apiEntranceRows, apiExitRows, mockEntranceRows, mockExitRows, directionFilter, plateKeyword, timeRange, recentVersion])
 
   const recentColumns = useMemo(
     () => [
@@ -174,7 +241,7 @@ export default function VehicleAccessControl() {
         dataIndex: 'operator',
         key: 'operator',
         width: 140,
-        render: (value: string) => (value === 'Auto' ? 'Tự động' : value),
+        render: (value: string) => (value === 'Auto' ? t('vehicleAccessControl.operatorAuto') : value),
       },
       {
         title: t('liveExit.fee'),
@@ -232,7 +299,7 @@ export default function VehicleAccessControl() {
         )}
 
       <ContentCard
-        title={<>Lượt ra vào gần đây ({recentRows.length})</>}
+        title={<>{t('vehicleAccessControl.recentTitle')} ({recentRows.length})</>}
         className="mt-12"
       >
         <div className="mb-12 flex items-center gap-8 flex-wrap">
@@ -241,7 +308,7 @@ export default function VehicleAccessControl() {
             onChange={(value) => setDirectionFilter(value as 'all' | 'entrance' | 'exit')}
             className="vehicle_filter-select-w130"
             options={[
-              { value: 'all', label: 'Tất cả' },
+              { value: 'all', label: t('common.all') },
               { value: 'entrance', label: t('menu.liveEntrance') },
               { value: 'exit', label: t('menu.liveExit') },
             ]}
@@ -264,16 +331,21 @@ export default function VehicleAccessControl() {
               setTimeRange(null)
             }}
           />
+          <Button type="primary" size="small" onClick={fetchEvents} loading={eventsLoading}>
+            {t('parkingMap.refresh', 'Làm mới')}
+          </Button>
         </div>
-        <DataTable
-          columns={recentColumns}
-          dataSource={recentRows}
-          pageSize={10}
-          total={recentRows.length}
-          size="small"
-          scroll={{ x: 900 }}
-          className="rounded"
-        />
+        <Spin spinning={eventsLoading}>
+          <DataTable
+            columns={recentColumns}
+            dataSource={recentRows}
+            pageSize={10}
+            total={recentRows.length}
+            size="small"
+            scroll={{ x: 900 }}
+            className="rounded"
+          />
+        </Spin>
       </ContentCard>
 
       <Modal

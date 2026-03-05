@@ -167,6 +167,14 @@ export default function LiveExit(props: LiveExitProps = {}) {
     afternoon: t('liveExit.shiftAfternoon', 'Ca trực chiều'),
     night: t('liveExit.shiftNight', 'Ca trực đêm'),
   }
+  const getGateLabel = (id: string) => {
+    const map: Record<string, string> = {
+      'gate-exit-1': t('liveExit.gateExit1'),
+      'gate-exit-2': t('liveExit.gateExit2'),
+      'gate-exit-3': t('liveExit.gateExit3'),
+    }
+    return map[id] ?? id
+  }
   const [selectedPayment, setSelectedPayment] = useState(persistedState.selectedPayment)
   const [flagMismatch, setFlagMismatch] = useState(persistedState.flagMismatch)
   const [flagLowConfidence, setFlagLowConfidence] = useState(persistedState.flagLowConfidence)
@@ -331,7 +339,7 @@ export default function LiveExit(props: LiveExitProps = {}) {
     const nextExits = [newExit, ...exits]
     saveVehicleLiveExitEntries(nextExits)
     setExits(nextExits)
-    message.success('Đã cho xe vé định kỳ ra cổng')
+    message.success(t('liveExit.subscriptionExitSuccess'))
     props.onExitAdded?.()
   }
 
@@ -439,7 +447,7 @@ export default function LiveExit(props: LiveExitProps = {}) {
                 label: (
                   <span className="flex items-center gap-6">
                     <Badge status={g.status === 'online' ? 'success' : 'error'} />
-                    {g.name}
+                    {getGateLabel(g.id)}
                   </span>
                 ),
               }))}
@@ -469,7 +477,7 @@ export default function LiveExit(props: LiveExitProps = {}) {
       >
         <div className="vehicle_gate-bar">
           <div className="flex items-center gap-16">
-            <Text strong className="vehicle_gate-name">{gate.name}</Text>
+            <Text strong className="vehicle_gate-name">{getGateLabel(gate.id)}</Text>
             <Badge
               status={gate.status === 'online' ? 'success' : 'error'}
               text={
@@ -693,7 +701,7 @@ export default function LiveExit(props: LiveExitProps = {}) {
                     />
                     <Text type="secondary" className="text-11">
                       {isFreeExit
-                        ? `Miễn phí trong ${Math.max(0, vehicleConfig.freeExitMinutes || 0)} phút đầu`
+                        ? t('liveExit.freeExitNote', { minutes: Math.max(0, vehicleConfig.freeExitMinutes || 0) })
                         : `${currentHourlyRate.toLocaleString('vi-VN')}đ/giờ x ${billableHours} giờ`}
                     </Text>
                   </div>

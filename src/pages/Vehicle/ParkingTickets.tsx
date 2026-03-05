@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Typography,
   Button,
@@ -13,6 +13,7 @@ import {
   Statistic,
   DatePicker,
   message,
+  Spin,
 } from 'antd'
 import {
   FileTextOutlined,
@@ -37,15 +38,15 @@ import { useBuildingStore } from '@/stores'
 import dayjs from 'dayjs'
 import {
   getVehicleTicketFilters,
-  getVehicleTickets,
   saveVehicleTicketFilters,
-  saveVehicleTickets,
 } from '@/services/mockPersistence'
+import { parkingTicketsApi, type ParkingTicketItem } from '@/services'
 
 const { Text } = Typography
 
 interface ParkingTicket {
   key: string
+  id?: string
   ticketId: string
   plate: string
   entry: string
@@ -60,6 +61,34 @@ interface ParkingTicket {
   vehicleType: string
   phone?: string
   resident?: string
+}
+
+function mapTicketItemToTicket(item: ParkingTicketItem): ParkingTicket {
+  const statusLower = (item.status ?? '').toLowerCase()
+  const status: ParkingTicket['status'] =
+    statusLower === 'exception' || statusLower === 'exceptions' ? 'exception'
+    : statusLower === 'closed' ? 'closed'
+    : 'active'
+  const entry = item.entry_time ? dayjs(item.entry_time).format('YYYY-MM-DD HH:mm') : '—'
+  const exit = item.exit_time ? dayjs(item.exit_time).format('YYYY-MM-DD HH:mm') : null
+  return {
+    key: item.ticket_id ?? item.id ?? String(Math.random()),
+    id: item.id,
+    ticketId: item.ticket_id ?? item.id ?? '—',
+    plate: item.plate_no ?? '—',
+    entry,
+    exit,
+    fee: item.fee ?? 0,
+    paid: !!item.paid,
+    exception: null,
+    gate: item.gate_id ?? '—',
+    zone: '—',
+    payment: item.payment_method ?? null,
+    status,
+    vehicleType: item.vehicle_type ?? 'Car',
+    phone: item.phone ?? undefined,
+    resident: item.owner_name ?? undefined,
+  }
 }
 
 const mockTickets: ParkingTicket[] = [
@@ -93,7 +122,9 @@ export default function ParkingTickets() {
     paymentFilter: 'all',
     dateRange: null,
   })
-  const [tickets] = useState<ParkingTicket[]>(() => getVehicleTickets<ParkingTicket>(mockTickets))
+  const [tickets, setTickets] = useState<ParkingTicket[]>([])
+  const [apiStats, setApiStats] = useState<{ active: number; closed: number; exception: number } | null>(null)
+  const [ticketsLoading, setTicketsLoading] = useState(false)
   const [searchText, setSearchText] = useState(persistedFilters.searchText)
   const [statusFilter, setStatusFilter] = useState<string>(persistedFilters.statusFilter)
   const [gateFilter, setGateFilter] = useState<string>(persistedFilters.gateFilter)
@@ -106,10 +137,57 @@ export default function ParkingTickets() {
   )
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedTicket, setSelectedTicket] = useState<ParkingTicket | null>(null)
+  const [detailTicket, setDetailTicket] = useState<ParkingTicket | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+
+  const fetchTickets = useCallback(() => {
+    setTicketsLoading(true)
+    parkingTicketsApi
+      .getList({
+        search: searchText.trim() || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        gate_id: gateFilter !== 'all' ? gateFilter : undefined,
+        zone: zoneFilter !== 'all' ? zoneFilter : undefined,
+        payment_method: paymentFilter !== 'all' && paymentFilter !== 'unpaid' ? paymentFilter : undefined,
+        paid: paymentFilter === 'unpaid' ? false : undefined,
+        entry_from: dateRange?.[0]?.toISOString(),
+        entry_to: dateRange?.[1]?.toISOString(),
+        limit: 500,
+        offset: 0,
+      })
+      .then((res) => {
+        const items = res.items ?? []
+        setTickets(items.map(mapTicketItemToTicket))
+        setApiStats({
+          active: res.active_count ?? 0,
+          closed: res.closed_count ?? 0,
+          exception: res.exception_count ?? 0,
+        })
+      })
+      .catch(() => {
+        setTickets(mockTickets)
+        setApiStats(null)
+      })
+      .finally(() => setTicketsLoading(false))
+  }, [searchText, statusFilter, gateFilter, zoneFilter, paymentFilter, dateRange])
 
   useEffect(() => {
-    saveVehicleTickets(tickets)
-  }, [tickets])
+    fetchTickets()
+  }, [fetchTickets])
+
+  useEffect(() => {
+    if (!drawerOpen || !selectedTicket?.ticketId) {
+      setDetailTicket(null)
+      return
+    }
+    setDetailLoading(true)
+    setDetailTicket(selectedTicket)
+    parkingTicketsApi
+      .getDetail(selectedTicket.ticketId)
+      .then((item) => setDetailTicket(mapTicketItemToTicket(item)))
+      .catch(() => setDetailTicket(selectedTicket))
+      .finally(() => setDetailLoading(false))
+  }, [drawerOpen, selectedTicket?.ticketId])
 
   useEffect(() => {
     saveVehicleTicketFilters({
@@ -147,7 +225,7 @@ export default function ParkingTickets() {
     return true
   }), [tickets, searchText, statusFilter, gateFilter, zoneFilter, paymentFilter, dateRange])
 
-  const stats = {
+  const stats = apiStats ?? {
     active: tickets.filter(t => t.status === 'active').length,
     closed: tickets.filter(t => t.status === 'closed').length,
     exception: tickets.filter(t => t.status === 'exception').length,
@@ -255,7 +333,12 @@ export default function ParkingTickets() {
         title={t('parkingTickets.title')}
         icon={<FileTextOutlined />}
         subtitle={selectedBuilding?.name || t('parkingTickets.allSites')}
-        actions={<Button icon={<ExportOutlined />} onClick={exportTickets}>{t('parkingTickets.export')}</Button>}
+        actions={
+          <Space>
+            <Button icon={<ExportOutlined />} onClick={exportTickets}>{t('parkingTickets.export')}</Button>
+            <Button type="primary" loading={ticketsLoading} onClick={fetchTickets}>{t('parkingMap.refresh', 'Làm mới')}</Button>
+          </Space>
+        }
       />
 
       {/* Stats */}
@@ -298,24 +381,24 @@ export default function ParkingTickets() {
           <Select value={gateFilter} onChange={setGateFilter} style={{ width: 140 }}
             options={[
               { value: 'all', label: t('parkingTickets.allGates') },
-              { value: 'Entrance 1', label: 'Entrance 1' },
-              { value: 'Entrance 2', label: 'Entrance 2' },
-              { value: 'Exit 1', label: 'Exit 1' },
-              { value: 'Exit 2', label: 'Exit 2' },
+              { value: 'Entrance 1', label: t('parkingTickets.gateEntrance1') },
+              { value: 'Entrance 2', label: t('parkingTickets.gateEntrance2') },
+              { value: 'Exit 1', label: t('parkingTickets.gateExit1') },
+              { value: 'Exit 2', label: t('parkingTickets.gateExit2') },
             ]}
           />
           <Select value={zoneFilter} onChange={setZoneFilter} style={{ width: 100 }}
             options={[
               { value: 'all', label: t('parkingTickets.allZones') },
-              { value: 'A', label: 'Zone A' },
-              { value: 'B', label: 'Zone B' },
-              { value: 'C', label: 'Zone C' },
+              { value: 'A', label: t('parkingTickets.zoneA') },
+              { value: 'B', label: t('parkingTickets.zoneB') },
+              { value: 'C', label: t('parkingTickets.zoneC') },
             ]}
           />
           <Select value={paymentFilter} onChange={setPaymentFilter} style={{ width: 130 }}
             options={[
               { value: 'all', label: t('parkingTickets.allPayments') },
-              { value: 'QR', label: 'QR' },
+              { value: 'QR', label: t('parkingTickets.qr') },
               { value: 'Cash', label: t('parkingTickets.cash') },
               { value: 'Card', label: t('parkingTickets.card') },
               { value: 'Wallet', label: t('parkingTickets.wallet') },
@@ -340,14 +423,16 @@ export default function ParkingTickets() {
 
       {/* Table */}
       <ContentCard>
-        <DataTable
-          columns={columns}
-          dataSource={filtered}
-          pageSize={10}
-          total={filtered.length}
-          size="small"
-          scroll={{ x: 1100 }}
-        />
+        <Spin spinning={ticketsLoading}>
+          <DataTable
+            columns={columns}
+            dataSource={filtered}
+            pageSize={10}
+            total={filtered.length}
+            size="small"
+            scroll={{ x: 1100 }}
+          />
+        </Spin>
       </ContentCard>
 
       {/* Detail Drawer */}
@@ -361,50 +446,57 @@ export default function ParkingTickets() {
           ) : undefined
         }
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => { setDrawerOpen(false); setSelectedTicket(null); setDetailTicket(null) }}
         width={420}
       >
-        {selectedTicket && (
-          <>
-            <Descriptions column={1} size="small" labelStyle={{ color: '#8c8c8c' }}>
-              <Descriptions.Item label={t('parkingTickets.plate')}>
-                <Text strong className="font-mono text-primary text-lg">{selectedTicket.plate}</Text>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('common.status')}>
-                <Tag color={selectedTicket.status === 'active' ? 'blue' : selectedTicket.status === 'closed' ? 'green' : 'red'} className="vehicle_tag-rounded-8">
-                  {t(`parkingTickets.${selectedTicket.status === 'exception' ? 'exceptionLabel' : selectedTicket.status}`)}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('parkingTickets.entry')}>{selectedTicket.entry}</Descriptions.Item>
-              <Descriptions.Item label={t('parkingTickets.exit')}>{selectedTicket.exit || '—'}</Descriptions.Item>
-              <Descriptions.Item label={t('parkingTickets.fee')}>
-                <Text strong className="text-warning">{selectedTicket.fee.toLocaleString('vi-VN')}đ</Text>
-              </Descriptions.Item>
-              <Descriptions.Item label={t('parkingTickets.paid')}>
-                {selectedTicket.paid ? <Tag color="green">✓ {selectedTicket.payment}</Tag> : <Tag>—</Tag>}
-              </Descriptions.Item>
-              <Descriptions.Item label="Gate">{selectedTicket.gate}</Descriptions.Item>
-              <Descriptions.Item label="Zone">{selectedTicket.zone}</Descriptions.Item>
-              <Descriptions.Item label={t('parkingTickets.vehicle')}>
-                <Tag color="blue" className="vehicle_tag-rounded"><CarOutlined /> {selectedTicket.vehicleType}</Tag>
-              </Descriptions.Item>
-              {selectedTicket.resident && <Descriptions.Item label={t('parkingTickets.resident')}>{selectedTicket.resident}</Descriptions.Item>}
-              {selectedTicket.phone && <Descriptions.Item label={t('parkingTickets.phone')}>{selectedTicket.phone}</Descriptions.Item>}
-              {selectedTicket.exception && (
-                <Descriptions.Item label={t('parkingTickets.exception')}>
-                  <Tag color="red"><ExclamationCircleOutlined /> {selectedTicket.exception}</Tag>
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-            <Divider />
-            <Space>
-              <Button icon={<ExportOutlined />} onClick={exportTickets}>{t('parkingTickets.export')}</Button>
-              <Button icon={<PrinterOutlined />}>{t('parkingTickets.reprint')}</Button>
-              {selectedTicket.status !== 'closed' && (
-                <Button danger icon={<ExclamationCircleOutlined />}>{t('parkingTickets.dispute')}</Button>
-              )}
-            </Space>
-          </>
+        {(detailTicket ?? selectedTicket) && (
+          <Spin spinning={detailLoading}>
+            {(() => {
+              const ticket = detailTicket ?? selectedTicket!
+              return (
+                <>
+                  <Descriptions column={1} size="small" labelStyle={{ color: '#8c8c8c' }}>
+                    <Descriptions.Item label={t('parkingTickets.plate')}>
+                      <Text strong className="font-mono text-primary text-lg">{ticket.plate}</Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('common.status')}>
+                      <Tag color={ticket.status === 'active' ? 'blue' : ticket.status === 'closed' ? 'green' : 'red'} className="vehicle_tag-rounded-8">
+                        {t(`parkingTickets.${ticket.status === 'exception' ? 'exceptionLabel' : ticket.status}`)}
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('parkingTickets.entry')}>{ticket.entry}</Descriptions.Item>
+                    <Descriptions.Item label={t('parkingTickets.exit')}>{ticket.exit || '—'}</Descriptions.Item>
+                    <Descriptions.Item label={t('parkingTickets.fee')}>
+                      <Text strong className="text-warning">{ticket.fee.toLocaleString('vi-VN')}đ</Text>
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t('parkingTickets.paid')}>
+                      {ticket.paid ? <Tag color="green">✓ {ticket.payment}</Tag> : <Tag>—</Tag>}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Gate">{ticket.gate}</Descriptions.Item>
+                    <Descriptions.Item label="Zone">{ticket.zone}</Descriptions.Item>
+                    <Descriptions.Item label={t('parkingTickets.vehicle')}>
+                      <Tag color="blue" className="vehicle_tag-rounded"><CarOutlined /> {ticket.vehicleType}</Tag>
+                    </Descriptions.Item>
+                    {ticket.resident && <Descriptions.Item label={t('parkingTickets.resident')}>{ticket.resident}</Descriptions.Item>}
+                    {ticket.phone && <Descriptions.Item label={t('parkingTickets.phone')}>{ticket.phone}</Descriptions.Item>}
+                    {ticket.exception && (
+                      <Descriptions.Item label={t('parkingTickets.exception')}>
+                        <Tag color="red"><ExclamationCircleOutlined /> {ticket.exception}</Tag>
+                      </Descriptions.Item>
+                    )}
+                  </Descriptions>
+                  <Divider />
+                  <Space>
+                    <Button icon={<ExportOutlined />} onClick={exportTickets}>{t('parkingTickets.export')}</Button>
+                    <Button icon={<PrinterOutlined />}>{t('parkingTickets.reprint')}</Button>
+                    {ticket.status !== 'closed' && (
+                      <Button danger icon={<ExclamationCircleOutlined />}>{t('parkingTickets.dispute')}</Button>
+                    )}
+                  </Space>
+                </>
+              )
+            })()}
+          </Spin>
         )}
       </DetailDrawer>
     </PageContainer>

@@ -895,6 +895,8 @@
     "overview": "Tổng quan",
     "vehicles": "Xe cộ",
     "allZones": "Tất cả khu vực",
+    "filterZone": "Khu vực",
+    "selectZone": "Chọn khu vực",
     "revenueTitle": "Doanh thu",
     "byDay": "Theo ngày",
     "byMonth": "Theo tháng",
@@ -909,7 +911,18 @@
     "inCountDay": "Lượt vào (ngày)",
     "outCountDay": "Lượt ra (ngày)",
     "inCountMonth": "Lượt vào (tháng)",
-    "outCountMonth": "Lượt ra (tháng)"
+    "outCountMonth": "Lượt ra (tháng)",
+    "tablesFromApi": "Dữ liệu từ API",
+    "apiStatsTable": "Get Dashboard Stats",
+    "apiTrafficTable": "Get Dashboard Traffic",
+    "apiRevenueTable": "Get Dashboard Revenue",
+    "zoneName": "Khu vực",
+    "period": "Kỳ",
+    "periodLabel": "Kỳ",
+    "inCount": "Lượt vào",
+    "outCount": "Lượt ra",
+    "revenueAmount": "Doanh thu (VND)",
+    "total": "Tổng"
   },
   "liveEntrance": {
     "title": "Cổng vào",
@@ -943,9 +956,15 @@
     "type": "Loại",
     "status": "Trạng thái",
     "operator": "Người thao tác",
+    "operatorAuto": "Tự động",
     "confirmed": "Đã xác nhận",
     "manual": "Thủ công",
-    "blocked": "Đã chặn"
+    "blocked": "Đã chặn",
+    "live": "TRỰC TIẾP",
+    "gateEntry1": "Cổng vào 1",
+    "gateEntry2": "Cổng vào 2",
+    "gateExit1": "Cổng ra 1",
+    "gateExit2": "Cổng ra 2"
   },
   "liveExit": {
     "title": "Cổng ra",
@@ -988,7 +1007,17 @@
     "operator": "Người thao tác",
     "paid": "Đã thanh toán",
     "pending": "Chờ thanh toán",
-    "exception": "Ngoại lệ"
+    "exception": "Ngoại lệ",
+    "gateExit1": "Cổng ra 1",
+    "gateExit2": "Cổng ra 2",
+    "gateExit3": "Cổng ra 3",
+    "subscriptionExitSuccess": "Đã cho xe vé định kỳ ra cổng",
+    "freeExitNote": "Miễn phí trong {{minutes}} phút đầu",
+    "manualOnly": "Thủ công"
+  },
+  "vehicleAccessControl": {
+    "recentTitle": "Lượt ra vào gần đây",
+    "operatorAuto": "Tự động"
   },
   "energyMeter": {
     "title": "Đồng hồ năng lượng",
@@ -1159,7 +1188,18 @@
     "reservation": "Đặt chỗ",
     "entrance": "LỐI VÀO",
     "exit": "LỐI RA",
-    "trafficFlow": "LÀN GIAO THÔNG NỘI BỘ"
+    "trafficFlow": "LÀN GIAO THÔNG NỘI BỘ",
+    "truck": "Xe tải",
+    "vehicleBrand": "Hãng xe",
+    "vehicleColor": "Màu xe",
+    "parkedDuration": "Đã đỗ",
+    "spotPreview": "Ảnh chỗ đỗ",
+    "maintenance": "Bảo trì",
+    "search": "Tìm kiếm",
+    "searchResults": "Kết quả tìm kiếm",
+    "infoPanel": "Thông tin đỗ xe",
+    "clickToViewImage": "Bấm vào ô để xem ảnh chỗ đỗ",
+    "noPlateResult": "Không tìm thấy xe với biển số này."
   },
   "parkingTickets": {
     "title": "Quản lý thanh toán",
@@ -1189,7 +1229,16 @@
     "cash": "Tiền mặt",
     "card": "Thẻ",
     "wallet": "Ví cư dân",
-    "unpaid": "Chưa thanh toán"
+    "unpaid": "Chưa thanh toán",
+    "ticketId": "Mã vé",
+    "gateEntrance1": "Cổng vào 1",
+    "gateEntrance2": "Cổng vào 2",
+    "gateExit1": "Cổng ra 1",
+    "gateExit2": "Cổng ra 2",
+    "zoneA": "Khu A",
+    "zoneB": "Khu B",
+    "zoneC": "Khu C",
+    "qr": "QR"
   },
   "parkingSub": {
     "title": "Dịch vụ gửi xe",
@@ -1224,7 +1273,16 @@
     "zoneRestriction": "Giới hạn zone",
     "createSuccess": "Tạo thuê bao thành công",
     "updateSuccess": "Cập nhật thuê bao thành công",
-    "deleteSuccess": "Xóa thuê bao thành công"
+    "deleteSuccess": "Xóa thuê bao thành công",
+    "loadError": "Không tải được danh sách đăng ký",
+    "createError": "Tạo đăng ký thất bại",
+    "updateError": "Cập nhật thất bại",
+    "deleteError": "Xóa thất bại",
+    "selectTenantFirst": "Vui lòng chọn tenant từ trang chủ để xem danh sách đăng ký gửi xe.",
+    "zoneA": "Khu A",
+    "zoneB": "Khu B",
+    "zoneC": "Khu C",
+    "zoneLabel": "Khu vực"
   },
   "parkingDevices": {
     "title": "Thiết bị và tình trạng thiết bị",
@@ -1324,7 +1382,13 @@
     "byDay": "Theo ngày",
     "vehicleType": "Loại xe",
     "pricePerHour": "Giá theo giờ",
-    "pricePerDay": "Giá theo ngày"
+    "pricePerDay": "Giá theo ngày",
+    "selectTenantHint": "Chọn tenant từ trang chủ để đồng bộ cấu hình với server.",
+    "saveError": "Lưu cấu hình thất bại",
+    "gateEntry1": "Cổng vào 1",
+    "gateEntry2": "Cổng vào 2",
+    "gateExit1": "Cổng ra 1",
+    "gateExit2": "Cổng ra 2"
   },
   "devices": {
     "title": "Quản lý thiết bị IoT",
