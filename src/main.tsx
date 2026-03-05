@@ -10,6 +10,7 @@ import './styles/pages-dashboard.css'
 import './styles/pages-elevator-robot.css'
 import './styles/pages-workspace-admin.css'
 import './styles/pages-people.css'
+import './styles/responsive.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -116,23 +116,33 @@
 .dashboard_alert-body {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .dashboard_alert-title {
   font-weight: 600;
   font-size: 13px;
   color: #1a1a2e;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .dashboard_alert-location {
   font-size: 11px;
   color: #8c8c8c;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .dashboard_alert-extra {
   font-size: 10px;
   color: #bfbfbf;
   margin-top: 2px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .dashboard_zone-card {
@@ -167,6 +177,13 @@
 .dashboard_card {
   border-radius: 16px;
   width: 100%;
+  min-width: 0;
+}
+
+/* Cột danh sách cảnh báo: nội dung wrap, không bị cắt xấu */
+.dashboard_main-row .dashboard_card .ant-card-body {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .dashboard_card--full-height {

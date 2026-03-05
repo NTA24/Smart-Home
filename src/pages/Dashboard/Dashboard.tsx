@@ -242,10 +242,10 @@ export default function Dashboard() {
         </Col>
       </Row>
 
-      {/* Main Content */}
-      <Row gutter={[12, 12]} className="flex items-stretch">
+      {/* Main Content: cột phải (cảnh báo) dùng xl để tránh bị ép quá hẹp khi màn vừa */}
+      <Row gutter={[12, 12]} className="flex items-stretch dashboard_main-row">
         {/* Left - Building Visualization */}
-        <Col xs={24} lg={12} className="flex">
+        <Col xs={24} xl={12} className="flex">
           <ContentCard className="dashboard_card" bodyStyle={{ padding: 16 }}>
             {/* Header with Building icon and Tabs */}
             <div className="dashboard_building-header">
@@ -365,7 +365,7 @@ export default function Dashboard() {
         </Col>
 
         {/* Center - Alerts & Energy */}
-        <Col xs={24} lg={6} className="flex flex-col">
+        <Col xs={24} xl={6} className="flex flex-col">
           {/* Live Alerts Feed */}
           <ContentCard
             title={t('dashboard.liveAlertsFeed')}
@@ -430,7 +430,7 @@ export default function Dashboard() {
         </Col>
 
         {/* Right - Alerts List */}
-        <Col xs={24} lg={6} className="flex">
+        <Col xs={24} xl={6} className="flex">
           <ContentCard className="dashboard_card" bodyStyle={{ padding: 12 }}>
             <AlertItem 
               type="A" 

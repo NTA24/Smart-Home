@@ -5,15 +5,27 @@
 /* ── Main layout wrapper ── */
 .main-layout-root {
   min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
 }
 
+/* Khối giữa (header + content + footer): chiếm phần còn lại sau spacer, không bị co 0 */
 .main-layout-inner {
   transition: margin-left 0.2s;
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-layout-content {
+  flex: 1 1 auto;
   min-height: 280px;
   overflow: auto;
+  width: 100%;
+  min-width: 0;
 }
 
 /* ── Left Navbar ── */
@@ -277,45 +289,113 @@
   cursor: pointer;
 }
 
+/* ── Building Selector wrapper (full width, no gap bên phải) ── */
+.building-selector-wrap {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 /* ── Building Selector Card ── */
 .building-selector {
   cursor: pointer;
-  padding: 12px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #6366f1 100%);
   color: #fff;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: none;
+  outline: none;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.building-selector:hover {
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.building-selector:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.building-selector .flex-between {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.building-selector .flex.items-center.gap-8 {
+  min-width: 0;
+  flex: 1;
 }
 
 .building-selector_avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13px;
   flex-shrink: 0;
+  letter-spacing: 0.02em;
 }
 
 .building-selector_name {
   font-weight: 600;
   font-size: 14px;
+  line-height: 1.3;
+  word-break: break-word;
 }
 
 .building-selector_meta {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 10px 14px;
   margin-top: 10px;
   font-size: 12px;
-  opacity: 0.9;
+  opacity: 0.95;
+  width: 100%;
 }
 
 .building-selector_meta-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+}
+
+.building-selector_meta-item .anticon {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* Tag trong building selector: màu nền nhạt để đọc trên gradient */
+.building-selector .ant-tag {
+  border: none;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.2;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.building-selector .ant-tag.ant-tag-green,
+.building-selector .ant-tag[class*='green'] {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.building-selector .ant-tag.ant-tag-orange,
+.building-selector .ant-tag[class*='orange'] {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 /* ── Header ── */

@@ -9,14 +9,21 @@ export const LEFT_NAV_WIDTH = 240
 interface LeftNavProps {
   useNewgenLogo: boolean
   onLogoClick: () => void
+  /** Gọi khi ở mobile drawer để đóng drawer sau khi điều hướng */
+  onCloseDrawer?: () => void
 }
 
-export default function LeftNav({ useNewgenLogo, onLogoClick }: LeftNavProps) {
+export default function LeftNav({ useNewgenLogo, onLogoClick, onCloseDrawer }: LeftNavProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const isHome = location.pathname === '/home/tenant' || location.pathname === '/home/campus' || location.pathname === '/home/building'
 
   const currentLogo = useNewgenLogo ? newgenLogo : viettelLogo
+
+  const goHome = () => {
+    onCloseDrawer?.()
+    navigate('/home/tenant')
+  }
 
   return (
     <nav
@@ -37,8 +44,8 @@ export default function LeftNav({ useNewgenLogo, onLogoClick }: LeftNavProps) {
       <div className="left-nav_items">
         <div
           className={`left-nav_item ${isHome ? 'left-nav_item--active' : ''}`}
-          onClick={() => navigate('/home/tenant')}
-          onKeyDown={(e) => e.key === 'Enter' && navigate('/home/tenant')}
+          onClick={goHome}
+          onKeyDown={(e) => e.key === 'Enter' && goHome()}
           role="button"
           tabIndex={0}
         >
@@ -47,7 +54,7 @@ export default function LeftNav({ useNewgenLogo, onLogoClick }: LeftNavProps) {
           </div>
           <span className="left-nav_item-label">Home</span>
         </div>
-        <BuildingSelector />
+        <BuildingSelector onClose={onCloseDrawer} />
       </div>
     </nav>
   )

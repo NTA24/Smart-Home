@@ -30,9 +30,13 @@ export const MIDDLE_SIDEBAR_WIDTH = 260
 interface MiddleSidebarProps {
   collapsed: boolean
   leftNavWidth: number
+  /** Render bên trong mobile drawer (không fixed) */
+  inDrawer?: boolean
+  /** Gọi khi ở mobile để đóng drawer sau khi chọn menu/building */
+  onCloseDrawer?: () => void
 }
 
-export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebarProps) {
+export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onCloseDrawer }: MiddleSidebarProps) {
   const { t } = useTranslation()
   const { token } = theme.useToken()
   const navigate = useNavigate()
@@ -69,6 +73,7 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     const labelKey = routeToLabelKey[key]
     if (labelKey) {
+      onCloseDrawer?.()
       const tab: Tab = { key, labelKey, closable: key !== '/dashboard' }
       addTab(tab)
       navigate(key)
@@ -129,6 +134,7 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
   })
 
   const handleBuildingSelect = (buildingId: string) => {
+    onCloseDrawer?.()
     const sid = String(buildingId ?? '')
     const building = navStore.buildings.find(b => String(b?.id ?? '') === sid)
     if (building) {
@@ -191,14 +197,14 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
     </div>
   )
 
-  return (
-    <Sider
-      trigger={null}
-      collapsible
-      collapsed={collapsed}
-      collapsedWidth={0}
-      width={MIDDLE_SIDEBAR_WIDTH}
-      style={{
+  const siderStyle: React.CSSProperties = inDrawer
+    ? {
+        background: token.colorBgContainer,
+        borderRight: 'none',
+        overflow: 'auto',
+        height: '100%',
+      }
+    : {
         background: token.colorBgContainer,
         borderRight: `1px solid ${token.colorBorderSecondary}`,
         overflow: 'auto',
@@ -208,12 +214,22 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
         top: 0,
         bottom: 0,
         zIndex: 100,
-      }}
+      }
+
+  return (
+    <Sider
+      trigger={null}
+      collapsible
+      collapsed={inDrawer ? false : collapsed}
+      collapsedWidth={0}
+      width={MIDDLE_SIDEBAR_WIDTH}
+      style={siderStyle}
     >
       {/* Building selector header */}
       <div
+        className="building-selector-wrap"
         style={{
-          padding: '12px 16px',
+          padding: '12px 14px',
           borderBottom: `1px solid ${token.colorBorderSecondary}`,
           background: token.colorBgContainer,
         }}

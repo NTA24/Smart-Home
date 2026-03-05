@@ -123,6 +123,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid #f0ad4e;
+  min-width: 0;
 }
 
 .vehicle_plate-text {
@@ -130,6 +131,10 @@
   font-size: 14px;
   font-weight: 700;
   font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .vehicle_plate-display {
@@ -137,7 +142,8 @@
   border: 2px solid #faad14;
   border-radius: 8px;
   padding: 8px 20px;
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 120px; /* Đủ rộng cho biển số 1 dòng (vd: 51A-123.45), tránh bị xuống từng ký tự */
 }
 
 .vehicle_plate-value {
@@ -146,6 +152,10 @@
   font-family: monospace;
   color: #1a1a1a;
   letter-spacing: 2px;
+  white-space: nowrap;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .vehicle_plate-crop {
@@ -164,6 +174,10 @@
   font-family: monospace;
   color: #1a1a1a;
   letter-spacing: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .vehicle_customer-box {

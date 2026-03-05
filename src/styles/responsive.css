@@ -1,0 +1,328 @@
+/* ═══════════════════════════════════════════════
+   RESPONSIVE STYLES
+   Breakpoints: 1200 (lg), 992 (md), 768 (sm), 576 (xs)
+   ═══════════════════════════════════════════════ */
+
+/* ── Base: prevent horizontal break/overflow ── */
+html {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Khu vực giữa (inner) đã được set flex trong layout.css để chiếm hết phần còn lại */
+
+/* Tránh 100vw (gồm cả scrollbar) gây khung trắng/tràn bên phải */
+.main-layout-root {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+.main-layout-content {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Page container: tránh margin âm gây tràn khi màn nhỏ */
+.page-container {
+  max-width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 991px) {
+  .page-container {
+    margin-left: -8px;
+    margin-right: -8px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .page-container {
+    margin-left: -4px;
+    margin-right: -4px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/* ── Large (≤1200px): reduce side padding ── */
+@media (max-width: 1200px) {
+  .main-header {
+    padding: 0 16px;
+  }
+  .main-layout-content {
+    margin: 12px !important;
+    padding: 12px !important;
+  }
+  .main-footer {
+    padding: 20px 24px;
+  }
+}
+
+/* ── Medium (≤992px): mobile layout – sidebars become drawer ── */
+@media (max-width: 991px) {
+  .main-layout-inner {
+    margin-left: 0 !important;
+  }
+  .main-layout-content {
+    margin: 8px !important;
+    padding: 12px !important;
+    min-height: 200px;
+  }
+  .main-header {
+    padding: 0 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .main-header_left {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .main-header_right {
+    flex-shrink: 0;
+  }
+  .breadcrumb {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .breadcrumb_sep {
+    margin: 0 4px;
+  }
+  .header-action_username {
+    display: none;
+  }
+  .main-footer {
+    padding: 16px 12px;
+  }
+  .footer_grid {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .footer_col,
+  .footer_col--wide,
+  .footer_col--contact {
+    flex: 1 1 100%;
+  }
+}
+
+/* ── Mobile drawer overlay ── */
+.mobile-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mobile-drawer-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(320px, 85vw);
+  max-width: 100%;
+  z-index: 1001;
+  background: #fff;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.25s ease;
+}
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* When drawer is open, left nav and middle sidebar inside it are not fixed */
+.mobile-drawer-panel .left-nav {
+  position: static !important;
+  height: auto !important;
+  flex: 0 0 auto;
+  min-height: 0;
+  width: 100% !important;
+}
+
+.mobile-drawer-panel .middle-sidebar-wrap {
+  position: static !important;
+  height: auto !important;
+  flex: 1;
+  min-height: 0;
+  width: 100% !important;
+}
+
+.mobile-drawer-panel .left-nav {
+  flex-shrink: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.mobile-drawer-panel .middle-sidebar-wrap {
+  flex: 1;
+  overflow: auto;
+  border-right: none;
+  min-height: 0;
+}
+
+.mobile-drawer-panel .middle-sidebar-wrap .ant-layout-sider {
+  position: static !important;
+  left: auto !important;
+  height: 100% !important;
+  max-height: 100%;
+}
+
+/* ── Header trang (camera_header, page-header): wrap và co khi màn nhỏ ── */
+.camera_header,
+.page-header {
+  min-width: 0;
+}
+
+.camera_header .ant-select,
+.page-header .ant-select {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .camera_header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .camera_header .flex-wrap {
+    width: 100%;
+  }
+  .camera_header .ant-select {
+    min-width: 0 !important;
+    width: 100%;
+  }
+}
+
+/* flex-between cho phép xuống dòng */
+.flex-between {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Col trong Row: cho phép co khi màn nhỏ */
+.ant-col {
+  min-width: 0;
+}
+
+/* Chart/echarts wrapper có thể co trong flex */
+.content-card .echarts-for-react,
+.content-card canvas {
+  max-width: 100% !important;
+}
+
+/* Card header (title + extra) xuống dòng trên màn nhỏ */
+@media (max-width: 768px) {
+  .content-card .ant-card-head {
+    flex-wrap: wrap;
+  }
+  .content-card .ant-card-head-title {
+    min-width: 0;
+    padding-right: 8px;
+  }
+  .content-card .ant-card-extra {
+    margin-top: 4px;
+    margin-left: 0;
+  }
+}
+
+/* ── Small (≤768px) ── */
+@media (max-width: 768px) {
+  .main-header {
+    padding: 0 8px;
+  }
+  .main-layout-content {
+    margin: 6px !important;
+    padding: 10px !important;
+  }
+  .tabbar {
+    padding: 6px 8px 0;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tabbar_tab {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .main-footer .footer_heading {
+    font-size: 14px;
+  }
+  .footer_text,
+  .footer_text--white,
+  .footer_text--desc {
+    font-size: 11px;
+  }
+}
+
+/* ── Extra small (≤576px) ── */
+@media (max-width: 576px) {
+  .main-layout-content {
+    margin: 4px !important;
+    padding: 8px !important;
+  }
+  .breadcrumb_link,
+  .breadcrumb_current {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .header-action .ant-select {
+    min-width: 90px;
+  }
+  .main-footer {
+    padding: 12px 8px;
+  }
+  .footer_logo img {
+    height: 40px;
+  }
+  .footer_copyright-text {
+    font-size: 10px;
+  }
+}
+
+/* Ant Design overrides for small screens */
+@media (max-width: 768px) {
+  .ant-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ant-card-body {
+    padding: 12px;
+  }
+  .ant-modal {
+    max-width: calc(100vw - 16px);
+    margin: 8px;
+    top: 8px;
+    padding-bottom: 8px;
+  }
+  .ant-drawer-body {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .ant-card-body {
+    padding: 10px;
+  }
+  .ant-btn + .ant-btn {
+    margin-left: 6px;
+  }
+  .ant-space-item {
+    flex-wrap: wrap;
+  }
+}

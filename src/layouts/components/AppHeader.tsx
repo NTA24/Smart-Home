@@ -23,9 +23,13 @@ interface AppHeaderProps {
   isHomePage: boolean
   collapsed: boolean
   onToggleCollapse: () => void
+  isMobile?: boolean
+  mobileMenuOpen?: boolean
 }
 
-export default function AppHeader({ isHomePage, collapsed, onToggleCollapse }: AppHeaderProps) {
+export default function AppHeader({ isHomePage, collapsed, onToggleCollapse, isMobile, mobileMenuOpen }: AppHeaderProps) {
+  void isMobile
+  void mobileMenuOpen
   const { t, i18n } = useTranslation()
   const { token } = theme.useToken()
   const _navigate = useNavigate()
@@ -77,18 +81,20 @@ export default function AppHeader({ isHomePage, collapsed, onToggleCollapse }: A
         borderBottom: `1px solid ${token.colorBorderSecondary}`,
       }}
     >
-      {/* ── Left: collapse toggle + breadcrumb ── */}
+      {/* ── Left: collapse toggle (desktop) / menu (mobile) + breadcrumb ── */}
       <div className="main-header_left">
-        {!isHomePage && (
-          collapsed ? (
+        {(isMobile || !isHomePage) && (
+          (isMobile ? mobileMenuOpen : collapsed) ? (
             <MenuUnfoldOutlined
               className="main-header_toggle"
               onClick={onToggleCollapse}
+              aria-label={isMobile ? 'Close menu' : 'Expand sidebar'}
             />
           ) : (
             <MenuFoldOutlined
               className="main-header_toggle"
               onClick={onToggleCollapse}
+              aria-label={isMobile ? 'Open menu' : 'Collapse sidebar'}
             />
           )
         )}
