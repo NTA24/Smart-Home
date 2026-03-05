@@ -153,34 +153,42 @@ export interface EnergyMeterListParams {
 }
 
 // ========================
-// HVAC Asset
+// HVAC Asset (Swagger: /api/energy/hvac-assets)
 // ========================
 
 export interface HvacAsset {
-  id?: string
+  id: string
+  tenant_id: string
   device_id: string
-  tenant_id?: string
-  space_id?: string
-  asset_type?: string
-  system_type?: string
-  zone?: string
+  scope_type: string
+  scope_id: string
+  system_type: string
+  role_type: string
+  parent_id: string
   rated_kw: number
   meta?: Record<string, unknown>
   created_at?: string
-  updated_at?: string
 }
 
 export interface CreateHvacAssetPayload {
+  tenant_id: string
   device_id: string
-  asset_type: string
-  zone: string
+  scope_type: string
+  scope_id: string
+  system_type: string
+  role_type: string
+  parent_id: string
   rated_kw: number
   meta?: Record<string, unknown>
 }
 
 export interface UpdateHvacAssetPayload {
-  asset_type?: string
-  zone?: string
+  device_id?: string
+  scope_type?: string
+  scope_id?: string
+  system_type?: string
+  role_type?: string
+  parent_id?: string
   rated_kw?: number
   meta?: Record<string, unknown>
 }
@@ -194,33 +202,30 @@ export interface HvacAssetListParams {
 // IAQ Sensor
 // ========================
 
+/** Swagger: GET /api/energy/iaq-sensors/list, GET /api/energy/iaq-sensors/{id} */
 export interface IaqSensor {
   id?: string
   device_id: string
-  sensor_model?: string
-  sensor_type?: string
-  location?: string
-  params_supported?: string[]
+  sensor_type: string
   meta?: Record<string, unknown>
   created_at?: string
   updated_at?: string
 }
 
+/** POST /api/energy/iaq-sensors */
 export interface CreateIaqSensorPayload {
   device_id: string
-  sensor_model: string
-  location: string
-  params_supported: string[]
+  sensor_type: string
   meta?: Record<string, unknown>
 }
 
+/** PATCH /api/energy/iaq-sensors/{id} */
 export interface UpdateIaqSensorPayload {
-  sensor_model?: string
-  location?: string
-  params_supported?: string[]
+  sensor_type?: string
   meta?: Record<string, unknown>
 }
 
+/** GET list — limit (1–500, default 50), offset (min 0, default 0) */
 export interface IaqSensorListParams {
   limit?: number
   offset?: number
@@ -230,9 +235,9 @@ export interface IaqSensorListParams {
 // Energy Aggregate
 // ========================
 
+/** Swagger: GET /api/energy/aggregates-table/list, GET /api/energy/aggregates-table/{id} */
 export interface EnergyAggregate {
-  id?: string
-  meter_id?: string
+  id: string
   scope_type: string
   scope_id: string
   bucket: string
@@ -242,9 +247,9 @@ export interface EnergyAggregate {
   kw_peak: number
   breakdown?: Record<string, unknown>
   created_at?: string
-  updated_at?: string
 }
 
+/** POST /api/energy/aggregates-table */
 export interface CreateEnergyAggregatePayload {
   scope_type: string
   scope_id: string
@@ -256,6 +261,7 @@ export interface CreateEnergyAggregatePayload {
   breakdown?: Record<string, unknown>
 }
 
+/** PATCH /api/energy/aggregates-table/{id} */
 export interface UpdateEnergyAggregatePayload {
   kwh?: number
   kw_avg?: number
@@ -263,10 +269,13 @@ export interface UpdateEnergyAggregatePayload {
   breakdown?: Record<string, unknown>
 }
 
+/** GET list — limit (1–500, default 50), offset (min 0, default 0) */
 export interface EnergyAggregateListParams {
   limit?: number
   offset?: number
-  meter_id?: string
+  scope_type?: string
+  scope_id?: string
+  bucket?: string
 }
 
 // ========================

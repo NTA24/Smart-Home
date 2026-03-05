@@ -20,18 +20,21 @@ import {
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { PageContainer, PageHeader, ContentCard, DataTable, TableActionButtons, CrudModal } from '@/components'
-import { deviceApi } from '@/services'
+import { deviceApi, energyMeterApi } from '@/services'
 import type {
   EnergyMeter,
   CreateEnergyMeterPayload,
   UpdateEnergyMeterPayload,
 } from '@/services'
 import { useBuildingStore } from '@/stores'
-import { getEnergyMeters, saveEnergyMeters } from '@/services/mockPersistence'
 
 const { Text } = Typography
 
-export default function EnergyMeterPage() {
+export interface EnergyMeterPageProps {
+  embedded?: boolean
+}
+
+export default function EnergyMeterPage({ embedded }: EnergyMeterPageProps = {}) {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
   const [loading, setLoading] = useState(false)
@@ -64,12 +67,14 @@ export default function EnergyMeterPage() {
   const fetchMeters = async (limit = 10, offset = 0) => {
     setLoading(true)
     try {
-      const allItems = getEnergyMeters<EnergyMeter>([])
-      setMeters(allItems.slice(offset, offset + limit))
-      setTotal(allItems.length)
+      const res = await energyMeterApi.getList({ limit, offset })
+      setMeters(res.items ?? [])
+      setTotal(res.total ?? 0)
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       message.error(`${t('apiTest.fetchError')}: ${errorMsg}`)
+      setMeters([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
@@ -78,8 +83,7 @@ export default function EnergyMeterPage() {
   const fetchMeterById = async (id: string) => {
     setLoading(true)
     try {
-      const item = getEnergyMeters<EnergyMeter>([]).find((meter) => meter.device_id === id) || null
-      if (!item) throw new Error(`Energy meter ${id} not found`)
+      const item = await energyMeterApi.getById(id)
       setSelectedMeter(item)
       setDetailVisible(true)
     } catch (err: unknown) {
@@ -90,28 +94,20 @@ export default function EnergyMeterPage() {
     }
   }
 
-  const handleCreate = async (values: CreateEnergyMeterPayload) => {
+  const handleCreate = async (values: CreateEnergyMeterPayload & { meta?: string }) => {
     const hide = message.loading(t('apiTest.processing'), 0)
     try {
       const parsedMeta =
         typeof values.meta === 'string'
           ? JSON.parse(values.meta as unknown as string)
           : values.meta || {}
-      const currentItems = getEnergyMeters<EnergyMeter>([])
-      if (currentItems.some((meter) => meter.device_id === values.device_id)) {
-        throw new Error(`Energy meter ${values.device_id} already exists`)
-      }
-      const now = new Date().toISOString()
-      const nextItems: EnergyMeter[] = [
-        {
-          ...values,
-          meta: parsedMeta,
-          created_at: now,
-          updated_at: now,
-        },
-        ...currentItems,
-      ]
-      saveEnergyMeters(nextItems)
+      await energyMeterApi.create({
+        device_id: values.device_id,
+        meter_type: values.meter_type,
+        phase: values.phase,
+        unit_default: values.unit_default,
+        meta: parsedMeta,
+      })
       hide()
       message.success(t('apiTest.createSuccess'))
       setModalVisible(false)
@@ -124,7 +120,7 @@ export default function EnergyMeterPage() {
     }
   }
 
-  const handleUpdate = async (values: UpdateEnergyMeterPayload) => {
+  const handleUpdate = async (values: UpdateEnergyMeterPayload & { meta?: string }) => {
     if (!editingId) return
     const hide = message.loading(t('apiTest.processing'), 0)
     try {
@@ -132,21 +128,12 @@ export default function EnergyMeterPage() {
         typeof values.meta === 'string'
           ? JSON.parse(values.meta as unknown as string)
           : values.meta
-      const now = new Date().toISOString()
-      const currentItems = getEnergyMeters<EnergyMeter>([])
-      let found = false
-      const nextItems = currentItems.map((meter) => {
-        if (meter.device_id !== editingId) return meter
-        found = true
-        return {
-          ...meter,
-          ...values,
-          ...(parsedMeta !== undefined ? { meta: parsedMeta } : {}),
-          updated_at: now,
-        }
+      await energyMeterApi.update(editingId, {
+        ...(values.meter_type !== undefined && { meter_type: values.meter_type }),
+        ...(values.phase !== undefined && { phase: values.phase }),
+        ...(values.unit_default !== undefined && { unit_default: values.unit_default }),
+        ...(parsedMeta !== undefined && { meta: parsedMeta }),
       })
-      if (!found) throw new Error(`Energy meter ${editingId} not found`)
-      saveEnergyMeters(nextItems)
       hide()
       message.success(t('apiTest.updateSuccess'))
       setModalVisible(false)
@@ -163,10 +150,7 @@ export default function EnergyMeterPage() {
   const handleDelete = async (id: string) => {
     const hide = message.loading(t('apiTest.processing'), 0)
     try {
-      const currentItems = getEnergyMeters<EnergyMeter>([])
-      const nextItems = currentItems.filter((meter) => meter.device_id !== id)
-      if (nextItems.length === currentItems.length) throw new Error(`Energy meter ${id} not found`)
-      saveEnergyMeters(nextItems)
+      await energyMeterApi.delete(id)
       hide()
       message.success(t('apiTest.deleteSuccess'))
       fetchMeters()
@@ -254,28 +238,29 @@ export default function EnergyMeterPage() {
     },
   ]
 
-  return (
-    <PageContainer>
-      <PageHeader
-        title={t('energyMeter.title')}
-        icon={<ThunderboltOutlined />}
-        subtitle={`${selectedBuilding?.name || t('energyMeter.allSites')} — ${t('common.total')}: ${total}`}
-      />
-
+  const content = (
+    <>
+      {!embedded && (
+        <PageHeader
+          title={t('energyMeter.title')}
+          icon={<ThunderboltOutlined />}
+          subtitle={`${selectedBuilding?.name || t('energyMeter.allSites')} — ${t('common.total')}: ${total}`}
+        />
+      )}
       <Spin spinning={loading}>
         <ContentCard
           title={t('energyMeter.meterList')}
           titleIcon={<ThunderboltOutlined />}
           titleIconColor="#faad14"
           titleExtra={
-            <>
+            <span style={{ display: 'inline-flex', gap: 8 }}>
               <Button icon={<ReloadOutlined />} onClick={() => fetchMeters()}>
                 {t('apiTest.reload')}
               </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal} style={{ marginLeft: 8 }}>
                 {t('apiTest.create')}
               </Button>
-            </>
+            </span>
           }
         >
           <DataTable<EnergyMeter>
@@ -413,6 +398,7 @@ export default function EnergyMeterPage() {
           <Text type="secondary">{t('common.noData')}</Text>
         )}
       </Modal>
-    </PageContainer>
+    </>
   )
+  return embedded ? content : <PageContainer>{content}</PageContainer>
 }

@@ -3,13 +3,13 @@
 // ========================
 
 /**
- * Interface cho IAQ Sensor entity
- * Dựa theo Swagger: campus.iot-platform.io.vn
+ * IAQ Sensor entity — GET /api/energy/iaq-sensors/{id}, list items
+ * List/Get response: device_id, sensor_type, meta
  */
 export interface IaqSensor {
-  id: string
+  id?: string
   device_id: string
-  sensor_type: string // "IAQ", ...
+  sensor_type: string
   meta: Record<string, unknown>
   created_at?: string
   updated_at?: string
@@ -35,7 +35,7 @@ export interface UpdateIaqSensorPayload {
 }
 
 /**
- * Params cho API lấy danh sách IAQ Sensor
+ * GET /api/energy/iaq-sensors/list — limit (1–500, default 50), offset (min 0, default 0)
  */
 export interface IaqSensorListParams {
   limit?: number

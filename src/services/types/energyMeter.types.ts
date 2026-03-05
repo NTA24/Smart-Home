@@ -42,9 +42,12 @@ export interface UpdateEnergyMeterPayload {
 
 /**
  * Params cho API lấy danh sách Energy Meter
+ * GET /api/energy/meters/list — limit (1–500, default 50), offset (min 0, default 0)
  */
 export interface EnergyMeterListParams {
+  /** Số item tối đa (1–500, mặc định 50) */
   limit?: number
+  /** Vị trí bắt đầu (min 0, mặc định 0) */
   offset?: number
   search?: string
   device_id?: string

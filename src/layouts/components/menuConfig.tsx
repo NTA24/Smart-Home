@@ -145,7 +145,7 @@ export const menuConfig: MenuEntry[] = [
       { key: '/energy-data-center', labelKey: 'menu.energyDataCenter' },
       { key: '/alarm-statistics', labelKey: 'menu.alarmStatistics' },
       { key: '/energy-monitoring', labelKey: 'menu.energyMonitoring' },
-      { key: '/energy-meters', labelKey: 'menu.energyMeters' },
+      { key: '/energy-device-management', labelKey: 'menu.energyDeviceManagement' },
     ],
   },
 
@@ -154,11 +154,11 @@ export const menuConfig: MenuEntry[] = [
     key: 'remote-monitoring',
     icon: <EnvironmentOutlined />,
     labelKey: 'menu.remoteMonitoring',
-    defaultRoute: '/hvac-assets',
+    defaultRoute: '/energy-telemetry',
     children: [
-      { key: '/hvac-assets', labelKey: 'menu.hvacAssets' },
-      { key: '/iaq-sensors', labelKey: 'menu.iaqSensors' },
-      { key: '/energy-aggregates', labelKey: 'menu.energyAggregates' },
+      { key: '/energy-telemetry', labelKey: 'menu.energyTelemetry' },
+      { key: '/iaq-telemetry', labelKey: 'menu.iaqTelemetry' },
+      { key: '/hvac-telemetry', labelKey: 'menu.hvacTelemetry' },
     ],
   },
 

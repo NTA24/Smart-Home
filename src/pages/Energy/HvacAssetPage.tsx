@@ -21,7 +21,7 @@ import {
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { PageContainer, PageHeader, ContentCard, DataTable, TableActionButtons, CrudModal } from '@/components'
-import { tenantApi, deviceApi, spaceApi } from '@/services'
+import { tenantApi, deviceApi, spaceApi, hvacAssetApi } from '@/services'
 import type {
   HvacAsset,
   CreateHvacAssetPayload,
@@ -30,11 +30,15 @@ import type {
 } from '@/services'
 import type { SpaceItem } from '@/services'
 import { useBuildingStore } from '@/stores'
-import { getHvacAssets, saveHvacAssets } from '@/services/mockPersistence'
 
 const { Text } = Typography
 
-export default function HvacAssetPage() {
+export interface HvacAssetPageProps {
+  /** Khi true, không render PageContainer/PageHeader (dùng khi nhúng trong tab) */
+  embedded?: boolean
+}
+
+export default function HvacAssetPage({ embedded }: HvacAssetPageProps = {}) {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
   const [loading, setLoading] = useState(false)
@@ -58,12 +62,14 @@ export default function HvacAssetPage() {
   const fetchAssets = async (limit = 10, offset = 0) => {
     setLoading(true)
     try {
-      const allItems = getHvacAssets<HvacAsset>([])
-      setAssets(allItems.slice(offset, offset + limit))
-      setTotal(allItems.length)
+      const res = await hvacAssetApi.getList({ limit, offset })
+      setAssets(res.items ?? [])
+      setTotal(res.total ?? 0)
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       message.error(`${t('apiTest.fetchError')}: ${errorMsg}`)
+      setAssets([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
@@ -72,8 +78,7 @@ export default function HvacAssetPage() {
   const fetchAssetById = async (id: string) => {
     setLoading(true)
     try {
-      const item = getHvacAssets<HvacAsset>([]).find((asset) => asset.device_id === id) || null
-      if (!item) throw new Error(`HVAC asset ${id} not found`)
+      const item = await hvacAssetApi.getById(id)
       setSelectedAsset(item)
       setDetailVisible(true)
     } catch (err: unknown) {
@@ -88,23 +93,17 @@ export default function HvacAssetPage() {
     const hide = message.loading(t('apiTest.processing'), 0)
     try {
       const payload: CreateHvacAssetPayload = {
-        ...values,
+        tenant_id: values.tenant_id,
+        device_id: values.device_id,
+        scope_type: values.scope_type ?? 'space',
+        scope_id: values.scope_id ?? '',
+        system_type: values.system_type,
+        role_type: values.role_type ?? '',
+        parent_id: values.parent_id ?? '',
+        rated_kw: values.rated_kw,
         meta: values.meta ? (typeof values.meta === 'string' ? JSON.parse(values.meta) : values.meta) : {},
       }
-      const currentItems = getHvacAssets<HvacAsset>([])
-      if (currentItems.some((asset) => asset.device_id === payload.device_id)) {
-        throw new Error(`HVAC asset ${payload.device_id} already exists`)
-      }
-      const now = new Date().toISOString()
-      const nextItems: HvacAsset[] = [
-        {
-          ...payload,
-          created_at: now,
-          updated_at: now,
-        },
-        ...currentItems,
-      ]
-      saveHvacAssets(nextItems)
+      await hvacAssetApi.create(payload)
       hide()
       message.success(t('apiTest.createSuccess'))
       setModalVisible(false)
@@ -125,20 +124,7 @@ export default function HvacAssetPage() {
         ...values,
         meta: values.meta ? (typeof values.meta === 'string' ? JSON.parse(values.meta) : values.meta) : undefined,
       }
-      const now = new Date().toISOString()
-      const currentItems = getHvacAssets<HvacAsset>([])
-      let found = false
-      const nextItems = currentItems.map((asset) => {
-        if (asset.device_id !== editingId) return asset
-        found = true
-        return {
-          ...asset,
-          ...payload,
-          updated_at: now,
-        }
-      })
-      if (!found) throw new Error(`HVAC asset ${editingId} not found`)
-      saveHvacAssets(nextItems)
+      await hvacAssetApi.update(editingId, payload)
       hide()
       message.success(t('apiTest.updateSuccess'))
       setModalVisible(false)
@@ -155,10 +141,7 @@ export default function HvacAssetPage() {
   const handleDelete = async (id: string) => {
     const hide = message.loading(t('apiTest.processing'), 0)
     try {
-      const currentItems = getHvacAssets<HvacAsset>([])
-      const nextItems = currentItems.filter((asset) => asset.device_id !== id)
-      if (nextItems.length === currentItems.length) throw new Error(`HVAC asset ${id} not found`)
-      saveHvacAssets(nextItems)
+      await hvacAssetApi.delete(id)
       hide()
       message.success(t('apiTest.deleteSuccess'))
       fetchAssets()
@@ -170,9 +153,13 @@ export default function HvacAssetPage() {
   }
 
   const openEditModal = (asset: HvacAsset) => {
-    setEditingId(asset.device_id)
+    setEditingId(asset.id ?? asset.device_id)
     form.setFieldsValue({
+      scope_type: asset.scope_type,
+      scope_id: asset.scope_id,
       system_type: asset.system_type,
+      role_type: asset.role_type,
+      parent_id: asset.parent_id,
       rated_kw: asset.rated_kw,
       meta: JSON.stringify(asset.meta || {}, null, 2),
     })
@@ -271,42 +258,43 @@ export default function HvacAssetPage() {
       width: 150,
       render: (_: unknown, record: HvacAsset) => (
         <TableActionButtons
-          onView={() => fetchAssetById(record.device_id)}
+          onView={() => fetchAssetById(record.id ?? record.device_id)}
           onEdit={() => openEditModal(record)}
-          onDelete={() => handleDelete(record.device_id)}
+          onDelete={() => handleDelete(record.id ?? record.device_id)}
         />
       ),
     },
   ]
 
-  return (
-    <PageContainer>
-      <PageHeader
-        title={t('hvacAsset.title')}
-        icon={<ControlOutlined />}
-        subtitle={`${selectedBuilding?.name || t('hvacAsset.allSites')} — ${t('common.total')}: ${total}`}
-      />
-
+  const content = (
+    <>
+      {!embedded && (
+        <PageHeader
+          title={t('hvacAsset.title')}
+          icon={<ControlOutlined />}
+          subtitle={`${selectedBuilding?.name || t('hvacAsset.allSites')} — ${t('common.total')}: ${total}`}
+        />
+      )}
       <Spin spinning={loading}>
         <ContentCard
           title={t('hvacAsset.assetList')}
           titleIcon={<ControlOutlined />}
           titleIconColor="#1890ff"
           titleExtra={
-            <>
+            <span style={{ display: 'inline-flex', gap: 8 }}>
               <Button icon={<ReloadOutlined />} onClick={() => fetchAssets()}>
                 {t('apiTest.reload')}
               </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal} style={{ marginLeft: 8 }}>
                 {t('apiTest.create')}
               </Button>
-            </>
+            </span>
           }
         >
           <DataTable<HvacAsset>
             columns={columns}
             dataSource={assets}
-            rowKey="device_id"
+            rowKey={(r) => r.id ?? r.device_id}
             total={total}
             pageSize={10}
             onPageChange={(page, pageSize) => fetchAssets(pageSize, (page - 1) * pageSize)}
@@ -364,10 +352,21 @@ export default function HvacAssetPage() {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
+                  <Form.Item name="scope_type" label={t('hvacAsset.scopeType')} initialValue="space">
+                    <Select
+                      options={[
+                        { value: 'space', label: t('hvacAsset.scopeTypeSpace') },
+                        { value: 'building', label: t('hvacAsset.scopeTypeBuilding') },
+                        { value: 'campus', label: t('hvacAsset.scopeTypeCampus') },
+                      ]}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
                   <Form.Item
-                    name="space_id"
-                    label={t('hvacAsset.spaceId')}
-                    rules={[{ required: true, message: t('hvacAsset.spaceIdRequired') }]}
+                    name="scope_id"
+                    label={t('hvacAsset.scopeId')}
+                    rules={[{ required: true, message: t('hvacAsset.scopeIdRequired') }]}
                   >
                     <Select
                       showSearch
@@ -375,11 +374,23 @@ export default function HvacAssetPage() {
                       placeholder={t('hvacAsset.selectSpace')}
                       optionFilterProp="label"
                       options={spaces.map((s) => ({
-                        value: (s.id || s.space_id) as string,
-                        label: `${s.name || s.space_id || s.id}${s.space_type ? ` (${s.space_type})` : ''}${s.floor ? ` - ${s.floor}` : ''}`,
+                        value: (s.id || (s as { space_id?: string }).space_id) as string,
+                        label: `${(s as { name?: string }).name || (s as { space_id?: string }).space_id || s.id}${(s as { space_type?: string }).space_type ? ` (${(s as { space_type: string }).space_type})` : ''}${(s as { floor?: string }).floor ? ` - ${(s as { floor: string }).floor}` : ''}`,
                       }))}
                       notFoundContent={spacesLoading ? <Spin size="small" /> : t('common.noData')}
                     />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item name="role_type" label={t('hvacAsset.roleType')}>
+                    <Input placeholder="e.g. supply, return" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="parent_id" label={t('hvacAsset.parentId')}>
+                    <Input placeholder="UUID (optional)" />
                   </Form.Item>
                 </Col>
               </Row>
@@ -442,11 +453,14 @@ export default function HvacAssetPage() {
         {selectedAsset ? (
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label={t('hvacAsset.deviceId')}>{selectedAsset.device_id}</Descriptions.Item>
+            <Descriptions.Item label={t('hvacAsset.scopeType')}>{selectedAsset.scope_type}</Descriptions.Item>
+            <Descriptions.Item label={t('hvacAsset.scopeId')}>{selectedAsset.scope_id}</Descriptions.Item>
             <Descriptions.Item label={t('hvacAsset.systemType')}>
               <Tag color={systemTypeColor[selectedAsset.system_type != null ? selectedAsset.system_type.toLowerCase() : ''] || 'default'}>
                 {selectedAsset.system_type?.toUpperCase()}
               </Tag>
             </Descriptions.Item>
+            <Descriptions.Item label={t('hvacAsset.roleType')}>{selectedAsset.role_type || '—'}</Descriptions.Item>
             <Descriptions.Item label={t('hvacAsset.ratedKw')}>
               <Text strong>{selectedAsset.rated_kw} kW</Text>
             </Descriptions.Item>
@@ -458,15 +472,14 @@ export default function HvacAssetPage() {
             <Descriptions.Item label={t('apiTest.createdAt')}>
               {selectedAsset.created_at ? new Date(selectedAsset.created_at).toLocaleString() : '-'}
             </Descriptions.Item>
-            <Descriptions.Item label={t('apiTest.updatedAt')}>
-              {selectedAsset.updated_at ? new Date(selectedAsset.updated_at).toLocaleString() : '-'}
-            </Descriptions.Item>
           </Descriptions>
         ) : (
           <Text type="secondary">{t('common.noData')}</Text>
         )}
       </Modal>
-    </PageContainer>
+    </>
   )
+
+  return embedded ? content : <PageContainer>{content}</PageContainer>
 }
 

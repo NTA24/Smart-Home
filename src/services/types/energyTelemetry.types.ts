@@ -3,9 +3,10 @@
 // ========================
 
 /**
- * Interface cho Energy Telemetry record
+ * Energy Telemetry — GET /api/energy/telemetry/energy response
  */
 export interface EnergyTelemetry {
+  id?: string
   device_id: string
   ts: string
   kwh_delta: number
@@ -17,20 +18,17 @@ export interface EnergyTelemetry {
 }
 
 /**
- * Params cho API query Energy Telemetry
- * GET /api/energy/telemetry/energy
+ * GET /api/energy/telemetry/energy — device_id, start, end required; limit (1–200000, default 10000)
  */
 export interface EnergyTelemetryQueryParams {
   device_id: string
   start: string
   end: string
-  limit?: number // max 200000, min 1, default 10000
+  limit?: number
 }
 
 /**
- * Payload khi ingest Energy Telemetry (bulk)
- * POST /api/energy/telemetry/energy/bulk
- * Body is an array of EnergyTelemetryIngestItem
+ * POST /api/energy/telemetry/energy/bulk — body: array of items
  */
 export interface EnergyTelemetryIngestItem {
   device_id: string

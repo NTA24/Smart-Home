@@ -18,7 +18,7 @@ import {
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { PageContainer, PageHeader, ContentCard, DataTable, TableActionButtons, CrudModal } from '@/components'
-import { getIaqSensors, saveIaqSensors } from '@/services/mockPersistence'
+import { iaqSensorApi } from '@/services'
 import type {
   IaqSensor,
   CreateIaqSensorPayload,
@@ -28,7 +28,11 @@ import { useBuildingStore } from '@/stores'
 
 const { Text } = Typography
 
-export default function IaqSensorPage() {
+export interface IaqSensorPageProps {
+  embedded?: boolean
+}
+
+export default function IaqSensorPage({ embedded }: IaqSensorPageProps = {}) {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
   const [loading, setLoading] = useState(false)
@@ -45,12 +49,14 @@ export default function IaqSensorPage() {
   const fetchSensors = async (limit = 10, offset = 0) => {
     setLoading(true)
     try {
-      const allItems = getIaqSensors<IaqSensor>([])
-      setSensors(allItems.slice(offset, offset + limit))
-      setTotal(allItems.length)
+      const res = await iaqSensorApi.getList({ limit, offset })
+      setSensors(res.items ?? [])
+      setTotal(res.total ?? 0)
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       message.error(`${t('apiTest.fetchError')}: ${errorMsg}`)
+      setSensors([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
@@ -59,8 +65,7 @@ export default function IaqSensorPage() {
   const fetchSensorById = async (id: string) => {
     setLoading(true)
     try {
-      const item = getIaqSensors<IaqSensor>([]).find((sensor) => sensor.device_id === id) || null
-      if (!item) throw new Error(`IAQ sensor ${id} not found`)
+      const item = await iaqSensorApi.getById(id)
       setSelectedSensor(item)
       setDetailVisible(true)
     } catch (err: unknown) {
@@ -75,23 +80,11 @@ export default function IaqSensorPage() {
     const hide = message.loading(t('apiTest.processing'), 0)
     try {
       const payload: CreateIaqSensorPayload = {
-        ...values,
+        device_id: values.device_id,
+        sensor_type: values.sensor_type,
         meta: values.meta ? (typeof values.meta === 'string' ? JSON.parse(values.meta) : values.meta) : {},
       }
-      const currentItems = getIaqSensors<IaqSensor>([])
-      if (currentItems.some((sensor) => sensor.device_id === payload.device_id)) {
-        throw new Error(`IAQ sensor ${payload.device_id} already exists`)
-      }
-      const now = new Date().toISOString()
-      const nextItems: IaqSensor[] = [
-        {
-          ...payload,
-          created_at: now,
-          updated_at: now,
-        },
-        ...currentItems,
-      ]
-      saveIaqSensors(nextItems)
+      await iaqSensorApi.create(payload)
       hide()
       message.success(t('apiTest.createSuccess'))
       setModalVisible(false)
@@ -112,20 +105,7 @@ export default function IaqSensorPage() {
         ...values,
         meta: values.meta ? (typeof values.meta === 'string' ? JSON.parse(values.meta) : values.meta) : undefined,
       }
-      const now = new Date().toISOString()
-      const currentItems = getIaqSensors<IaqSensor>([])
-      let found = false
-      const nextItems = currentItems.map((sensor) => {
-        if (sensor.device_id !== editingId) return sensor
-        found = true
-        return {
-          ...sensor,
-          ...payload,
-          updated_at: now,
-        }
-      })
-      if (!found) throw new Error(`IAQ sensor ${editingId} not found`)
-      saveIaqSensors(nextItems)
+      await iaqSensorApi.update(editingId, payload)
       hide()
       message.success(t('apiTest.updateSuccess'))
       setModalVisible(false)
@@ -142,10 +122,7 @@ export default function IaqSensorPage() {
   const handleDelete = async (id: string) => {
     const hide = message.loading(t('apiTest.processing'), 0)
     try {
-      const currentItems = getIaqSensors<IaqSensor>([])
-      const nextItems = currentItems.filter((sensor) => sensor.device_id !== id)
-      if (nextItems.length === currentItems.length) throw new Error(`IAQ sensor ${id} not found`)
-      saveIaqSensors(nextItems)
+      await iaqSensorApi.delete(id)
       hide()
       message.success(t('apiTest.deleteSuccess'))
       fetchSensors()
@@ -157,7 +134,7 @@ export default function IaqSensorPage() {
   }
 
   const openEditModal = (sensor: IaqSensor) => {
-    setEditingId(sensor.device_id)
+    setEditingId(sensor.id ?? sensor.device_id)
     form.setFieldsValue({
       sensor_type: sensor.sensor_type,
       meta: JSON.stringify(sensor.meta || {}, null, 2),
@@ -238,28 +215,29 @@ export default function IaqSensorPage() {
     },
   ]
 
-  return (
-    <PageContainer>
-      <PageHeader
-        title={t('iaqSensor.title')}
-        icon={<CloudOutlined />}
-        subtitle={`${selectedBuilding?.name || t('iaqSensor.allSites')} — ${t('common.total')}: ${total}`}
-      />
-
+  const content = (
+    <>
+      {!embedded && (
+        <PageHeader
+          title={t('iaqSensor.title')}
+          icon={<CloudOutlined />}
+          subtitle={`${selectedBuilding?.name || t('iaqSensor.allSites')} — ${t('common.total')}: ${total}`}
+        />
+      )}
       <Spin spinning={loading}>
         <ContentCard
           title={t('iaqSensor.sensorList')}
           titleIcon={<CloudOutlined />}
           titleIconColor="#52c41a"
           titleExtra={
-            <>
+            <span style={{ display: 'inline-flex', gap: 8 }}>
               <Button icon={<ReloadOutlined />} onClick={() => fetchSensors()}>
                 {t('apiTest.reload')}
               </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal} style={{ marginLeft: 8 }}>
                 {t('apiTest.create')}
               </Button>
-            </>
+            </span>
           }
         >
           <DataTable<IaqSensor>
@@ -352,6 +330,7 @@ export default function IaqSensorPage() {
           <Text type="secondary">{t('common.noData')}</Text>
         )}
       </Modal>
-    </PageContainer>
+    </>
   )
+  return embedded ? content : <PageContainer>{content}</PageContainer>
 }

@@ -27,7 +27,7 @@ import {
   BarChartOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { getEnergyAggregates, saveEnergyAggregates } from '@/services/mockPersistence'
+import { energyAggregateApi } from '@/services'
 import type {
   EnergyAggregate,
   CreateEnergyAggregatePayload,
@@ -37,7 +37,11 @@ import { useBuildingStore } from '@/stores'
 
 const { Text } = Typography
 
-export default function EnergyAggregatePage() {
+export interface EnergyAggregatePageProps {
+  embedded?: boolean
+}
+
+export default function EnergyAggregatePage({ embedded }: EnergyAggregatePageProps = {}) {
   const { t } = useTranslation()
   const { selectedBuilding } = useBuildingStore()
   const [loading, setLoading] = useState(false)
@@ -54,12 +58,14 @@ export default function EnergyAggregatePage() {
   const fetchData = async (limit = 10, offset = 0) => {
     setLoading(true)
     try {
-      const allItems = getEnergyAggregates<EnergyAggregate>([])
-      setAggregates(allItems.slice(offset, offset + limit))
-      setTotal(allItems.length)
+      const res = await energyAggregateApi.getList({ limit, offset })
+      setAggregates(res.items ?? [])
+      setTotal(res.total ?? 0)
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
       message.error(`${t('apiTest.fetchError')}: ${errorMsg}`)
+      setAggregates([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
@@ -68,8 +74,7 @@ export default function EnergyAggregatePage() {
   const fetchById = async (id: string) => {
     setLoading(true)
     try {
-      const item = getEnergyAggregates<EnergyAggregate>([]).find((aggregate) => aggregate.scope_id === id) || null
-      if (!item) throw new Error(`Energy aggregate ${id} not found`)
+      const item = await energyAggregateApi.getById(id)
       setSelectedItem(item)
       setDetailVisible(true)
     } catch (err: unknown) {
@@ -94,17 +99,7 @@ export default function EnergyAggregatePage() {
         kw_peak: values.kw_peak,
         breakdown: values.breakdown ? (typeof values.breakdown === 'string' ? JSON.parse(values.breakdown) : values.breakdown) : {},
       }
-      const now = new Date().toISOString()
-      const currentItems = getEnergyAggregates<EnergyAggregate>([])
-      const nextItems: EnergyAggregate[] = [
-        {
-          ...payload,
-          created_at: now,
-          updated_at: now,
-        },
-        ...currentItems,
-      ]
-      saveEnergyAggregates(nextItems)
+      await energyAggregateApi.create(payload)
       hide()
       message.success(t('apiTest.createSuccess'))
       setModalVisible(false)
@@ -128,20 +123,7 @@ export default function EnergyAggregatePage() {
         kw_peak: values.kw_peak,
         breakdown: values.breakdown ? (typeof values.breakdown === 'string' ? JSON.parse(values.breakdown) : values.breakdown) : undefined,
       }
-      const now = new Date().toISOString()
-      const currentItems = getEnergyAggregates<EnergyAggregate>([])
-      let found = false
-      const nextItems = currentItems.map((aggregate) => {
-        if (aggregate.scope_id !== editingId) return aggregate
-        found = true
-        return {
-          ...aggregate,
-          ...payload,
-          updated_at: now,
-        }
-      })
-      if (!found) throw new Error(`Energy aggregate ${editingId} not found`)
-      saveEnergyAggregates(nextItems)
+      await energyAggregateApi.update(editingId, payload)
       hide()
       message.success(t('apiTest.updateSuccess'))
       setModalVisible(false)
@@ -158,10 +140,7 @@ export default function EnergyAggregatePage() {
   const handleDelete = async (id: string) => {
     const hide = message.loading(t('apiTest.processing'), 0)
     try {
-      const currentItems = getEnergyAggregates<EnergyAggregate>([])
-      const nextItems = currentItems.filter((aggregate) => aggregate.scope_id !== id)
-      if (nextItems.length === currentItems.length) throw new Error(`Energy aggregate ${id} not found`)
-      saveEnergyAggregates(nextItems)
+      await energyAggregateApi.delete(id)
       hide()
       message.success(t('apiTest.deleteSuccess'))
       fetchData()
@@ -173,7 +152,7 @@ export default function EnergyAggregatePage() {
   }
 
   const openEditModal = (item: EnergyAggregate) => {
-    setEditingId(item.scope_id)
+    setEditingId(item.id ?? item.scope_id)
     form.setFieldsValue({
       kwh: item.kwh,
       kw_avg: item.kw_avg,
@@ -266,11 +245,11 @@ export default function EnergyAggregatePage() {
       width: 150,
       render: (_: unknown, record: EnergyAggregate) => (
         <Space size="small">
-          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => fetchById(record.scope_id)} />
+          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => fetchById(record.id ?? record.scope_id)} />
           <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)} />
           <Popconfirm
             title={t('apiTest.confirmDelete')}
-            onConfirm={() => handleDelete(record.scope_id)}
+            onConfirm={() => handleDelete(record.id ?? record.scope_id)}
             okText={t('apiTest.yes')}
             cancelText={t('apiTest.no')}
           >
@@ -281,34 +260,35 @@ export default function EnergyAggregatePage() {
     },
   ]
 
-  return (
-    <PageContainer>
-      <PageHeader
-        title={t('energyAggregate.title')}
-        icon={<BarChartOutlined />}
-        subtitle={`${selectedBuilding?.name || t('energyAggregate.allSites')} — ${t('common.total')}: ${total}`}
-      />
-
+  const content = (
+    <>
+      {!embedded && (
+        <PageHeader
+          title={t('energyAggregate.title')}
+          icon={<BarChartOutlined />}
+          subtitle={`${selectedBuilding?.name || t('energyAggregate.allSites')} — ${t('common.total')}: ${total}`}
+        />
+      )}
       <Spin spinning={loading}>
         <ContentCard
           title={t('energyAggregate.aggregateList')}
           titleIcon={<BarChartOutlined />}
           titleIconColor="#722ed1"
           titleExtra={
-            <>
+            <span style={{ display: 'inline-flex', gap: 8 }}>
               <Button icon={<ReloadOutlined />} onClick={() => fetchData()}>
                 {t('apiTest.reload')}
               </Button>
-              <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal} style={{ marginLeft: 8 }}>
                 {t('apiTest.create')}
               </Button>
-            </>
+            </span>
           }
         >
           <DataTable<EnergyAggregate>
             columns={columns}
             dataSource={aggregates}
-            rowKey={(record: EnergyAggregate) => `${record.scope_id}-${record.bucket}-${record.bucket_start}`}
+            rowKey={(record: EnergyAggregate) => record.id ?? `${record.scope_id}-${record.bucket}-${record.bucket_start}`}
             total={total}
             pageSize={10}
             onPageChange={(page, pageSize) => fetchData(pageSize, (page - 1) * pageSize)}
@@ -472,6 +452,7 @@ export default function EnergyAggregatePage() {
           <Text type="secondary">{t('common.noData')}</Text>
         )}
       </Modal>
-    </PageContainer>
+    </>
   )
+  return embedded ? content : <PageContainer>{content}</PageContainer>
 }

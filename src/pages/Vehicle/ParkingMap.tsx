@@ -325,7 +325,10 @@ export default function ParkingMap() {
         ? buildingRefs[selectedBuildingKey].current
         : bldRow
       if (!startEl) { setPathRoutes([]); return }
-      const bld = rel(startEl)
+      const bldRaw = rel(startEl)
+      // Nếu không chọn tòa cụ thể, dùng tâm X của container thay vì tâm bldRow
+      // để điểm xuất phát nằm trên đường dọc vàng giữa (tránh nằm trong block)
+      const bld = selectedBuildingKey ? bldRaw : { ...bldRaw, x: bldRaw.x }
       // Đường đi chỉ chạy theo vạch vàng ngang: 4 làn .parkmap_lane-h (roadH0–roadH3) + làn trong block .parkmap_block-lane
       const lanes = Array.from(container.querySelectorAll('.parkmap_lane-h'))
       if (lanes.length < 4) { setPathRoutes([]); return }
@@ -377,74 +380,128 @@ export default function ParkingMap() {
         }
       }
 
+      // Lấy bounding box của block chứa slot (để biết cạnh trái/phải block)
+      const getBlockBounds = (slotEl: Element) => {
+        const block = slotEl.closest('.parkmap_block')
+        if (!block) return null
+        const r = block.getBoundingClientRect()
+        return { l: r.left - c.left, r: r.right - c.left, t: r.top - c.top, b: r.bottom - c.top }
+      }
+
       const routes: PathRoute[] = []
       ids.forEach((slotId) => {
         const el = container.querySelector(`[data-slot-id="${slotId}"]`)
         if (!el) return
         const s = rel(el)
         const laneY = getBlockLaneY(el)
-        const vLaneX = pickVLaneTowardSlot(s.x)
+        const blockBounds = getBlockBounds(el)
 
-        // ── CHIẾN LƯỢC: Tòa → DỌC ra cạnh tòa (roadH1 hoặc roadH2) → DỌC theo vLaneX → NGANG vào slot ──
-        // QUAN TRỌNG: KHÔNG BAO GIỜ đi ngang từ bld.x sang vLaneX khi đang ở trong vùng block parking.
-        // Luôn đi DỌC từ tòa ra đường ngang vàng trước, rồi mới đi ngang.
+        // Tìm vLaneX: đường dọc vàng nằm NGOÀI block chứa slot, về phía tòa nhà
+        // Nếu slot cùng phía với tòa (hoặc cùng block), dùng đường dọc gần nhất bên ngoài block
+        let vLaneX: number
+        if (blockBounds) {
+          if (s.x >= bld.x) {
+            // Slot bên phải hoặc cùng cột tòa → dùng đường dọc bên PHẢI block
+            const rightOfBlock = uniqueVLaneXs.filter(x => x > blockBounds.r - 2)
+            vLaneX = rightOfBlock.length > 0 ? rightOfBlock[0] : pickGap(s.x)
+          } else {
+            // Slot bên trái tòa → dùng đường dọc bên TRÁI block
+            const leftOfBlock = uniqueVLaneXs.filter(x => x < blockBounds.l + 2)
+            vLaneX = leftOfBlock.length > 0 ? leftOfBlock[leftOfBlock.length - 1] : pickGap(s.x)
+          }
+        } else {
+          vLaneX = pickVLaneTowardSlot(s.x)
+        }
+
+        // ── ROUTING THUẦN ĐƯỜNG VÀNG ──
+        // Tòa nằm giữa roadH1 (trên) và roadH2 (dưới).
+        // roadH1 và roadH2 là đường ngang vàng NGOÀI block → an toàn đi ngang.
+        // vLaneX là đường dọc vàng NGOÀI block → an toàn đi dọc.
+        // Vào block: từ vLaneX dọc → laneY ngang → slot, hoặc từ roadH thẳng dọc xuống slot hàng trên.
+
+        // Xác định vào block từ bên nào: hướng gần tòa nhất
+        // entryX = cạnh trái hoặc phải của block (nơi tiếp giáp với đường dọc vàng)
+        const entryX = blockBounds
+          ? (vLaneX < s.x ? blockBounds.l : blockBounds.r)
+          : vLaneX
 
         const pts: [number, number][] = [[bld.x, bld.y]]
 
-        if (s.y < roadH1) {
-          // ── Slot ở phía TRÊN tòa (upper blocks P1/P2/P3/P4) ──
-          // Từ tòa: dọc lên roadH1 → dọc tiếp theo vLaneX lên → vào slot
-          pts.push([bld.x, roadH1])      // ra cạnh trên tòa (roadH1)
-          pts.push([vLaneX, roadH1])     // ngang theo roadH1 đến đường dọc vàng
+        // Dùng blockBounds để xác định vùng chính xác, không dùng s.y so sánh với roadH
+        // vì tâm slot có thể nằm gần ranh giới và bị phân loại sai
+        const isP1 = !blockBounds && s.y < roadH0
+        const isUpperBlock = blockBounds ? (blockBounds.b <= roadH2 - 5) : (s.y >= roadH0 && s.y < roadH1)
+        const sameColumn = blockBounds
+          ? (bld.x >= blockBounds.l - 5 && bld.x <= blockBounds.r + 5)
+          : false
 
-          if (s.y < roadH0) {
-            // Slot ở P1 (trên roadH0)
-            pts.push([vLaneX, roadH0])   // dọc lên roadH0
-            pts.push([s.x, roadH0])      // ngang vào cột slot
-            pts.push([s.x, s.y])         // dọc xuống slot
+        if (isP1) {
+          // ── Slot ở P1 ──
+          pts.push([bld.x, roadH1])
+          pts.push([vLaneX, roadH1])
+          pts.push([vLaneX, roadH0])
+          pts.push([s.x, roadH0])
+          pts.push([s.x, s.y])
+
+        } else if (isUpperBlock) {
+          // ── Slot ở upper block (P2/P3/P4) ──
+          pts.push([bld.x, roadH1])
+
+          if (sameColumn && laneY != null && s.y > laneY) {
+            // Cùng cột, hàng DƯỚI block: roadH1 → laneY → slot
+            pts.push([s.x, roadH1])
+            pts.push([s.x, laneY])
+            pts.push([s.x, s.y])
+          } else if (!sameColumn && laneY != null && s.y > laneY) {
+            // Khác cột, hàng DƯỚI: roadH1 → vLaneX → laneY → ngang → slot
+            pts.push([vLaneX, roadH1])
+            pts.push([vLaneX, laneY])
+            pts.push([s.x, laneY])
+            pts.push([s.x, s.y])
           } else {
-            // Slot ở upper block (P2/P3/P4), giữa roadH0 và roadH1
-            // Vào từ đường dọc vàng dọc xuống (từ roadH1 xuống laneY hoặc slot)
-            if (laneY != null && s.y > laneY) {
-              // Slot ở hàng dưới của block (dưới laneY)
-              pts.push([vLaneX, laneY])  // dọc xuống đến block-lane
-              pts.push([s.x, laneY])     // ngang theo block-lane
-              pts.push([s.x, s.y])       // dọc xuống slot
-            } else if (laneY != null && s.y < laneY) {
-              // Slot ở hàng trên của block (trên laneY) — đi từ roadH1 xuống trực tiếp
-              pts.push([s.x, roadH1])    // ngang đến cột slot trên roadH1
-              pts.push([s.x, s.y])       // dọc xuống vào slot
-            } else {
-              pts.push([vLaneX, s.y])
-              pts.push([s.x, s.y])
-            }
+            // Hàng TRÊN block: phải vào từ cạnh ngoài block rồi đi trên roadH0
+            // Chọn cạnh block gần tòa hơn
+            const blockEdgeX = blockBounds
+              ? (bld.x <= s.x ? blockBounds.l : blockBounds.r)
+              : vLaneX
+            pts.push([blockEdgeX, roadH1])  // ngang theo roadH1 đến cạnh block
+            pts.push([blockEdgeX, roadH0])  // dọc lên roadH0 dọc theo cạnh block
+            pts.push([s.x, roadH0])         // ngang vào cột slot trên roadH0
+            pts.push([s.x, s.y])            // dọc xuống slot
           }
-        } else {
-          // ── Slot ở phía DƯỚI tòa (lower blocks P5/P6/P7) ──
-          // Từ tòa: dọc xuống roadH2 → ngang theo roadH2 đến vLaneX → dọc tiếp → vào slot
-          pts.push([bld.x, roadH2])      // ra cạnh dưới tòa (roadH2)
-          pts.push([vLaneX, roadH2])     // ngang theo roadH2 đến đường dọc vàng
 
-          if (s.y >= roadH3) {
-            // Slot ở hàng dưới lower block (dưới roadH3)
-            pts.push([vLaneX, roadH3])   // dọc xuống roadH3
-            pts.push([s.x, roadH3])      // ngang vào cột slot
-            pts.push([s.x, s.y])         // dọc xuống slot
-          } else {
-            // Slot ở hàng trên lower block (giữa roadH2 và roadH3)
-            if (laneY != null && s.y < laneY) {
-              // Slot ở hàng trên của block (trên laneY) — đi từ roadH2 xuống trực tiếp
+        } else {
+          // ── Slot ở lower block (P5/P6/P7) ──
+          pts.push([bld.x, roadH2])
+
+          if (sameColumn) {
+            if (laneY != null) {
               pts.push([s.x, roadH2])
-              pts.push([s.x, s.y])
-            } else if (laneY != null) {
-              // Slot ở hàng dưới của block (dưới laneY)
-              pts.push([vLaneX, laneY])
               pts.push([s.x, laneY])
               pts.push([s.x, s.y])
             } else {
-              pts.push([vLaneX, s.y])
+              pts.push([s.x, roadH2])
               pts.push([s.x, s.y])
             }
+          } else if (laneY != null && s.y < laneY) {
+            // Hàng TRÊN lower block
+            pts.push([vLaneX, roadH2])
+            pts.push([vLaneX, laneY])
+            pts.push([s.x, laneY])
+            pts.push([s.x, s.y])
+          } else if (s.y >= roadH3) {
+            pts.push([vLaneX, roadH2])
+            pts.push([vLaneX, roadH3])
+            pts.push([s.x, roadH3])
+            pts.push([s.x, s.y])
+          } else if (laneY != null) {
+            pts.push([vLaneX, roadH2])
+            pts.push([vLaneX, laneY])
+            pts.push([s.x, laneY])
+            pts.push([s.x, s.y])
+          } else {
+            pts.push([s.x, roadH2])
+            pts.push([s.x, s.y])
           }
         }
 

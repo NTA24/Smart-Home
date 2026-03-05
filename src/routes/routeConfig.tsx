@@ -54,6 +54,7 @@ const EnergyAggregatePage = lazy(() => import('@/pages/Energy/EnergyAggregatePag
 const EnergyTelemetryPage = lazy(() => import('@/pages/Energy/EnergyTelemetryPage'))
 const IaqTelemetryPage = lazy(() => import('@/pages/Energy/IaqTelemetryPage'))
 const HvacTelemetryPage = lazy(() => import('@/pages/Energy/HvacTelemetryPage'))
+const EnergyMvPage = lazy(() => import('@/pages/Energy/EnergyMvPage'))
 const EnergyDeviceManagement = lazy(() => import('@/pages/Energy/EnergyDeviceManagement'))
 
 // Elevator
@@ -358,6 +359,36 @@ export const routes: RouteConfig[] = [
     parentKey: 'energy-management',
     element: <EnergyDeviceManagement />,
   },
+  {
+    path: 'energy-device-management/energy-meters',
+    labelKey: 'menu.energyMeters',
+    parentKey: 'energy-management',
+    element: <EnergyDeviceManagement />,
+  },
+  {
+    path: 'energy-device-management/hvac-assets',
+    labelKey: 'menu.hvacAssets',
+    parentKey: 'energy-management',
+    element: <EnergyDeviceManagement />,
+  },
+  {
+    path: 'energy-device-management/iaq-sensors',
+    labelKey: 'menu.iaqSensors',
+    parentKey: 'energy-management',
+    element: <EnergyDeviceManagement />,
+  },
+  {
+    path: 'energy-device-management/energy-aggregates',
+    labelKey: 'menu.energyAggregates',
+    parentKey: 'energy-management',
+    element: <EnergyDeviceManagement />,
+  },
+  {
+    path: 'energy-device-management/energy-mv',
+    labelKey: 'menu.energyMv',
+    parentKey: 'energy-management',
+    element: <EnergyDeviceManagement />,
+  },
 
   // ── Remote Monitoring ─────────────────────────────────────────────────────
   {
@@ -395,6 +426,12 @@ export const routes: RouteConfig[] = [
     labelKey: 'menu.hvacTelemetry',
     parentKey: 'remote-monitoring',
     element: <HvacTelemetryPage />,
+  },
+  {
+    path: 'energy-mv',
+    labelKey: 'menu.energyMv',
+    parentKey: 'remote-monitoring',
+    element: <EnergyMvPage />,
   },
 
   // ── Elevator ──────────────────────────────────────────────────────────────

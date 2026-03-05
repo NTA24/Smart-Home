@@ -3,8 +3,8 @@
 // ========================
 
 /**
- * Interface cho Energy Aggregate entity
- * Dựa theo Swagger: campus.iot-platform.io.vn
+ * Energy Aggregate — GET /api/energy/aggregates-table/list, GET /api/energy/aggregates-table/{id}
+ * Response: id, scope_type, scope_id, bucket, bucket_start, kwh, kw_avg, kw_peak, breakdown, created_at
  */
 export interface EnergyAggregate {
   id: string
@@ -17,7 +17,6 @@ export interface EnergyAggregate {
   kw_peak: number
   breakdown: Record<string, unknown>
   created_at?: string
-  updated_at?: string
 }
 
 /**
@@ -47,7 +46,7 @@ export interface UpdateEnergyAggregatePayload {
 }
 
 /**
- * Params cho API lấy danh sách Energy Aggregate
+ * GET /api/energy/aggregates-table/list — limit (1–500, default 50), offset (min 0, default 0)
  */
 export interface EnergyAggregateListParams {
   limit?: number

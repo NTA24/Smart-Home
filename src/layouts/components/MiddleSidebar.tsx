@@ -19,6 +19,9 @@ import { routeToParentKey, routeToLabelKey } from '@/routes/routeConfig'
 import { menuConfig, ADMIN1_HIDDEN_GROUP_KEYS } from './menuConfig'
 import type { MenuGroup } from './menuConfig'
 
+/** Menu group keys that are disabled (not clickable, no expand). */
+const DISABLED_MENU_GROUP_KEYS = new Set<string>(['fire-alarm'])
+
 const { Sider } = Layout
 const { Text } = Typography
 
@@ -58,8 +61,9 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
   }, [location.pathname])
 
   const handleOpenChange = (keys: string[]) => {
-    setOpenKeys(keys)
-    sessionStorage.setItem('menu-open-keys', JSON.stringify(keys))
+    const filtered = keys.filter(k => !DISABLED_MENU_GROUP_KEYS.has(k))
+    setOpenKeys(filtered)
+    sessionStorage.setItem('menu-open-keys', JSON.stringify(filtered))
   }
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
@@ -92,13 +96,20 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
 
     // Group với children
     const group = entry as MenuGroup
+    const isGroupDisabled = DISABLED_MENU_GROUP_KEYS.has(group.key)
     const groupLabel = (
       <span
         onClick={e => {
+          if (isGroupDisabled) {
+            e.preventDefault()
+            e.stopPropagation()
+            return
+          }
           e.stopPropagation()
           const currentGroupKey = routeToParentKey[location.pathname]
           if (currentGroupKey !== group.key) navigate(group.defaultRoute)
         }}
+        style={isGroupDisabled ? { cursor: 'not-allowed', opacity: 0.65 } : undefined}
       >
         {t(group.labelKey)}
       </span>
@@ -108,10 +119,11 @@ export default function MiddleSidebar({ collapsed, leftNavWidth }: MiddleSidebar
       key: group.key,
       icon: group.icon,
       label: groupLabel,
+      disabled: isGroupDisabled,
       children: group.children.map(child => ({
         key: child.key,
         label: t(child.labelKey),
-        disabled: child.disabled,
+        disabled: child.disabled ?? isGroupDisabled,
       })),
     }
   })
