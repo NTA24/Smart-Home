@@ -251,11 +251,11 @@ export default function ParkingMap() {
     ? allSlots.filter(s => (s.plate || '').toLowerCase().replace(/\s/g, '').includes(plateSearchApplied.trim().toLowerCase().replace(/\s/g, '')))
     : []
 
+  // Chỉ highlight + chỉ đường khi bấm Tìm kiếm (biển số), không khi đổi filter loại xe
   const highlightedIds = useMemo(() => {
     if (searchResultSlots.length > 0) return new Set(searchResultSlots.map(s => s.id))
-    if (vehicleFilter !== 'all' && filteredSlots.length > 0) return new Set(filteredSlots.map(s => s.id))
     return new Set<string>()
-  }, [searchResultSlots, vehicleFilter, filteredSlots])
+  }, [searchResultSlots])
 
   const mapSlots = allSlots.slice(0, 94)
   let _si = 0

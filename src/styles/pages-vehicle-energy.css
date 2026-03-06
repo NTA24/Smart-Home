@@ -381,6 +381,19 @@
   font-weight: 600;
 }
 
+/* Danh sách khu vực đỗ xe: scroll khi > 4 khu (tránh card quá dài) */
+.vehicle_zone-list {
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 4px;
+}
+
+.vehicle_zone-list .vehicle_zone-row:last-child {
+  margin-bottom: 0;
+}
+
 .vehicle_zone-row {
   margin-bottom: 20px;
 }

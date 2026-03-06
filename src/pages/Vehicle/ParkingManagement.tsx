@@ -286,27 +286,29 @@ export default function ParkingManagement() {
             titleIconColor="#1890ff"
             className="w-full"
           >
-            {parkingZones.map((zone) => {
-              const percent = Math.round((zone.used / zone.total) * 100)
-              return (
-                <div key={zone.name} className="vehicle_zone-row">
-                  <div className="vehicle_zone-header">
-                    <Text strong className="vehicle_zone-name">{zone.name}</Text>
-                    <Text type="secondary" className="text-sm">
-                      {zone.used}/{zone.total} ({percent}%)
-                    </Text>
+            <div className="vehicle_zone-list">
+              {parkingZones.map((zone) => {
+                const percent = Math.round((zone.used / zone.total) * 100)
+                return (
+                  <div key={zone.name} className="vehicle_zone-row">
+                    <div className="vehicle_zone-header">
+                      <Text strong className="vehicle_zone-name">{zone.name}</Text>
+                      <Text type="secondary" className="text-sm">
+                        {zone.used}/{zone.total} ({percent}%)
+                      </Text>
+                    </div>
+                    <Progress
+                      percent={percent}
+                      showInfo={false}
+                      strokeColor={percent > 80 ? '#f5222d' : percent > 60 ? '#faad14' : '#52c41a'}
+                      trailColor="#f0f0f0"
+                      strokeWidth={8}
+                      className="rounded-4"
+                    />
                   </div>
-                  <Progress
-                    percent={percent}
-                    showInfo={false}
-                    strokeColor={percent > 80 ? '#f5222d' : percent > 60 ? '#faad14' : '#52c41a'}
-                    trailColor="#f0f0f0"
-                    strokeWidth={8}
-                    className="rounded-4"
-                  />
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </ContentCard>
         </Col>
       </Row>
