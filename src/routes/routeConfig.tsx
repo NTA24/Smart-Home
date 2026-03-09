@@ -56,6 +56,7 @@ const IaqTelemetryPage = lazy(() => import('@/pages/Energy/IaqTelemetryPage'))
 const HvacTelemetryPage = lazy(() => import('@/pages/Energy/HvacTelemetryPage'))
 const EnergyMvPage = lazy(() => import('@/pages/Energy/EnergyMvPage'))
 const EnergyDeviceManagement = lazy(() => import('@/pages/Energy/EnergyDeviceManagement'))
+const EnergyDeviceDashboardPage = lazy(() => import('@/pages/Energy/EnergyDeviceDashboardPage'))
 
 // Elevator
 const ElevatorDashboard = lazy(() => import('@/pages/Elevator/ElevatorDashboard'))
@@ -388,6 +389,18 @@ export const routes: RouteConfig[] = [
     labelKey: 'menu.energyMv',
     parentKey: 'energy-management',
     element: <EnergyDeviceManagement />,
+  },
+  {
+    path: 'energy-device-management/device-config',
+    labelKey: 'energyDeviceManagement.configTitle',
+    parentKey: 'energy-management',
+    element: <EnergyDeviceManagement />,
+  },
+  {
+    path: 'energy-device-dashboard',
+    labelKey: 'menu.deviceDashboard',
+    parentKey: 'energy-management',
+    element: <EnergyDeviceDashboardPage />,
   },
 
   // ── Remote Monitoring ─────────────────────────────────────────────────────

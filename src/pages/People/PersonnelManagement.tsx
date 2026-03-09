@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Form, Input, Button, Space, Tag, Select } from 'antd'
 import { useTranslation } from 'react-i18next'
 import type { ColumnsType } from 'antd/es/table'
-import { PlusOutlined } from '@ant-design/icons'
+import { PlusOutlined, CrownOutlined } from '@ant-design/icons'
 import {
   PageContainer,
   PageHeader,
@@ -29,6 +29,7 @@ interface PersonnelRecord {
   contactNumber: string
   email: string
   status: 'active' | 'inactive'
+  isVip?: boolean
 }
 
 interface PersonnelFilterValues {
@@ -48,12 +49,12 @@ interface PersonnelFormValues {
 }
 
 const mockData: PersonnelRecord[] = [
-  { key: '1', serialNumber: 1, employeeId: 'NV001', name: 'Nguyễn Văn A', department: 'Kỹ thuật', position: 'Kỹ sư phần mềm', contactNumber: '090****1001', email: 'nva@company.com', status: 'active' },
-  { key: '2', serialNumber: 2, employeeId: 'NV002', name: 'Trần Thị B', department: 'Nhân sự', position: 'Trưởng phòng', contactNumber: '090****1002', email: 'ttb@company.com', status: 'active' },
-  { key: '3', serialNumber: 3, employeeId: 'NV003', name: 'Lê Văn C', department: 'Kỹ thuật', position: 'Kỹ sư hệ thống', contactNumber: '090****1003', email: 'lvc@company.com', status: 'active' },
-  { key: '4', serialNumber: 4, employeeId: 'NV004', name: 'Phạm Thị D', department: 'Kế toán', position: 'Kế toán viên', contactNumber: '090****1004', email: 'ptd@company.com', status: 'inactive' },
-  { key: '5', serialNumber: 5, employeeId: 'NV005', name: 'Hoàng Văn E', department: 'Bảo vệ', position: 'Nhân viên bảo vệ', contactNumber: '090****1005', email: 'hve@company.com', status: 'active' },
-  { key: '6', serialNumber: 6, employeeId: 'NV006', name: 'Vũ Thị F', department: 'Hành chính', position: 'Lễ tân', contactNumber: '090****1006', email: 'vtf@company.com', status: 'active' },
+  { key: '1', serialNumber: 1, employeeId: 'NV001', name: 'Nguyễn Văn A', department: 'Kỹ thuật', position: 'Kỹ sư phần mềm', contactNumber: '090****1001', email: 'nva@company.com', status: 'active', isVip: true },
+  { key: '2', serialNumber: 2, employeeId: 'NV002', name: 'Trần Thị B', department: 'Nhân sự', position: 'Trưởng phòng', contactNumber: '090****1002', email: 'ttb@company.com', status: 'active', isVip: false },
+  { key: '3', serialNumber: 3, employeeId: 'NV003', name: 'Lê Văn C', department: 'Kỹ thuật', position: 'Kỹ sư hệ thống', contactNumber: '090****1003', email: 'lvc@company.com', status: 'active', isVip: false },
+  { key: '4', serialNumber: 4, employeeId: 'NV004', name: 'Phạm Thị D', department: 'Kế toán', position: 'Kế toán viên', contactNumber: '090****1004', email: 'ptd@company.com', status: 'inactive', isVip: false },
+  { key: '5', serialNumber: 5, employeeId: 'NV005', name: 'Hoàng Văn E', department: 'Bảo vệ', position: 'Nhân viên bảo vệ', contactNumber: '090****1005', email: 'hve@company.com', status: 'active', isVip: false },
+  { key: '6', serialNumber: 6, employeeId: 'NV006', name: 'Vũ Thị F', department: 'Hành chính', position: 'Lễ tân', contactNumber: '090****1006', email: 'vtf@company.com', status: 'active', isVip: false },
 ]
 
 export default function PersonnelManagement() {
@@ -95,7 +96,19 @@ export default function PersonnelManagement() {
   const columns: ColumnsType<PersonnelRecord> = [
     { title: t('personnel.serialNumber'), dataIndex: 'serialNumber', key: 'serialNumber', width: 70, align: 'center' },
     { title: t('personnel.employeeId'), dataIndex: 'employeeId', key: 'employeeId', width: 100 },
-    { title: t('personnel.name'), dataIndex: 'name', key: 'name', width: 150, ellipsis: true },
+    {
+      title: t('personnel.name'),
+      dataIndex: 'name',
+      key: 'name',
+      width: 150,
+      ellipsis: true,
+      render: (name: string, record: PersonnelRecord) => (
+        <span>
+          {record.isVip && <CrownOutlined className="text-amber-500 mr-1" />}
+          {name}
+        </span>
+      ),
+    },
     { title: t('personnel.department'), dataIndex: 'department', key: 'department', width: 120 },
     { title: t('personnel.position'), dataIndex: 'position', key: 'position', width: 150, ellipsis: true },
     { title: t('personnel.contactNumber'), dataIndex: 'contactNumber', key: 'contactNumber', width: 130 },
@@ -240,6 +253,7 @@ export default function PersonnelManagement() {
           total={filteredData.length}
           showSizeChanger
           showQuickJumper
+          rowClassName={(record) => (record.isVip ? 'personnel-row-vip' : '')}
         />
       </ContentCard>
 

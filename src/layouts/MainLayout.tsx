@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Layout, theme } from 'antd'
 import { Outlet, useLocation } from 'react-router'
-import { AiChatFab, AppFooter, AppHeader, LeftNav, MiddleSidebar, LEFT_NAV_WIDTH, MIDDLE_SIDEBAR_WIDTH } from './components'
+import { AiChatFab, AppFooter, AppHeader, LeftNav, MiddleSidebar, LEFT_NAV_WIDTH, LEFT_NAV_WIDTH_COLLAPSED, MIDDLE_SIDEBAR_WIDTH } from './components'
 import { useHomeNavigationStore } from '@/stores'
 import { useMediaQuery, MOBILE_BREAKPOINT } from '@/hooks'
 
@@ -47,6 +47,20 @@ export default function MainLayout() {
     sessionStorage.setItem('sidebar-collapsed', JSON.stringify(next))
   }
 
+  // ── Left nav collapse (bar trái thu gọn) ───────────────────────────────────
+  const [leftNavCollapsed, setLeftNavCollapsed] = useState(() => {
+    const saved = sessionStorage.getItem('left-nav-collapsed')
+    return saved ? JSON.parse(saved) : false
+  })
+
+  const handleLeftNavToggle = () => {
+    const next = !leftNavCollapsed
+    setLeftNavCollapsed(next)
+    sessionStorage.setItem('left-nav-collapsed', JSON.stringify(next))
+  }
+
+  const leftNavWidth = leftNavCollapsed ? LEFT_NAV_WIDTH_COLLAPSED : LEFT_NAV_WIDTH
+
   // ── Mobile drawer state ────────────────────────────────────────────────────
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const closeMobileDrawer = () => setMobileMenuOpen(false)
@@ -54,7 +68,7 @@ export default function MainLayout() {
 
   // ── Layout math ─────────────────────────────────────────────────────────────
   const middleSiderWidth = isHomePage ? 0 : (collapsed ? 0 : MIDDLE_SIDEBAR_WIDTH)
-  const totalLeftMargin = isMobile ? 0 : LEFT_NAV_WIDTH + middleSiderWidth
+  const totalLeftMargin = isMobile ? 0 : leftNavWidth + middleSiderWidth
 
   const headerToggle = isMobile ? toggleMobileDrawer : handleToggleCollapse
 
@@ -65,6 +79,8 @@ export default function MainLayout() {
         <LeftNav
           useNewgenLogo={useNewgenLogo}
           onLogoClick={handleLogoClick}
+          collapsed={leftNavCollapsed}
+          onToggleCollapse={handleLeftNavToggle}
         />
       )}
 
@@ -72,7 +88,7 @@ export default function MainLayout() {
       {!isMobile && !isHomePage && (
         <MiddleSidebar
           collapsed={collapsed}
-          leftNavWidth={LEFT_NAV_WIDTH}
+          leftNavWidth={leftNavWidth}
         />
       )}
 

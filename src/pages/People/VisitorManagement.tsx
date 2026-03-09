@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Tabs, Input, Button, Card, Row, Col, Avatar, Typography, Space, List, Badge, Modal, Form, message } from 'antd'
+import { Tabs, Input, Button, Card, Row, Col, Avatar, Typography, Space, List, Badge, Modal, Form, message, Tag } from 'antd'
 import { useTranslation } from 'react-i18next'
 import {
   BellOutlined,
@@ -11,38 +11,22 @@ import {
   PlusOutlined,
   DownOutlined,
   SettingOutlined,
+  CrownOutlined,
 } from '@ant-design/icons'
 import { PageContainer, ContentCard } from '@/components'
+import { getVisitorsFromAccessLogs, type VisitorFromLog } from './accessLogData'
 
 const { Text } = Typography
 
-const FACE_IMAGES = [
-  '/security-faces/stored-face-1.png',
-  '/security-faces/stored-face-2.png',
-  '/security-faces/stored-face-3.png',
-  '/security-faces/stored-face-4.png',
-  '/security-faces/stored-face-5.png',
-  '/security-faces/stored-face-6.png',
-  '/security-faces/stored-face-7.png',
-]
-
-const TODAY_VISITORS_RAW = [
-  { key: '1', name: 'Ông Dũng Nguyễn', email: 'nguyendung@company.com', visitTime: '20/04 10:12:00', hostUnit: 'Trần Linh (ABC)', accessScope: 'Sảnh, Tầng 15', slot: '25/04, 20:46 - 21:00', type: 'Đến trong ngày', qrCode: 'QRX2345', status: 'CHECKEDIN' },
-  { key: '2', name: 'Ms. Ngọc Trần', email: 'ngoctran@mail.com', visitTime: '20/04 09:30:00', hostUnit: 'Căn A-1201', accessScope: 'Sảnh, Tầng 12', slot: '20/04 14:00-16:00', type: 'Đặt trước', qrCode: 'QRX2346', status: 'PENDING' },
-  { key: '3', name: 'Giao hàng GHN', email: '-', visitTime: '20/04 10:00:00', hostUnit: 'Căn B-0302', accessScope: 'Chỉ sảnh', slot: '10:00-10:30', type: 'Một lần', qrCode: 'QRX2347', status: 'CHECKOUT' },
-]
-
-const TODAY_VISITORS = TODAY_VISITORS_RAW.map((v, i) => ({
-  ...v,
-  face: FACE_IMAGES[Number(v.key) % FACE_IMAGES.length] ?? FACE_IMAGES[i % FACE_IMAGES.length],
-}))
+/** Dữ liệu khách ra vào lấy từ nhật ký (Access Logs). */
+const TODAY_VISITORS = getVisitorsFromAccessLogs()
 
 export default function VisitorManagement() {
   const { t } = useTranslation()
   const [form] = Form.useForm()
   const [activeTab, setActiveTab] = useState('today')
   const [detailTab, setDetailTab] = useState('profiles')
-  const [selectedVisitor, setSelectedVisitor] = useState<typeof TODAY_VISITORS[0] | null>(TODAY_VISITORS[0])
+  const [selectedVisitor, setSelectedVisitor] = useState<VisitorFromLog | null>(TODAY_VISITORS[0])
   const [search, setSearch] = useState('')
   const [inviteModalOpen, setInviteModalOpen] = useState(false)
 
@@ -103,12 +87,21 @@ export default function VisitorManagement() {
               dataSource={filteredToday}
               renderItem={(item) => (
                 <List.Item
-                  className={`cursor-pointer ${selectedVisitor?.key === item.key ? 'visitor-mgmt-item-active' : ''}`}
+                  className={`cursor-pointer ${selectedVisitor?.key === item.key ? 'visitor-mgmt-item-active' : ''} ${item.isVip ? 'visitor-mgmt-item-vip' : ''}`}
                   onClick={() => setSelectedVisitor(item)}
                 >
                   <List.Item.Meta
-                    avatar={<Avatar size={40} src={item.face} icon={<UserOutlined />} />}
-                    title={item.name}
+                    avatar={
+                      <div className="access-logs-avatar-wrap">
+                        <Avatar size={40} src={item.face} icon={<UserOutlined />} />
+                        {item.isVip && (
+                          <span className="access-logs-avatar-crown access-logs-avatar-crown--lg">
+                            <CrownOutlined />
+                          </span>
+                        )}
+                      </div>
+                    }
+                    title={<span>{item.isVip && <CrownOutlined className="text-amber-500 mr-1" />}{item.name}</span>}
                     description={item.visitTime}
                   />
                 </List.Item>
@@ -117,11 +110,23 @@ export default function VisitorManagement() {
           </div>
           <div className="flex-1 min-w-0">
             {selectedVisitor ? (
-              <ContentCard className="visitor-mgmt-detail-card">
+              <ContentCard className={`visitor-mgmt-detail-card ${selectedVisitor.isVip ? 'visitor-mgmt-detail-card-vip' : ''}`}>
                 <div className="flex flex-wrap items-start gap-12 visitor-mgmt-profile-row">
-                  <Avatar size={64} src={selectedVisitor.face} icon={<UserOutlined />} />
+                  <div className="access-logs-avatar-wrap">
+                    <Avatar size={64} src={selectedVisitor.face} icon={<UserOutlined />} />
+                    {selectedVisitor.isVip && (
+                      <span className="access-logs-avatar-crown access-logs-avatar-crown--xl">
+                        <CrownOutlined />
+                      </span>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <div className="visitor-mgmt-name">{selectedVisitor.name}</div>
+                    <div className="visitor-mgmt-name flex items-center gap-8 flex-wrap">
+                      {selectedVisitor.name}
+                      {selectedVisitor.isVip && (
+                        <Tag color="gold" icon={<CrownOutlined />}>VIP</Tag>
+                      )}
+                    </div>
                     <div className="visitor-mgmt-meta">{selectedVisitor.visitTime}</div>
                     <div className="flex flex-wrap items-center gap-8">
                       <Text type="secondary">{selectedVisitor.email}</Text>

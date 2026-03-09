@@ -112,6 +112,57 @@
   font-weight: 500;
 }
 
+/* ── Left nav thu gọn (chỉ icon) ───────────────────────────────────────────── */
+.left-nav--collapsed {
+  width: 64px;
+}
+
+.left-nav--collapsed .left-nav_logo {
+  padding: 8px;
+}
+
+.left-nav--collapsed .left-nav_logo img {
+  max-height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+.left-nav--collapsed .left-nav_item-label {
+  display: none;
+}
+
+.left-nav--collapsed .left-nav_item {
+  justify-content: center;
+  padding: 12px;
+  margin: 4px 8px;
+}
+
+.left-nav--collapsed .left-nav_items {
+  padding: 12px 0;
+}
+
+.left-nav_toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.left-nav_toggle:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* ── Nav Dropdown ── */
 .nav-dropdown {
   background: #fff;

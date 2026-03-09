@@ -99,6 +99,27 @@
   box-shadow: 0 2px 12px rgba(24, 144, 255, 0.12);
 }
 
+/* Khách VIP – highlight vàng */
+.visitor-mgmt-page .visitor-mgmt-list .ant-list-item.visitor-mgmt-item-vip {
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.15) 0%, rgba(250, 204, 21, 0.05) 100%);
+  border-color: rgba(250, 204, 21, 0.35);
+}
+.visitor-mgmt-page .visitor-mgmt-list .ant-list-item.visitor-mgmt-item-vip:hover {
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.22) 0%, rgba(250, 204, 21, 0.08) 100%);
+  border-color: rgba(250, 204, 21, 0.5);
+}
+.visitor-mgmt-page .visitor-mgmt-list .ant-list-item.visitor-mgmt-item-vip.visitor-mgmt-item-active {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.2) 0%, rgba(250, 204, 21, 0.08) 100%);
+  border-color: rgba(250, 204, 21, 0.5);
+  box-shadow: 0 2px 12px rgba(250, 204, 21, 0.2);
+}
+
+.visitor-mgmt-page .visitor-mgmt-detail-card.visitor-mgmt-detail-card-vip .ant-card {
+  border-color: rgba(250, 204, 21, 0.5);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(250, 204, 21, 0.06) 100%);
+  box-shadow: 0 2px 12px rgba(250, 204, 21, 0.12);
+}
+
 .visitor-mgmt-page .visitor-mgmt-list .ant-list-item .ant-list-item-meta-title {
   font-weight: 600;
   color: #1a1a2e;

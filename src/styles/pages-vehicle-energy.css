@@ -1459,3 +1459,476 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
+
+/* Add new device modal: fixed height for entire content area */
+.add-device-modal .ant-modal-content {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+.add-device-modal .ant-modal-body {
+  flex: 1;
+  min-height: 360px;
+  overflow-y: auto;
+}
+
+/* Edit device profile modal: fixed height, scroll content only (no page scroll) */
+.edit-device-profile-modal-wrap {
+  overflow: hidden !important;
+}
+.edit-device-profile-modal.ant-modal {
+  max-height: 90vh;
+  padding-bottom: 0;
+  top: 5vh;
+}
+.edit-device-profile-modal .ant-modal-content {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+.edit-device-profile-modal .ant-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  max-height: calc(90vh - 110px);
+}
+.edit-device-profile-modal .ant-modal-footer {
+  flex-shrink: 0;
+}
+
+/* Edit device profile – LWM2M tabs: fit in panel, scroll if needed */
+.edit-device-profile-lwm2m-tabs.ant-tabs {
+  min-width: 0;
+}
+.edit-device-profile-lwm2m-tabs .ant-tabs-nav {
+  margin-bottom: 12px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+.edit-device-profile-lwm2m-tabs .ant-tabs-nav-list {
+  flex-wrap: nowrap;
+  max-width: 100%;
+}
+.edit-device-profile-lwm2m-tabs .ant-tabs-tab {
+  padding: 6px 10px;
+  white-space: nowrap;
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+}
+.edit-device-profile-lwm2m-tabs .ant-tabs-tab .ant-tabs-tab-btn {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: inline-block;
+}
+.edit-device-profile-lwm2m-tabs .ant-tabs-tab-btn {
+  font-size: 12px;
+}
+.edit-device-profile-lwm2m-tabs .ant-tabs-content-holder {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Add new device modal: steps on one row, credentials on top row */
+.add-device-steps.ant-steps {
+  flex-wrap: nowrap;
+}
+.add-device-steps .ant-steps-item {
+  flex: none;
+  padding-inline-start: 0;
+}
+.add-device-steps .ant-steps-item-title {
+  white-space: nowrap;
+}
+.add-device-steps .ant-steps-item-subtitle {
+  white-space: nowrap;
+  margin-left: 2px;
+}
+.add-device-steps .ant-steps-item-content {
+  display: inline-block;
+}
+.add-device-steps .ant-steps-item-tail {
+  padding: 0 12px;
+}
+
+.add-device-profile-image-placeholder {
+  min-width: 120px;
+  min-height: 80px;
+  padding: 12px 16px;
+  background: #fafafa;
+  border: 1px dashed #d9d9d9;
+  border-radius: 8px;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.add-device-profile-image-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.add-device-profile-image-link-wrap {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.add-device-profile-image-link-label {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}
+.add-device-profile-image-link-input {
+  max-width: 320px;
+}
+input.hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Credential type tabs: fixed equal width + fixed height */
+.add-device-credentials-tabs.ant-segmented,
+.add-device-credentials-tabs .ant-segmented-group {
+  display: flex !important;
+  width: 100%;
+}
+.add-device-credentials-tabs.ant-segmented {
+  min-height: 40px;
+  height: 40px;
+}
+.add-device-credentials-tabs .ant-segmented-group {
+  flex: 1;
+  min-width: 0;
+}
+.add-device-credentials-tabs .ant-segmented-item {
+  flex: 1 1 0% !important;
+  min-width: 0;
+  max-width: none;
+  min-height: 40px;
+  height: 40px;
+  line-height: 38px;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+.add-device-credentials-tabs .ant-segmented-item-label {
+  display: block;
+  text-align: center;
+  width: 100%;
+}
+
+/* Credentials content: same height for Access token, X.509, MQTT Basic (no layout jump) */
+.add-device-credentials-content {
+  min-height: 260px;
+  height: 260px;
+  overflow-y: auto;
+}
+
+/* ── Nút quay lại (Quản lý thiết bị / Cấu hình thiết bị) ───────────────────── */
+.energy-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  border-color: #d9d9d9;
+  color: rgba(0, 0, 0, 0.88);
+  background: #fff;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.energy-back-btn:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+  background: #f0f7ff;
+}
+.energy-back-btn .anticon {
+  font-size: 0.875rem;
+}
+
+/* Nút "Quay lại cấu hình thiết bị" thụt vào trong (gateway list) */
+.energy-back-btn-indent {
+  margin-left: 16px;
+}
+
+/* ── Danh sách gateway: banner + card ──────────────────────────────────────── */
+.energy-gateway-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.25);
+}
+.energy-gateway-banner-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.energy-gateway-banner-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.95);
+}
+.energy-gateway-banner-time {
+  font-size: 0.8125rem;
+  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.9);
+}
+.energy-gateway-banner-fullscreen {
+  color: #fff !important;
+}
+.energy-gateway-banner-fullscreen:hover {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.energy-gateway-card {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.energy-gateway-card .content-card_title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* ── Add entity view modal: khoảng cách đều, giao diện gọn ───────────────────── */
+.add-entity-view-modal .ant-modal-body {
+  padding: 24px 24px 20px;
+}
+.add-entity-view-modal .ant-form-item {
+  margin-bottom: 20px;
+}
+.add-entity-view-modal .ant-form-item:last-of-type {
+  margin-bottom: 0;
+}
+.add-entity-view-modal .add-entity-view-section-label {
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.88);
+}
+.add-entity-view-modal .add-entity-view-collapse {
+  margin-top: 16px;
+  margin-bottom: 20px;
+}
+.add-entity-view-modal .add-entity-view-collapse .ant-collapse-item {
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.add-entity-view-modal .add-entity-view-collapse .ant-collapse-item:last-child {
+  margin-bottom: 0;
+}
+.add-entity-view-modal .add-entity-view-collapse .ant-collapse-header {
+  padding: 12px 16px;
+  align-items: center;
+}
+.add-entity-view-modal .add-entity-view-collapse .ant-collapse-content-box {
+  padding: 16px 16px 20px;
+}
+.add-entity-view-modal .add-entity-view-collapse .ant-collapse-content-box .ant-form-item {
+  margin-bottom: 16px;
+}
+.add-entity-view-modal .add-entity-view-collapse .ant-collapse-content-box .ant-form-item:last-child {
+  margin-bottom: 0;
+}
+.add-entity-view-modal .add-entity-view-collapse .ant-collapse-content-box p {
+  margin-bottom: 14px;
+}
+.add-entity-view-modal .ant-modal-footer {
+  padding: 16px 24px 24px;
+  gap: 10px;
+}
+
+/* ── Toolbar bulk actions (Gán cho customer, Make public, Make private + icons) ─ */
+.energy-toolbar-bulk-actions {
+  gap: 14px;
+}
+.energy-toolbar-bulk-actions .energy-toolbar-icon-group {
+  margin-left: 4px;
+}
+
+/* ── Device config: giảm kích cỡ tab/card title ─────────────────────────────── */
+/* ── Cấu hình thiết bị: header + 4 cards ─────────────────────────────────── */
+.energy-device-config-hero {
+  margin-bottom: 1.5rem;
+}
+.energy-device-config-hero-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.88);
+}
+.energy-device-config-hero-icon {
+  font-size: 1.25rem;
+  color: #595959;
+}
+.energy-device-config-hero-desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.45);
+  line-height: 1.5;
+}
+.energy-device-config-cards {
+  margin-top: 0.5rem;
+}
+.energy-device-config-card {
+  height: 100%;
+  border-radius: 12px;
+  border-width: 2px;
+  border-color: var(--card-color, #d9d9d9);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.energy-device-config-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08), 0 3px 6px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+}
+.energy-device-config-card .ant-card-body {
+  padding: 1.25rem 1.25rem 1.25rem;
+}
+.energy-device-config-card-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 72px;
+}
+.energy-device-config-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--card-color, #1890ff);
+  font-size: 1.25rem;
+}
+.energy-device-config-card-title {
+  font-size: 0.9375rem !important;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.88);
+  line-height: 1.4;
+}
+.energy-device-config-card-desc {
+  font-size: 0.8125rem !important;
+  color: rgba(0, 0, 0, 0.45);
+  line-height: 1.45;
+  margin: 0;
+}
+.energy-device-config-section-card.content-card .content-card_title {
+  font-size: 0.9375rem !important;
+}
+
+/* ── Device config table: tăng kích cỡ dàn icon cuối (actions) ────────────── */
+.device-config-table-actions .ant-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.device-config-table-actions .ant-btn .anticon {
+  font-size: 18px;
+}
+.device-config-table-actions .ant-btn.ant-btn-dangerous .anticon {
+  font-size: 18px;
+}
+
+/* ── Device Credentials modal ───────────────────────────────────────────── */
+.device-credentials-modal .ant-modal-header {
+  background: #1890ff;
+  border-bottom: none;
+  padding: 14px 20px;
+}
+.device-credentials-modal .ant-modal-title {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.device-credentials-modal .ant-modal-close {
+  color: rgba(255, 255, 255, 0.85);
+}
+.device-credentials-modal .ant-modal-close:hover {
+  color: #fff;
+}
+.device-credentials-modal .ant-modal-body {
+  padding: 20px 24px 16px;
+}
+.device-credentials-modal-body .device-credentials-label {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.85);
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.device-credentials-modal-body .device-credentials-segmented {
+  padding: 2px;
+  background: #f5f5f5;
+  border-radius: 6px;
+}
+.device-credentials-modal-body .device-credentials-segmented .ant-segmented-item-selected {
+  background: #1890ff;
+  color: #fff;
+  border-radius: 4px;
+}
+.device-credentials-modal-body .device-credentials-segmented .ant-segmented-item:not(.ant-segmented-item-selected) {
+  color: rgba(0, 0, 0, 0.65);
+}
+.device-credentials-modal-body .device-credentials-field {
+  margin-bottom: 12px;
+}
+.device-credentials-modal-body .device-credentials-field:last-child {
+  margin-bottom: 0;
+}
+.device-credentials-modal-body .device-credentials-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+.device-credentials-modal-body .device-credentials-field .ant-input-suffix,
+.device-credentials-modal-body .device-credentials-field .ant-input-password-suffix {
+  margin-left: 4px;
+}
+.device-credentials-modal-body .device-credentials-field .ant-input-suffix .ant-btn,
+.device-credentials-modal-body .device-credentials-field .ant-input-password-suffix .ant-btn {
+  color: rgba(0, 0, 0, 0.45);
+}
+.device-credentials-modal-body .device-credentials-field .ant-input-suffix .ant-btn:hover,
+.device-credentials-modal-body .device-credentials-field .ant-input-password-suffix .ant-btn:hover {
+  color: #1890ff;
+}
+.device-credentials-mqtt-error {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #ff4d4f;
+}
+.device-credentials-modal .ant-modal-footer .ant-btn-primary:disabled {
+  background: #f5f5f5;
+  border-color: #d9d9d9;
+  color: rgba(0, 0, 0, 0.25);
+}
+.device-credentials-modal .mt-3 {
+  margin-top: 16px;
+}

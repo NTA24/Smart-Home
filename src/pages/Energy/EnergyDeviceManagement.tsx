@@ -1,10 +1,12 @@
 import { Card, Row, Col, Typography, Button } from 'antd'
 import {
+  ArrowLeftOutlined,
   ControlOutlined,
   CloudOutlined,
   BarChartOutlined,
   DatabaseOutlined,
   ThunderboltOutlined,
+  SettingOutlined,
 } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router'
@@ -14,12 +16,13 @@ import HvacAssetPage from './HvacAssetPage'
 import IaqSensorPage from './IaqSensorPage'
 import EnergyAggregatePage from './EnergyAggregatePage'
 import EnergyMvPage from './EnergyMvPage'
+import EnergyDeviceConfigPage from './EnergyDeviceConfigPage'
 
 const { Text } = Typography
 
 const BASE = '/energy-device-management'
 
-type TabKey = 'meters' | 'hvac' | 'iaq' | 'aggregates' | 'mv'
+type TabKey = 'meters' | 'hvac' | 'iaq' | 'aggregates' | 'mv' | 'config'
 
 const pathToKey: Record<string, TabKey> = {
   'energy-meters': 'meters',
@@ -27,6 +30,7 @@ const pathToKey: Record<string, TabKey> = {
   'iaq-sensors': 'iaq',
   'energy-aggregates': 'aggregates',
   'energy-mv': 'mv',
+  'device-config': 'config',
 }
 
 const tabCards: { key: TabKey; path: string; icon: React.ReactNode; titleKey: string; descKey: string; color?: string }[] = [
@@ -35,6 +39,7 @@ const tabCards: { key: TabKey; path: string; icon: React.ReactNode; titleKey: st
   { key: 'iaq', path: 'iaq-sensors', icon: <CloudOutlined />, titleKey: 'menu.iaqSensors', descKey: 'energyDeviceManagement.iaqDesc', color: '#52c41a' },
   { key: 'aggregates', path: 'energy-aggregates', icon: <BarChartOutlined />, titleKey: 'menu.energyAggregates', descKey: 'energyDeviceManagement.aggregatesDesc', color: '#722ed1' },
   { key: 'mv', path: 'energy-mv', icon: <DatabaseOutlined />, titleKey: 'menu.energyMv', descKey: 'energyDeviceManagement.mvDesc', color: '#13c2c2' },
+  { key: 'config', path: 'device-config', icon: <SettingOutlined />, titleKey: 'energyDeviceManagement.configTitle', descKey: 'energyDeviceManagement.configDesc', color: '#eb2f96' },
 ]
 
 export default function EnergyDeviceManagement() {
@@ -58,6 +63,8 @@ export default function EnergyDeviceManagement() {
         return <EnergyAggregatePage embedded />
       case 'mv':
         return <EnergyMvPage embedded />
+      case 'config':
+        return <EnergyDeviceConfigPage />
       default:
         return null
     }
@@ -110,8 +117,13 @@ export default function EnergyDeviceManagement() {
             className="mb-4"
             style={{ background: '#fafafa' }}
           >
-            <Button type="link" onClick={() => navigate(BASE)} className="p-0">
-              ← {t('energyDeviceManagement.backToCards')}
+            <Button
+              type="default"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate(BASE)}
+              className="energy-back-btn"
+            >
+              {t('energyDeviceManagement.backToCards')}
             </Button>
           </Card>
           {renderContent()}

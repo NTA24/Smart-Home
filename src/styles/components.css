@@ -708,3 +708,55 @@
 .page-skeleton {
   padding: 24px;
 }
+
+/* ── VIP row highlight (People Directory, Personnel) ── */
+.people-directory-row-vip,
+.personnel-row-vip {
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.12) 0%, rgba(250, 204, 21, 0.04) 100%) !important;
+}
+.people-directory-row-vip:hover > td,
+.personnel-row-vip:hover > td {
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.18) 0%, rgba(250, 204, 21, 0.08) 100%) !important;
+}
+
+/* Avatar với icon vương miện VIP (Access Logs, v.v.) */
+.access-logs-avatar-wrap {
+  position: relative;
+  display: inline-block;
+}
+.access-logs-avatar-crown {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #facc15, #eab308);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.access-logs-avatar-crown--lg {
+  top: -6px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+}
+.access-logs-avatar-crown--sm {
+  top: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  font-size: 8px;
+}
+.access-logs-avatar-crown--xl {
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}

@@ -1,33 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Table, Button, Space, Avatar, Tag, Badge, Input, Select, DatePicker, Modal } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { BellOutlined, UserOutlined, MailOutlined, RightOutlined, SearchOutlined } from '@ant-design/icons'
+import { BellOutlined, UserOutlined, MailOutlined, RightOutlined, SearchOutlined, CrownOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { PageContainer, ContentCard } from '@/components'
+import { getAccessLogsWithFace, isVipByName } from './accessLogData'
 
-const FACE_IMAGES = [
-  '/security-faces/stored-face-1.png',
-  '/security-faces/stored-face-2.png',
-  '/security-faces/stored-face-3.png',
-  '/security-faces/stored-face-4.png',
-  '/security-faces/stored-face-5.png',
-  '/security-faces/stored-face-6.png',
-  '/security-faces/stored-face-7.png',
-]
-
-const MOCK_LOGS_RAW = [
-  { key: '1', date: '2026-02-25', name: 'Linh Tran', subText: 'Rapid visit', accessPoint: 'Lobby Gate', credential: 'Mobile Key', credentialId: 'RFID Card', status: 'success', time: '13:50' },
-  { key: '2', date: '2026-02-25', name: 'Nguyễn Văn A', subText: 'Tenant', accessPoint: 'Elevator Panel', credential: 'Mobile Key', credentialId: 'MPRO-0080', status: 'success', time: '23:10' },
-  { key: '3', date: '2026-02-25', name: 'Delivery (GHN)', subText: 'Visitor', accessPoint: 'Parking Barrier', credential: 'Badge', credentialId: 'RE6122034', status: 'default', time: '10:00' },
-  { key: '4', date: '2026-02-25', name: 'Linh Tran', subText: 'Employee', accessPoint: 'Floor 15', credential: 'Mobile Key', credentialId: 'MBOIB Card', status: 'processing', time: '19:05' },
-  { key: '5', date: '2026-02-24', name: 'Trần Văn B', subText: 'Tenant', accessPoint: 'Lobby Gate', credential: 'Mobile Key', credentialId: 'RFID Card', status: 'success', time: '08:30' },
-  { key: '6', date: '2026-02-23', name: 'Linh Tran', subText: 'Employee', accessPoint: 'Elevator Panel', credential: 'Badge', credentialId: 'RE6122035', status: 'success', time: '14:20' },
-]
-
-const MOCK_LOGS = MOCK_LOGS_RAW.map((r, i) => ({
-  ...r,
-  face: FACE_IMAGES[Number(r.key) % FACE_IMAGES.length] ?? FACE_IMAGES[i % FACE_IMAGES.length],
-}))
+const MOCK_LOGS = getAccessLogsWithFace()
 
 const CREDENTIAL_LABEL_KEY: Record<string, string> = {
   'Mobile Key': 'accessLogs.credentialMobileKey',
@@ -91,15 +70,25 @@ export default function AccessLogs() {
       title: t('accessLogs.face', 'Mặt'),
       key: 'face',
       width: 64,
-      render: (_: unknown, r: (typeof MOCK_LOGS)[0]) => (
-        <Avatar
-          size={36}
-          src={r.face}
-          icon={<UserOutlined />}
-          className="cursor-pointer hover:opacity-80"
-          onClick={() => setPreviewFace({ src: r.face, name: r.name })}
-        />
-      ),
+      render: (_: unknown, r: (typeof MOCK_LOGS)[0]) => {
+        const isVip = isVipByName(r.name)
+        return (
+          <div className="access-logs-avatar-wrap">
+            <Avatar
+              size={36}
+              src={r.face}
+              icon={<UserOutlined />}
+              className="cursor-pointer hover:opacity-80"
+              onClick={() => setPreviewFace({ src: r.face, name: r.name })}
+            />
+            {isVip && (
+              <span className="access-logs-avatar-crown access-logs-avatar-crown--lg">
+                <CrownOutlined />
+              </span>
+            )}
+          </div>
+        )
+      },
     },
     {
       title: t('accessLogs.date', 'Date'),
@@ -111,15 +100,32 @@ export default function AccessLogs() {
       title: t('accessLogs.name', 'Name'),
       key: 'name',
       width: 200,
-      render: (_: unknown, r: (typeof MOCK_LOGS)[0]) => (
-        <div className="flex items-center gap-8">
-          <Avatar size="small" icon={<UserOutlined />} className="flex-shrink-0" />
-          <div>
-            <div className="font-medium">{r.name}</div>
-            <div className="text-xs text-secondary">{t(SUBTEXT_LABEL_KEY[r.subText] || r.subText)}</div>
+      render: (_: unknown, r: (typeof MOCK_LOGS)[0]) => {
+        const isVip = isVipByName(r.name)
+        return (
+          <div className="flex items-center gap-8">
+            <div className="access-logs-avatar-wrap">
+              <Avatar size="small" icon={<UserOutlined />} className="flex-shrink-0" />
+              {isVip && (
+                <span className="access-logs-avatar-crown access-logs-avatar-crown--sm">
+                  <CrownOutlined />
+                </span>
+              )}
+            </div>
+            <div>
+              <div className="font-medium flex items-center gap-4">
+                {r.name}
+                {isVip && (
+                  <Tag color="gold" icon={<CrownOutlined />} className="m-0">
+                    VIP
+                  </Tag>
+                )}
+              </div>
+              <div className="text-xs text-secondary">{t(SUBTEXT_LABEL_KEY[r.subText] || r.subText)}</div>
+            </div>
           </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       title: t('accessLogs.accessPoint', 'Access Point'),

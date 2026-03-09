@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { Table, Select, Input, Button, Space, Drawer, Tabs, Typography, Tag } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { TeamOutlined, ExportOutlined, PlusOutlined, DownOutlined } from '@ant-design/icons'
+import { TeamOutlined, ExportOutlined, PlusOutlined, DownOutlined, CrownOutlined } from '@ant-design/icons'
 import { PageContainer, PageHeader, ContentCard } from '@/components'
 
 const { Text } = Typography
 
 const MOCK_PEOPLE = [
-  { key: '1', name: 'Nguyen Van A', id: 'NV001', type: 'Resident', tenantUnit: 'Apt A-1201', zoneFloor: 'Tower A/F12', status: 'ACTIVE' },
-  { key: '2', name: 'Tran Linh', id: 'NV002', type: 'Employee', tenantUnit: 'ABC Corp', zoneFloor: 'Office/F10', status: 'ACTIVE' },
-  { key: '3', name: 'Bao Nguyen', id: 'NV003', type: 'Contractor', tenantUnit: 'XYZ Ltd', zoneFloor: 'Service/F-B1', status: 'EXPIRED' },
-  { key: '4', name: 'GHN Delivery', id: 'V001', type: 'Visitor', tenantUnit: '(Invited)', zoneFloor: 'Lobby', status: 'CHECKIN' },
+  { key: '1', name: 'Nguyen Van A', id: 'NV001', type: 'Resident', tenantUnit: 'Apt A-1201', zoneFloor: 'Tower A/F12', status: 'ACTIVE', isVip: true },
+  { key: '2', name: 'Tran Linh', id: 'NV002', type: 'Employee', tenantUnit: 'ABC Corp', zoneFloor: 'Office/F10', status: 'ACTIVE', isVip: false },
+  { key: '3', name: 'Bao Nguyen', id: 'NV003', type: 'Contractor', tenantUnit: 'XYZ Ltd', zoneFloor: 'Service/F-B1', status: 'EXPIRED', isVip: false },
+  { key: '4', name: 'GHN Delivery', id: 'V001', type: 'Visitor', tenantUnit: '(Invited)', zoneFloor: 'Lobby', status: 'CHECKIN', isVip: false },
 ]
 
 function PersonDetailDrawer({
@@ -37,7 +37,7 @@ function PersonDetailDrawer({
           <div><Text type="secondary">{t('peopleDirectory.status', 'Status')}:</Text> {person.status}</div>
           <div><Text type="secondary">Created:</Text> 2026-02-10</div>
           <div><Text type="secondary">Owner:</Text> Building Admin</div>
-          <div><Text type="secondary">Tags:</Text> <Tag>VIP</Tag> <Tag>Parking A</Tag></div>
+          <div><Text type="secondary">Tags:</Text> {person.isVip && <Tag color="gold" icon={<CrownOutlined />}>VIP</Tag>} <Tag>Parking A</Tag></div>
         </div>
       ),
     },
@@ -101,7 +101,12 @@ function PersonDetailDrawer({
   ]
   return (
     <Drawer
-      title={`${t('peopleDirectory.personDetail', 'Person Detail')}: ${person.name} (${person.type})`}
+      title={
+          <>
+            {t('peopleDirectory.personDetail', 'Person Detail')}: {person.name} ({person.type})
+            {person.isVip && <Tag color="gold" icon={<CrownOutlined />} className="ml-2">VIP</Tag>}
+          </>
+        }
       width={520}
       open={open}
       onClose={onClose}
@@ -147,6 +152,7 @@ export default function PeopleDirectory() {
       width: 200,
       render: (_: unknown, r: (typeof MOCK_PEOPLE)[0]) => (
         <span className="cursor-pointer hover:underline" onClick={() => setDrawerPerson(r)}>
+          {r.isVip && <CrownOutlined className="text-amber-500 mr-1" />}
           {r.name} ({r.id})
         </span>
       ),
@@ -200,7 +206,11 @@ export default function PeopleDirectory() {
           columns={columns}
           dataSource={filtered}
           pagination={{ current: page, pageSize, total: filtered.length, onChange: setPage, showSizeChanger: false }}
-          onRow={(r) => ({ onClick: () => setDrawerPerson(r), style: { cursor: 'pointer' } })}
+          onRow={(r) => ({
+          onClick: () => setDrawerPerson(r),
+          style: { cursor: 'pointer' },
+          className: r.isVip ? 'people-directory-row-vip' : undefined,
+        })}
         />
         <div className="mt-12 flex flex-wrap items-center gap-8">
           <Text type="secondary">Bulk:</Text>
