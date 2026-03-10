@@ -171,6 +171,45 @@ export interface SaveDeviceBody {
   [key: string]: unknown
 }
 
+/** Payload for POST /api/entitiesQuery/find — Find Entity Data by Query */
+export interface EntitiesQueryFindBody {
+  entityFilter: {
+    type: string
+    customerId?: { id: string; entityType: string }
+    singleEntity?: { entityType: string; id: string; type?: string }
+  }
+  keyFilters?: Array<{
+    key: { type: string; key: string }
+    valueType: string
+    predicate: { type: string; operation: string; value: { defaultValue?: unknown; userValue?: unknown; dynamicValue?: unknown } }
+  }>
+  pageLink: {
+    pageSize: number
+    page: number
+    textSearch?: string
+    sortOrder?: { key: { type: string; key: string }; direction: 'ASC' | 'DESC' }
+    dynamic?: boolean
+  }
+  entityFields?: Array<{ type: string; key: string }>
+  latestValues?: Array<{ type: string; key: string }>
+}
+
+/** Build find payload for one device by id (singleEntity). */
+export function buildEntitiesQueryFindPayload(deviceId: string): EntitiesQueryFindBody {
+  return {
+    entityFilter: {
+      type: 'singleEntity',
+      singleEntity: { entityType: 'DEVICE', id: deviceId, type: 'singleEntity' },
+    },
+    pageLink: { pageSize: 1, page: 0, sortOrder: { key: { type: 'ENTITY_FIELD', key: 'createdTime' }, direction: 'DESC' } },
+    entityFields: [
+      { type: 'ENTITY_FIELD', key: 'name' },
+      { type: 'ENTITY_FIELD', key: 'label' },
+      { type: 'ENTITY_FIELD', key: 'additionalInfo' },
+    ],
+  }
+}
+
 // --- Asset Infos (tenant) ---
 export interface ThingsBoardAssetInfo {
   id?: { id: string; entityType?: string }
@@ -297,6 +336,18 @@ export const thingsBoardApi = {
   /** DELETE /api/dashboard/{dashboardId} — delete dashboard */
   deleteDashboard: (dashboardId: string) =>
     thingsBoardRequest<Record<string, unknown>>('delete', `/api/dashboard/${dashboardId}`),
+
+  /** GET /api/dashboard/{dashboardId} — get dashboard by id */
+  getDashboard: (dashboardId: string) =>
+    thingsBoardRequest<Record<string, unknown>>('get', `/api/dashboard/${dashboardId}`),
+
+  /** GET /api/user/dashboards/{dashboardId}/{action} — report user action: "visit" | "star" | "unstar" */
+  visitDashboard: (dashboardId: string) =>
+    thingsBoardRequest<Record<string, unknown>>('get', `/api/user/dashboards/${dashboardId}/visit`),
+
+  /** POST /api/entitiesQuery/find — Find Entity Data by Query. Body: entityFilter, keyFilters?, pageLink, entityFields?, latestValues? */
+  entitiesQueryFind: (body: EntitiesQueryFindBody) =>
+    thingsBoardRequest<unknown>('post', '/api/entitiesQuery/find', undefined, body),
 
   /** GET /api/dashboard/serverTime — server time (ms) for gateway/realtime display; may return number or { serverTime: number } */
   getServerTime: () =>
@@ -502,6 +553,29 @@ export const thingsBoardApi = {
     thingsBoardRequest<Record<string, unknown>>(
       'post',
       `/api/plugins/telemetry/DEVICE/${deviceId}/values/attributes/${scope}`,
+      undefined,
+      body
+    ),
+
+  /** POST /api/plugins/telemetry/{entityType}/{entityId}/{scope} — Save entity attributes (saveEntityAttributesV1). Scope: SERVER_SCOPE | SHARED_SCOPE. Body: key-value attributes (e.g. { power: true }). */
+  saveEntityAttributes: (
+    entityType: string,
+    entityId: string,
+    scope: 'SERVER_SCOPE' | 'SHARED_SCOPE',
+    body: Record<string, string | number | boolean | unknown>
+  ) =>
+    thingsBoardRequest<Record<string, unknown>>(
+      'post',
+      `/api/plugins/telemetry/${entityType}/${entityId}/${scope}`,
+      undefined,
+      body
+    ),
+
+  /** Ghi attribute SHARED_SCOPE cho device (onClick Power) — gọi saveEntityAttributes('DEVICE', deviceId, 'SHARED_SCOPE', body). */
+  postDeviceSharedScope: (deviceId: string, body: Record<string, string | number | boolean | unknown>) =>
+    thingsBoardRequest<Record<string, unknown>>(
+      'post',
+      `/api/plugins/telemetry/DEVICE/${deviceId}/SHARED_SCOPE`,
       undefined,
       body
     ),

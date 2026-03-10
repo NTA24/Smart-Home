@@ -81,10 +81,12 @@ export type {
   ThingsBoardDeviceInfo,
   ThingsBoardDeviceInfosResponse,
   SaveDeviceBody,
+  EntitiesQueryFindBody,
   ThingsBoardAssetInfo,
   ThingsBoardAssetInfosResponse,
   ThingsBoardAssetProfileInfosResponse,
   ThingsBoardEntityViewInfo,
   ThingsBoardEntityViewInfosResponse,
 } from './thingsboardApi'
+export { buildEntitiesQueryFindPayload } from './thingsboardApi'
 export * from './types'

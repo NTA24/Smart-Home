@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router'
 import { Button, Input, Space, Table, Checkbox, message, Modal, Select, Drawer, Tabs, Form, Switch } from 'antd'
 import {
   PlusOutlined,
@@ -66,6 +67,7 @@ function dashboardIsPublic(d: DashboardItem): boolean {
 
 export default function EnergyDeviceDashboardPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [dashboards, setDashboards] = useState<DashboardItem[]>([])
   const [loading, setLoading] = useState(false)
   const [total, setTotal] = useState(0)
@@ -436,7 +438,20 @@ export default function EnergyDeviceDashboardPage() {
               key: 'title',
               width: 140,
               ellipsis: true,
-              render: (v: string) => v || '—',
+              render: (v: string, record: DashboardItem) => {
+                const id = getDashboardId(record)
+                const name = v || '—'
+                if (!id) return name
+                return (
+                  <Button
+                    type="link"
+                    className="p-0 h-auto font-normal"
+                    onClick={() => navigate(`/energy-device-dashboard/${id}`)}
+                  >
+                    {name}
+                  </Button>
+                )
+              },
             },
             {
               title: t('energyDeviceDashboard.assignedToCustomers', 'Assigned to customers'),

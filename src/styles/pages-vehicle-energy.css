@@ -1663,6 +1663,326 @@ input.hidden {
   margin-left: 16px;
 }
 
+/* ── Trang xem thiết bị / Ổ cắm điện: title bar + Power card ───────────────── */
+.energy-outlet-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background: #fff;
+}
+
+.energy-device-view-title-bar {
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #096dd9 0%, #0050b3 100%);
+  color: #fff;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(9, 109, 217, 0.3);
+}
+
+.energy-device-view-card {
+  padding: 24px;
+  min-height: 200px;
+  background: #fafafa;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.energy-device-view-card-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #595959;
+  margin-bottom: 20px;
+  letter-spacing: 0.02em;
+}
+
+.energy-device-view-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.energy-device-view-controls .energy-device-view-power-btn {
+  flex-shrink: 0;
+}
+
+.energy-device-view-controls .ant-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  height: 40px;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.energy-device-view-power-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 3px solid #d9d9d9;
+  background: #fff;
+  color: #8c8c8c;
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s;
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.energy-device-view-power-btn:hover:not(:disabled) {
+  border-color: #bfbfbf;
+  background: #f5f5f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.energy-device-view-power-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.energy-device-view-power-btn.energy-device-view-power-on {
+  border-color: #52c41a;
+  background: #f6ffed;
+  color: #52c41a;
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.2);
+}
+.energy-device-view-power-btn.energy-device-view-power-on:hover:not(:disabled) {
+  border-color: #389e0d;
+  background: #d9f7be;
+  color: #389e0d;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.25);
+}
+
+.energy-device-view-scheduled {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #595959;
+}
+.energy-device-view-scheduled .anticon {
+  color: #1890ff;
+}
+.energy-device-view-scheduled .ant-btn-link {
+  margin-left: auto;
+  padding: 0 4px;
+}
+
+/* ── Cảm biến nhiệt độ và độ ẩm ───────────────────────────────────────────── */
+.energy-sensor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+.energy-sensor-toolbar .ant-select {
+  font-size: 0.875rem;
+}
+.energy-sensor-realtime {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: #595959;
+}
+.energy-sensor-realtime .anticon {
+  color: #1890ff;
+}
+.energy-sensor-server-time {
+  margin-left: 4px;
+  font-size: 0.8125rem;
+  color: #8c8c8c;
+}
+.energy-sensor-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding: 24px 20px;
+}
+@media (max-width: 768px) {
+  .energy-sensor-cards {
+    grid-template-columns: 1fr;
+  }
+}
+.energy-sensor-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 18px 18px 22px;
+  min-height: 120px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s;
+}
+.energy-sensor-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.energy-sensor-card-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.energy-sensor-card:hover .energy-sensor-card-actions {
+  opacity: 1;
+}
+.energy-sensor-card-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+}
+.energy-sensor-card-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.energy-sensor-card-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.energy-sensor-card-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #8c8c8c;
+  text-transform: capitalize;
+}
+.energy-sensor-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #e6f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #1890ff;
+}
+.energy-sensor-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #262626;
+  margin-bottom: 8px;
+}
+.energy-sensor-card-meta {
+  font-size: 0.75rem;
+  color: #8c8c8c;
+}
+
+/* ── Rule Engine Statistics ───────────────────────────────────────────────── */
+.energy-rule-engine-wrap {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+.energy-rule-engine-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+}
+@media (max-width: 768px) {
+  .energy-rule-engine-charts {
+    grid-template-columns: 1fr;
+  }
+}
+.energy-rule-engine-chart-card {
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 16px;
+}
+.energy-rule-engine-chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 4px;
+}
+.energy-rule-engine-chart-subtitle {
+  font-size: 0.75rem;
+  color: #8c8c8c;
+  margin-bottom: 12px;
+}
+.energy-rule-engine-chart-placeholder {
+  min-height: 200px;
+  background: #fff;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+}
+.energy-rule-engine-exceptions {
+  padding: 0 20px 20px;
+}
+.energy-rule-engine-exceptions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.energy-rule-engine-exceptions-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #262626;
+}
+
+/* ── Software OTA Device list ──────────────────────────────────────────────── */
+.energy-software-wrap {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+.energy-software-main {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr);
+  gap: 16px;
+  padding: 16px 20px 20px;
+}
+@media (max-width: 992px) {
+  .energy-software-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.energy-software-table-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.energy-software-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.energy-software-stat-card {
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  padding: 16px 14px;
+  text-align: center;
+}
+.energy-software-stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.energy-software-stat-label {
+  font-size: 0.8125rem;
+  color: #595959;
+}
+
 /* ── Danh sách gateway: banner + card ──────────────────────────────────────── */
 .energy-gateway-banner {
   display: flex;
