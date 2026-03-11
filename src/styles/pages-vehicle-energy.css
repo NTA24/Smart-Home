@@ -1671,6 +1671,42 @@ input.hidden {
   background: #fff;
 }
 
+/* ── Device Dashboard Home: equal card height + scroll ── */
+.device-dashboard-home .device-dashboard-home-row {
+  display: flex;
+  align-items: stretch;
+  min-height: 300px;
+}
+
+.device-dashboard-home .device-dashboard-home-row:first-of-type {
+  min-height: 0;
+}
+
+.device-dashboard-home .device-dashboard-home-row:first-of-type .device-dashboard-home-row {
+  min-height: 300px;
+}
+
+.device-dashboard-home .device-dashboard-home-col {
+  display: flex;
+}
+
+.device-dashboard-home .device-dashboard-home-col > .ant-card {
+  width: 100%;
+}
+
+.device-dashboard-home .device-dashboard-home-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.device-dashboard-home .device-dashboard-home-card .ant-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .energy-device-view-title-bar {
   padding: 14px 20px;
   background: linear-gradient(135deg, #096dd9 0%, #0050b3 100%);

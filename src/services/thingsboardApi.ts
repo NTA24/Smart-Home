@@ -281,8 +281,80 @@ export const thingsBoardApi = {
   getCustomer: (customerId: string) =>
     thingsBoardRequest<Record<string, unknown>>('get', `/api/customer/${customerId}`),
 
-  /** GET /api/customers?pageSize=10&page=0 */
-  getCustomers: (params?: { pageSize?: number; page?: number; textSearch?: string }) =>
+  /** DELETE /api/customer/{customerId} — xóa customer và tất cả customer users; dashboards/assets/devices bị unassign, không xóa */
+  deleteCustomer: (customerId: string) =>
+    thingsBoardRequest<Record<string, unknown>>('delete', `/api/customer/${customerId}`),
+
+  /** GET /api/customer/{customerId}/users?pageSize=10&page=0&sortProperty=createdTime&sortOrder=DESC */
+  getCustomerUsers: (
+    customerId: string,
+    params?: {
+      pageSize?: number
+      page?: number
+      sortProperty?: string
+      sortOrder?: 'ASC' | 'DESC'
+      textSearch?: string
+    }
+  ) =>
+    thingsBoardRequest<{ data: unknown[]; totalPages: number; totalElements: number }>(
+      'get',
+      `/api/customer/${customerId}/users`,
+      params as Record<string, unknown>
+    ),
+
+  /**
+   * POST /api/customer — tạo customer mới.
+   * Body theo ThingsBoard: title, country, state, city, address, address2, zip, phone, email, version: 0, additionalInfo.
+   * Query: nameConflictPolicy (FAIL | UNIQUIFY), uniquifySeparator, uniquifyStrategy (RANDOM | INCREMENTAL).
+   */
+  createCustomer: (
+    body: {
+      title: string
+      email?: string
+      country?: string
+      state?: string
+      city?: string
+      address?: string
+      address2?: string
+      zip?: string
+      phone?: string
+      additionalInfo?: Record<string, unknown>
+    },
+    params?: {
+      nameConflictPolicy?: 'FAIL' | 'UNIQUIFY'
+      uniquifySeparator?: string
+      uniquifyStrategy?: 'RANDOM' | 'INCREMENTAL'
+    }
+  ) => {
+    const payload = {
+      title: body.title,
+      email: body.email ?? undefined,
+      country: body.country ?? undefined,
+      state: body.state ?? undefined,
+      city: body.city ?? undefined,
+      address: body.address ?? undefined,
+      address2: body.address2 ?? undefined,
+      zip: body.zip ?? undefined,
+      phone: body.phone ?? undefined,
+      version: 0,
+      additionalInfo: body.additionalInfo ?? {},
+    }
+    return thingsBoardRequest<Record<string, unknown>>(
+      'post',
+      '/api/customer',
+      params as Record<string, unknown>,
+      payload
+    )
+  },
+
+  /** GET /api/customers?pageSize=10&page=0&sortProperty=createdTime&sortOrder=DESC */
+  getCustomers: (params?: {
+    pageSize?: number
+    page?: number
+    textSearch?: string
+    sortProperty?: string
+    sortOrder?: 'ASC' | 'DESC'
+  }) =>
     thingsBoardRequest<{ data: unknown[]; totalPages: number; totalElements: number }>('get', '/api/customers', params as Record<string, unknown>),
 
   /** GET /api/devices?pageSize=10&page=0 */
@@ -321,6 +393,22 @@ export const thingsBoardApi = {
   getTenantDashboards: (params?: { pageSize?: number; page?: number; sortProperty?: string; sortOrder?: string }) =>
     thingsBoardRequest<{ data?: Array<{ id?: { id?: string }; title?: string; createdTime?: number; customerId?: { id?: string }; customerTitle?: string; customerIsPublic?: boolean }>; totalElements?: number }>('get', '/api/tenant/dashboards', params as Record<string, unknown>),
 
+  /** GET /api/customer/{customerId}/dashboards — danh sách dashboard của customer */
+  getCustomerDashboards: (
+    customerId: string,
+    params?: {
+      pageSize?: number
+      page?: number
+      sortProperty?: string
+      sortOrder?: 'ASC' | 'DESC'
+      textSearch?: string
+    }
+  ) =>
+    thingsBoardRequest<{
+      data?: Array<{ id?: { id?: string }; title?: string; createdTime?: number }>
+      totalElements?: number
+    }>('get', `/api/customer/${customerId}/dashboards`, params as Record<string, unknown>),
+
   /** POST /api/customer/public/dashboard/{dashboardId} — make dashboard public */
   makeDashboardPublic: (dashboardId: string) =>
     thingsBoardRequest<Record<string, unknown>>('post', `/api/customer/public/dashboard/${dashboardId}`),
@@ -341,9 +429,13 @@ export const thingsBoardApi = {
   getDashboard: (dashboardId: string) =>
     thingsBoardRequest<Record<string, unknown>>('get', `/api/dashboard/${dashboardId}`),
 
-  /** GET /api/user/dashboards/{dashboardId}/{action} — report user action: "visit" | "star" | "unstar" */
+  /** GET /api/user/dashboards/{dashboardId}/{action} — report user action: "VISIT" | "star" | "unstar" */
   visitDashboard: (dashboardId: string) =>
-    thingsBoardRequest<Record<string, unknown>>('get', `/api/user/dashboards/${dashboardId}/visit`),
+    thingsBoardRequest<Record<string, unknown>>('get', `/api/user/dashboards/${dashboardId}/VISIT`),
+
+  /** GET /api/user/dashboards/{dashboardId}/star — star dashboard */
+  starDashboard: (dashboardId: string) =>
+    thingsBoardRequest<Record<string, unknown>>('get', `/api/user/dashboards/${dashboardId}/star`),
 
   /** POST /api/entitiesQuery/find — Find Entity Data by Query. Body: entityFilter, keyFilters?, pageLink, entityFields?, latestValues? */
   entitiesQueryFind: (body: EntitiesQueryFindBody) =>
@@ -352,6 +444,32 @@ export const thingsBoardApi = {
   /** GET /api/dashboard/serverTime — server time (ms) for gateway/realtime display; may return number or { serverTime: number } */
   getServerTime: () =>
     thingsBoardRequest<number | { serverTime?: number }>('get', '/api/dashboard/serverTime'),
+
+  /** GET /api/dashboard/home — tổng quan dashboard home */
+  getDashboardHome: () =>
+    thingsBoardRequest<Record<string, unknown>>('get', '/api/dashboard/home'),
+
+  /** GET /api/user/dashboards — danh sách dashboard của user */
+  getUserDashboards: () =>
+    thingsBoardRequest<{ data?: Array<Record<string, unknown>> } | Array<Record<string, unknown>>>(
+      'get',
+      '/api/user/dashboards'
+    ),
+
+  /** GET /api/usage — thống kê usage */
+  getUsage: () => thingsBoardRequest<Record<string, unknown>>('get', '/api/usage'),
+
+  /** GET /api/user/settings/{key} — QUICK_LINKS, DOC_LINKS, GETTING_STARTED */
+  getUserSettings: (key: string) =>
+    thingsBoardRequest<Record<string, unknown>>('get', `/api/user/settings/${key}`),
+
+  /** GET /api/mobile/qr/settings */
+  getMobileQrSettings: () =>
+    thingsBoardRequest<Record<string, unknown>>('get', '/api/mobile/qr/settings'),
+
+  /** GET /api/mobile/qr/deepLink */
+  getMobileQrDeepLink: () =>
+    thingsBoardRequest<Record<string, unknown>>('get', '/api/mobile/qr/deepLink'),
 
   /** GET /api/queues */
   getQueues: (params?: { pageSize?: number; page?: number; sortProperty?: string; sortOrder?: string; serviceType?: string }) =>
@@ -381,6 +499,51 @@ export const thingsBoardApi = {
   unassignDeviceFromCustomer: (deviceId: string) =>
     thingsBoardRequest<Record<string, unknown>>('delete', `/api/customer/device/${deviceId}`),
 
+  /** GET /api/customer/{customerId}/deviceInfos — danh sách device của customer */
+  getCustomerDeviceInfos: (
+    customerId: string,
+    params?: {
+      pageSize?: number
+      page?: number
+      sortProperty?: string
+      sortOrder?: 'ASC' | 'DESC'
+      textSearch?: string
+      deviceProfileId?: string
+    }
+  ) =>
+    thingsBoardRequest<ThingsBoardDeviceInfosResponse>(
+      'get',
+      `/api/customer/${customerId}/deviceInfos`,
+      params as Record<string, unknown>
+    ),
+
+  /** GET /api/edge/types — danh sách edge types cho filter */
+  getEdgeTypes: () =>
+    thingsBoardRequest<string[] | { types?: string[] }>('get', '/api/edge/types'),
+
+  /** GET /api/customer/{customerId}/edgeInfos — danh sách edge của customer */
+  getCustomerEdgeInfos: (
+    customerId: string,
+    params?: {
+      pageSize?: number
+      page?: number
+      sortProperty?: string
+      sortOrder?: 'ASC' | 'DESC'
+      textSearch?: string
+      type?: string
+    }
+  ) =>
+    thingsBoardRequest<{
+      data?: Array<{
+        id?: { id?: string }
+        name?: string
+        type?: string
+        label?: string
+        createdTime?: number
+      }>
+      totalElements?: number
+    }>('get', `/api/customer/${customerId}/edgeInfos`, params as Record<string, unknown>),
+
   /** GET /api/tenant/deviceInfos — danh sách thiết bị (phân trang, sắp xếp) */
   getDeviceInfos: (params?: {
     pageSize?: number
@@ -394,6 +557,24 @@ export const thingsBoardApi = {
     thingsBoardRequest<ThingsBoardDeviceInfosResponse>(
       'get',
       '/api/tenant/deviceInfos',
+      params as Record<string, unknown>
+    ),
+
+  /** GET /api/customer/{customerId}/assetInfos — danh sách asset của customer */
+  getCustomerAssetInfos: (
+    customerId: string,
+    params?: {
+      pageSize?: number
+      page?: number
+      sortProperty?: string
+      sortOrder?: 'ASC' | 'DESC'
+      assetProfileId?: string
+      textSearch?: string
+    }
+  ) =>
+    thingsBoardRequest<ThingsBoardAssetInfosResponse>(
+      'get',
+      `/api/customer/${customerId}/assetInfos`,
       params as Record<string, unknown>
     ),
 

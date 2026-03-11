@@ -58,6 +58,7 @@ const EnergyMvPage = lazy(() => import('@/pages/Energy/EnergyMvPage'))
 const EnergyDeviceManagement = lazy(() => import('@/pages/Energy/EnergyDeviceManagement'))
 const EnergyDeviceDashboardPage = lazy(() => import('@/pages/Energy/EnergyDeviceDashboardPage'))
 const EnergyDeviceDashboardViewPage = lazy(() => import('@/pages/Energy/EnergyDeviceDashboardViewPage'))
+const EnergyDeviceDashboardHomePage = lazy(() => import('@/pages/Energy/EnergyDeviceDashboardHomePage'))
 
 // Elevator
 const ElevatorDashboard = lazy(() => import('@/pages/Elevator/ElevatorDashboard'))
@@ -100,6 +101,12 @@ const MeetingIssueTickets = lazy(() => import('@/pages/Workspace/IssueTickets'))
 // Admin
 const UserManagement = lazy(() => import('@/pages/Admin/UserManagement'))
 const DeviceManagement = lazy(() => import('@/pages/Admin/DeviceManagement'))
+const AccountSettings = lazy(() => import('@/pages/Admin/AccountSettings'))
+const CustomerUsersPage = lazy(() => import('@/pages/Admin/CustomerUsersPage'))
+const CustomerAssetsPage = lazy(() => import('@/pages/Admin/CustomerAssetsPage'))
+const CustomerDevicesPage = lazy(() => import('@/pages/Admin/CustomerDevicesPage'))
+const CustomerDashboardsPage = lazy(() => import('@/pages/Admin/CustomerDashboardsPage'))
+const CustomerEdgesPage = lazy(() => import('@/pages/Admin/CustomerEdgesPage'))
 
 // Other
 const EquipmentOperation = lazy(() => import('@/pages/Other/EquipmentOperation'))
@@ -398,6 +405,12 @@ export const routes: RouteConfig[] = [
     element: <EnergyDeviceManagement />,
   },
   {
+    path: 'energy-device-dashboard-home',
+    labelKey: 'energyDeviceDashboard.homeTitle',
+    parentKey: 'energy-management',
+    element: <EnergyDeviceDashboardHomePage />,
+  },
+  {
     path: 'energy-device-dashboard',
     labelKey: 'menu.deviceDashboard',
     parentKey: 'energy-management',
@@ -653,6 +666,36 @@ export const routes: RouteConfig[] = [
     path: 'devices',
     labelKey: 'menu.deviceManagement',
     element: <DeviceManagement />,
+  },
+  {
+    path: 'account-settings',
+    labelKey: 'header.settings',
+    element: <AccountSettings />,
+  },
+  {
+    path: 'account-settings/customer/:customerId/users',
+    labelKey: 'account.customerUsers',
+    element: <CustomerUsersPage />,
+  },
+  {
+    path: 'account-settings/customer/:customerId/assets',
+    labelKey: 'account.assets',
+    element: <CustomerAssetsPage />,
+  },
+  {
+    path: 'account-settings/customer/:customerId/devices',
+    labelKey: 'account.devices',
+    element: <CustomerDevicesPage />,
+  },
+  {
+    path: 'account-settings/customer/:customerId/dashboards',
+    labelKey: 'account.dashboards',
+    element: <CustomerDashboardsPage />,
+  },
+  {
+    path: 'account-settings/customer/:customerId/edges',
+    labelKey: 'account.edges',
+    element: <CustomerEdgesPage />,
   },
 
   // ── Other ─────────────────────────────────────────────────────────────────

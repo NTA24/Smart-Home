@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Layout, Menu, Dropdown, Tag, Typography, theme } from 'antd'
+import { Layout, Menu, Dropdown, Tag, Typography, theme, Button } from 'antd'
 import type { MenuProps } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation } from 'react-router'
@@ -7,6 +7,7 @@ import {
   DownOutlined,
   BuildOutlined,
   AppstoreOutlined,
+  HomeOutlined,
 } from '@ant-design/icons'
 import {
   useTabStore,
@@ -16,7 +17,7 @@ import {
 } from '@/stores'
 import type { Tab } from '@/stores'
 import { routeToParentKey, routeToLabelKey } from '@/routes/routeConfig'
-import { menuConfig, ADMIN1_HIDDEN_GROUP_KEYS } from './menuConfig'
+import { menuConfig, accountSidebarConfig, ADMIN1_HIDDEN_GROUP_KEYS } from './menuConfig'
 import type { MenuGroup } from './menuConfig'
 
 /** Menu group keys that are disabled (not clickable, no expand). */
@@ -80,12 +81,18 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
     }
   }
 
-  // Chuyển menuConfig → Ant Design menu items, có dịch ngôn ngữ
-  const visibleConfig = currentUser === 'admin1'
-    ? menuConfig.filter(item => !ADMIN1_HIDDEN_GROUP_KEYS.has(item.key))
-    : menuConfig
+  // Khi ở trang tài khoản hoặc phân quyền (kể cả customer users): dùng sidebar riêng
+  const isAccountSection =
+    location.pathname === '/account-settings' ||
+    location.pathname === '/user-management' ||
+    location.pathname.startsWith('/account-settings/')
+  const baseConfig = isAccountSection
+    ? accountSidebarConfig
+    : currentUser === 'admin1'
+      ? menuConfig.filter(item => !ADMIN1_HIDDEN_GROUP_KEYS.has(item.key))
+      : menuConfig
 
-  const menuItems: MenuProps['items'] = visibleConfig.map(entry => {
+  const menuItems: MenuProps['items'] = baseConfig.map(entry => {
     if ('type' in entry && entry.type === 'item') {
       const isDashboard = entry.key === '/dashboard'
       return {
@@ -295,6 +302,24 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
         onClick={handleMenuClick}
         style={{ border: 'none', marginTop: 8 }}
       />
+
+      {/* Khi ở trang tài khoản: nút quay lại bảng điều khiển */}
+      {isAccountSection && (
+        <div style={{ padding: '12px 14px', borderTop: `1px solid ${token.colorBorderSecondary}` }}>
+          <Button
+            type="default"
+            block
+            icon={<HomeOutlined />}
+            onClick={() => {
+              onCloseDrawer?.()
+              addTab({ key: '/dashboard', labelKey: 'menu.home', closable: false })
+              navigate('/dashboard')
+            }}
+          >
+            {t('menu.backToDashboard', 'Quay lại bảng điều khiển')}
+          </Button>
+        </div>
+      )}
     </Sider>
   )
 }

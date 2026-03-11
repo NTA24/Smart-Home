@@ -32,8 +32,7 @@ export default function AppHeader({ isHomePage, collapsed, onToggleCollapse, isM
   void mobileMenuOpen
   const { t, i18n } = useTranslation()
   const { token } = theme.useToken()
-  const _navigate = useNavigate()
-  void _navigate
+  const navigate = useNavigate()
 
   const navStore = useHomeNavigationStore()
   const { selectedBuilding } = useBuildingStore()
@@ -69,6 +68,10 @@ export default function AppHeader({ isHomePage, collapsed, onToggleCollapse, isM
   ]
 
   const handleUserMenuClick: MenuProps['onClick'] = ({ key }) => {
+    if (key === 'settings') {
+      navigate('/account-settings')
+      return
+    }
     if (key === 'switch-admin') switchUser('admin' as UserRole)
     else if (key === 'switch-admin1') switchUser('admin1' as UserRole)
   }

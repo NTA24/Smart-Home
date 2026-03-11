@@ -11,6 +11,7 @@ import {
   EnvironmentOutlined,
   RobotOutlined,
   LaptopOutlined,
+  UserOutlined,
 } from '@ant-design/icons'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -140,8 +141,9 @@ export const menuConfig: MenuEntry[] = [
     key: 'energy-management',
     icon: <ThunderboltOutlined />,
     labelKey: 'menu.energyManagement',
-    defaultRoute: '/energy-device-dashboard',
+    defaultRoute: '/energy-device-dashboard-home',
     children: [
+      { key: '/energy-device-dashboard-home', labelKey: 'menu.deviceDashboardHome' },
       { key: '/energy-device-dashboard', labelKey: 'menu.deviceDashboard' },
       { key: '/energy-data-center', labelKey: 'menu.energyDataCenter' },
       { key: '/alarm-statistics', labelKey: 'menu.alarmStatistics' },
@@ -223,3 +225,9 @@ export const ADMIN1_HIDDEN_GROUP_KEYS = new Set([
   'smart-workspace',
   'smart-meeting-room',
 ])
+
+/** Sidebar khi đang ở /account-settings: chỉ 2 mục — Quản lý tài khoản, Quản lý phân quyền */
+export const accountSidebarConfig: MenuEntry[] = [
+  { type: 'item', key: '/account-settings', icon: <UserOutlined />, labelKey: 'menu.accountManagement' },
+  { type: 'item', key: '/user-management', icon: <SafetyCertificateOutlined />, labelKey: 'menu.permissionManagement' },
+]
