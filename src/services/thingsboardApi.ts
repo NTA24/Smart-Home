@@ -445,6 +445,10 @@ export const thingsBoardApi = {
   getServerTime: () =>
     thingsBoardRequest<number | { serverTime?: number }>('get', '/api/dashboard/serverTime'),
 
+  /** Trả về URL đầy đủ cho ảnh ThingsBoard (vd. /api/images/system/...) — dùng cho background hoặc img src */
+  getImageUrl: (path: string) =>
+    `${THINGSBOARD_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`,
+
   /** GET /api/dashboard/home — tổng quan dashboard home */
   getDashboardHome: () =>
     thingsBoardRequest<Record<string, unknown>>('get', '/api/dashboard/home'),

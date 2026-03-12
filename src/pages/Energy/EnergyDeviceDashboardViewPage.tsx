@@ -13,7 +13,10 @@ import {
   FireOutlined,
   CloudOutlined,
   CloseOutlined,
+  PictureOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons'
+import ReactECharts from 'echarts-for-react'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import { PageContainer } from '@/components'
@@ -33,6 +36,9 @@ const RULE_ENGINE_DASHBOARD_ID = 'd0f90c50-1aa3-11f1-8db1-5df566826c84'
 /** Software OTA dashboard (Device list) — getDashboard, visit, serverTime */
 const SOFTWARE_DASHBOARD_ID = 'd0f6c260-1aa3-11f1-8db1-5df566826c84'
 
+/** Bảng thống kê năng lượng Tasmota — getDashboard, visit, tenant/dashboards, serverTime, images */
+const TASMOTA_ENERGY_DASHBOARD_ID = '0add88d0-1ddb-11f1-ae4a-7d6b236a15c2'
+
 function getDeviceIdFromDashboard(data: Record<string, unknown> | null, dashboardId: string): string | null {
   if (!data) return DASHBOARD_TO_DEVICE_ID[dashboardId] ?? null
   const config = data.configuration as Record<string, unknown> | undefined
@@ -44,6 +50,116 @@ function getDeviceIdFromDashboard(data: Record<string, unknown> | null, dashboar
     if (alias?.entityType === 'DEVICE' && alias.entityId) return alias.entityId
   }
   return DASHBOARD_TO_DEVICE_ID[dashboardId] ?? null
+}
+
+/** Đồng hồ Current 0–5 A dùng ECharts — compact = mini view, fullScreen = lấp đầy ô vuông */
+function TasmotaCurrentGaugeEcharts({
+  value,
+  max,
+  compact = false,
+  fullScreen = false,
+}: {
+  value: number
+  max: number
+  compact?: boolean
+  fullScreen?: boolean
+}) {
+  const axisLabelFontSize = compact ? 9 : 11
+  const axisLabelDistance = compact ? 20 : 24
+  const detailFontSize = compact ? 18 : 28
+  const titleFontSize = compact ? 12 : 16
+  const height = fullScreen ? '100%' : compact ? 400 : 520
+  const option = {
+    series: [
+      {
+        type: 'gauge',
+        min: 0,
+        max,
+        splitNumber: 10,
+        axisLine: {
+          lineStyle: {
+            width: compact ? 16 : 20,
+            color: [
+              [2.5 / max, '#f5d4a8'],
+              [3.5 / max, '#e89550'],
+              [1, '#d46b2d'],
+            ],
+          },
+        },
+        pointer: { width: compact ? 5 : 6, itemStyle: { color: '#e89550' } },
+        axisTick: { length: 6, lineStyle: { color: '#8c8c8c' } },
+        splitLine: { length: 12, lineStyle: { color: '#595959', width: 2 } },
+        axisLabel: { distance: axisLabelDistance, color: '#595959', fontSize: axisLabelFontSize },
+        detail: {
+          formatter: '{value}',
+          fontSize: detailFontSize,
+          color: '#262626',
+          offsetCenter: [0, '60%'],
+        },
+        title: { show: true, offsetCenter: [0, '-10%'], fontSize: titleFontSize, color: '#595959' },
+        data: [{ value, name: 'A' }],
+      },
+    ],
+  }
+  return (
+    <div className={`energy-tasmota-gauge-echarts-wrap${fullScreen ? ' energy-tasmota-gauge-echarts-fullscreen' : ''}`}>
+      <ReactECharts option={option} style={{ height, width: '100%' }} notMerge />
+    </div>
+  )
+}
+
+/** Đồng hồ Power Factor 0–1 dùng ECharts — compact = mini view, fullScreen = lấp đầy ô vuông */
+function TasmotaPowerFactorGaugeEcharts({
+  value,
+  compact = false,
+  fullScreen = false,
+}: {
+  value: number
+  compact?: boolean
+  fullScreen?: boolean
+}) {
+  const axisLabelFontSize = compact ? 9 : 11
+  const axisLabelDistance = compact ? 20 : 24
+  const detailFontSize = compact ? 18 : 28
+  const titleFontSize = compact ? 12 : 16
+  const height = fullScreen ? '100%' : compact ? 400 : 520
+  const option = {
+    series: [
+      {
+        type: 'gauge',
+        min: 0,
+        max: 1,
+        splitNumber: 10,
+        axisLine: {
+          lineStyle: {
+            width: compact ? 16 : 20,
+            color: [
+              [0.5, '#ff3b30'],
+              [0.8, '#ffd60a'],
+              [1, '#007aff'],
+            ],
+          },
+        },
+        pointer: { width: compact ? 5 : 6, itemStyle: { color: '#e89550' } },
+        axisTick: { length: 6, lineStyle: { color: '#8c8c8c' } },
+        splitLine: { length: 12, lineStyle: { color: '#595959', width: 2 } },
+        axisLabel: { distance: axisLabelDistance, color: '#595959', fontSize: axisLabelFontSize },
+        detail: {
+          formatter: '{value}',
+          fontSize: detailFontSize,
+          color: '#262626',
+          offsetCenter: [0, '60%'],
+        },
+        title: { show: true, offsetCenter: [0, '-10%'], fontSize: titleFontSize, color: '#595959' },
+        data: [{ value, name: 'PF' }],
+      },
+    ],
+  }
+  return (
+    <div className={`energy-tasmota-gauge-echarts-wrap${fullScreen ? ' energy-tasmota-gauge-echarts-fullscreen' : ''}`}>
+      <ReactECharts option={option} style={{ height, width: '100%' }} notMerge />
+    </div>
+  )
 }
 
 export default function EnergyDeviceDashboardViewPage() {
@@ -77,9 +193,11 @@ export default function EnergyDeviceDashboardViewPage() {
   const [editCardModalOpen, setEditCardModalOpen] = useState(false)
   const [editingCardKey, setEditingCardKey] = useState<'temp' | 'humidity' | null>(null)
   const [editingCardTitle, setEditingCardTitle] = useState('')
+  const [tasmotaGaugeFullScreen, setTasmotaGaugeFullScreen] = useState<'current' | 'pf' | null>(null)
   const isTempHumidityDashboard = dashboardId === TEMP_HUMIDITY_DASHBOARD_ID
   const isRuleEngineDashboard = dashboardId === RULE_ENGINE_DASHBOARD_ID
   const isSoftwareDashboard = dashboardId === SOFTWARE_DASHBOARD_ID
+  const isTasmotaEnergyDashboard = dashboardId === TASMOTA_ENERGY_DASHBOARD_ID
   const isSoftwareLikeDashboard = isSoftwareDashboard || deviceTitle === 'Software' || deviceTitle === 'Firmware'
 
   useEffect(() => {
@@ -92,7 +210,7 @@ export default function EnergyDeviceDashboardViewPage() {
     setLoading(true)
     setError(null)
 
-    const useStatsApis = isTempHumidityDashboard || isRuleEngineDashboard
+    const useStatsApis = isTempHumidityDashboard || isRuleEngineDashboard || isTasmotaEnergyDashboard
     if (useStatsApis) {
       Promise.all([
         thingsBoardApi.getDashboard(dashboardId),
@@ -434,7 +552,7 @@ export default function EnergyDeviceDashboardViewPage() {
     <PageContainer>
       <div
         className={`flex flex-col gap-4 ${
-          isRuleEngineDashboard || isSoftwareLikeDashboard
+          isRuleEngineDashboard || isSoftwareLikeDashboard || isTasmotaEnergyDashboard
             ? 'max-w-full'
             : isTempHumidityDashboard
             ? 'max-w-4xl'
@@ -522,6 +640,119 @@ export default function EnergyDeviceDashboardViewPage() {
               />
             </div>
           </div>
+        ) : isTasmotaEnergyDashboard ? (
+          /* Bảng thống kê năng lượng Tasmota */
+          (() => {
+            const powerCardBg = thingsBoardApi.getImageUrl('/api/images/system/power_consumption_card_background.png')
+            const chartCardBg = thingsBoardApi.getImageUrl('/api/images/system/power_consumption_chart_card_background.png')
+            const powerVal = 31
+            const reactivePowerVal = 34
+            const apparentPowerVal = 46
+            const currentVal = 0.16
+            const powerFactorVal = 0.69
+            const lastUpdateSec = 60
+            const lastUpdateText = lastUpdateSec >= 60 ? `${Math.floor(lastUpdateSec / 60)}m ago` : `${lastUpdateSec}s ago`
+            return (
+              <div className="energy-tasmota-wrap">
+                <div className="energy-device-view-title-bar">
+                  {deviceTitle || t('energyDeviceDashboard.tasmotaEnergyStats', 'Bảng thống kê năng lượng tasmota')}
+                </div>
+                <div className="energy-sensor-toolbar">
+                  <Select
+                    suffixIcon={<DownOutlined />}
+                    value="realtime-1h"
+                    style={{ minWidth: 220 }}
+                    options={[
+                      { value: 'realtime-1h', label: 'Realtime - last 1 hour' },
+                    ]}
+                  />
+                  <Button type="text" icon={<PictureOutlined />} aria-label="Image" />
+                  <Button type="default" icon={<EditOutlined />} size="small">
+                    {t('energyDeviceDashboard.editMode', 'Edit mode')}
+                  </Button>
+                  <Button type="text" icon={<DownloadOutlined />} aria-label="Download" />
+                  <Button type="text" icon={<FullscreenOutlined />} aria-label="Fullscreen" />
+                  {serverTime != null && (
+                    <span className="energy-sensor-server-time" style={{ marginLeft: 8 }}>
+                      {dayjs(serverTime).format('YYYY-MM-DD HH:mm:ss')}
+                    </span>
+                  )}
+                </div>
+                <div className="energy-tasmota-cards">
+                  <div className="energy-tasmota-card" style={{ backgroundImage: `url(${powerCardBg})` }}>
+                    <div className="energy-tasmota-card-header">
+                      <ThunderboltOutlined className="energy-tasmota-card-icon" />
+                      <span className="energy-tasmota-card-label">Power</span>
+                    </div>
+                    <div className="energy-tasmota-card-meta">Last update {lastUpdateText}</div>
+                    <div className="energy-tasmota-card-value">{powerVal} kW</div>
+                  </div>
+                  <div className="energy-tasmota-card" style={{ backgroundImage: `url(${powerCardBg})` }}>
+                    <div className="energy-tasmota-card-header">
+                      <ThunderboltOutlined className="energy-tasmota-card-icon" />
+                      <span className="energy-tasmota-card-label">Reactive Power</span>
+                    </div>
+                    <div className="energy-tasmota-card-meta">Last update {lastUpdateText}</div>
+                    <div className="energy-tasmota-card-value">{reactivePowerVal} VAR</div>
+                  </div>
+                  <div className="energy-tasmota-card" style={{ backgroundImage: `url(${powerCardBg})` }}>
+                    <div className="energy-tasmota-card-header">
+                      <ThunderboltOutlined className="energy-tasmota-card-icon" />
+                      <span className="energy-tasmota-card-label">Apparent Power</span>
+                    </div>
+                    <div className="energy-tasmota-card-meta">Last update {lastUpdateText}</div>
+                    <div className="energy-tasmota-card-value">{apparentPowerVal} VA</div>
+                  </div>
+                </div>
+                <div className="energy-tasmota-gauges">
+                  <div className="energy-tasmota-gauge-card">
+                    <Button
+                      type="text"
+                      icon={<FullscreenOutlined />}
+                      className="energy-tasmota-gauge-fullscreen-btn"
+                      onClick={() => setTasmotaGaugeFullScreen('current')}
+                      aria-label={t('energyDeviceDashboard.gaugesFullScreen', 'Xem full screen')}
+                    />
+                    <TasmotaCurrentGaugeEcharts value={currentVal} max={5} compact />
+                  </div>
+                  <div className="energy-tasmota-gauge-card">
+                    <Button
+                      type="text"
+                      icon={<FullscreenOutlined />}
+                      className="energy-tasmota-gauge-fullscreen-btn"
+                      onClick={() => setTasmotaGaugeFullScreen('pf')}
+                      aria-label={t('energyDeviceDashboard.gaugesFullScreen', 'Xem full screen')}
+                    />
+                    <TasmotaPowerFactorGaugeEcharts value={powerFactorVal} compact />
+                  </div>
+                </div>
+                <Modal
+                  open={tasmotaGaugeFullScreen !== null}
+                  onCancel={() => setTasmotaGaugeFullScreen(null)}
+                  footer={null}
+                  width="100%"
+                  styles={{ body: { padding: 24 } }}
+                  wrapClassName="energy-tasmota-gauges-fullscreen-modal"
+                  closable
+                  closeIcon={<CloseOutlined />}
+                >
+                  <div className="energy-tasmota-gauge-fullscreen-single">
+                    {tasmotaGaugeFullScreen === 'current' && (
+                      <TasmotaCurrentGaugeEcharts value={currentVal} max={5} fullScreen />
+                    )}
+                    {tasmotaGaugeFullScreen === 'pf' && (
+                      <TasmotaPowerFactorGaugeEcharts value={powerFactorVal} fullScreen />
+                    )}
+                  </div>
+                </Modal>
+                <div className="energy-tasmota-power-consumption" style={{ backgroundImage: `url(${chartCardBg})` }}>
+                  <div className="energy-tasmota-power-consumption-label">Power Consumption</div>
+                  <div className="energy-tasmota-power-consumption-meta">Current month so far</div>
+                  <div className="energy-tasmota-power-consumption-meta">Last update {lastUpdateSec + 9}s ago</div>
+                </div>
+              </div>
+            )
+          })()
         ) : isSoftwareLikeDashboard ? (
           /* Software OTA - Device list */
           <div className="energy-software-wrap">
