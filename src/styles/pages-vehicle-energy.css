@@ -2005,27 +2005,74 @@ input.hidden {
 }
 
 .energy-tasmota-power-consumption {
-  min-height: 100px;
+  min-height: 120px;
   padding: 20px;
   border-radius: 8px;
   background-size: cover;
   background-position: center;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.75);
   background-blend-mode: overlay;
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(1px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.energy-tasmota-power-consumption-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.energy-tasmota-power-consumption-icon {
+  color: #ff4d4f;
+  font-size: 1.125rem;
 }
 
 .energy-tasmota-power-consumption-label {
   font-size: 0.9375rem;
   font-weight: 600;
   color: #262626;
-  margin-bottom: 4px;
 }
 
 .energy-tasmota-power-consumption-meta {
   font-size: 0.8125rem;
   color: #595959;
+}
+
+.energy-tasmota-power-consumption-value-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.energy-tasmota-power-consumption-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #52c41a;
+}
+
+.energy-tasmota-power-consumption-na {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.75rem;
+  color: #bfbfbf;
+}
+
+.energy-tasmota-power-consumption-na-unit {
+  font-size: 0.6875rem;
+  color: #d9d9d9;
+}
+
+.energy-tasmota-power-consumption-last {
+  margin-top: auto;
 }
 
 /* ── Cảm biến nhiệt độ và độ ẩm ───────────────────────────────────────────── */
