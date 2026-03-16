@@ -240,12 +240,7 @@ export default function ParkingMap() {
     })
   }
 
-  const filteredSlots = allSlots.filter(s => {
-    if (vehicleFilter === 'car' && s.vehicleType !== 'car') return false
-    if (vehicleFilter === 'motorbike' && s.vehicleType !== 'motorbike') return false
-    if (vehicleFilter === 'truck' && s.vehicleType !== 'truck') return false
-    return true
-  })
+  // (filteredSlots) removed: not used; keep filters via search/highlight only.
 
   const searchResultSlots = plateSearchApplied.trim()
     ? allSlots.filter(s => (s.plate || '').toLowerCase().replace(/\s/g, '').includes(plateSearchApplied.trim().toLowerCase().replace(/\s/g, '')))
@@ -420,11 +415,6 @@ export default function ParkingMap() {
         // Vào block: từ vLaneX dọc → laneY ngang → slot, hoặc từ roadH thẳng dọc xuống slot hàng trên.
 
         // Xác định vào block từ bên nào: hướng gần tòa nhất
-        // entryX = cạnh trái hoặc phải của block (nơi tiếp giáp với đường dọc vàng)
-        const entryX = blockBounds
-          ? (vLaneX < s.x ? blockBounds.l : blockBounds.r)
-          : vLaneX
-
         const pts: [number, number][] = [[bld.x, bld.y]]
 
         // Dùng blockBounds để xác định vùng chính xác, không dùng s.y so sánh với roadH

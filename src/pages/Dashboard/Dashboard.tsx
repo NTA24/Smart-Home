@@ -64,12 +64,9 @@ export default function Dashboard() {
             <Title level={4}>{t('dashboard.people', 'Người')}</Title>
             <div className="mt-2">
               <Text className="dashboard_stat-label">
-                {t('dashboard.currentOccupancy', 'Số người hiện tại')}
+                {t('dashboard.todayVisitors', 'Lượt ra/vào hôm nay')}
               </Text>
               <Title level={3} style={{ marginTop: 4 }}>300</Title>
-              <Text type="secondary">
-                {t('dashboard.todayVisitors', 'Lượt ra/vào hôm nay')}: 1,200
-              </Text>
               <div className="mt-2" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <ArrowUpOutlined style={{ color: '#52c41a' }} />
                 <Text type="success">+5% {t('dashboard.vsYesterday', 'so với hôm qua')}</Text>

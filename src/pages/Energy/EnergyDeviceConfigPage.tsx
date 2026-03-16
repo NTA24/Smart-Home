@@ -39,11 +39,22 @@ import { thingsBoardApi, type ThingsBoardDeviceInfo, type ThingsBoardAssetInfo, 
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
 
-const { Title, Text } = Typography
+const { Text } = Typography
 
 function generateToken(length = 20): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+}
+
+function getIdString(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (!v || typeof v !== 'object') return ''
+  if ('id' in v) {
+    const inner = (v as { id?: unknown }).id
+    if (typeof inner === 'string') return inner
+    if (inner && typeof inner === 'object' && 'id' in (inner as object) && typeof (inner as { id?: unknown }).id === 'string') return (inner as { id: string }).id
+  }
+  return ''
 }
 
 const sections = [
@@ -73,7 +84,6 @@ export default function EnergyDeviceConfigPage() {
   const [deviceMakePrivateDeviceIds, setDeviceMakePrivateDeviceIds] = useState<string[]>([])
   const [deviceUnassignModalOpen, setDeviceUnassignModalOpen] = useState(false)
   const [deviceCredentialsModalOpen, setDeviceCredentialsModalOpen] = useState(false)
-  const [deviceCredentialsDevice, setDeviceCredentialsDevice] = useState<ThingsBoardDeviceInfo | null>(null)
   const [deviceCredentialsType, setDeviceCredentialsType] = useState<'accessToken' | 'x509' | 'mqttBasic'>('accessToken')
   const [deviceCredAccessToken, setDeviceCredAccessToken] = useState('')
   const [deviceCredX509, setDeviceCredX509] = useState('')
@@ -370,11 +380,9 @@ export default function EnergyDeviceConfigPage() {
         .getAssetProfileInfos({ pageSize: 50, page: 0, sortProperty: 'name', sortOrder: 'ASC' })
         .then((res: ThingsBoardAssetProfileInfosResponse) => {
           const data = res?.data ?? []
-          const list = data.map((p) => {
-            const idVal = p?.id
-            const value = (typeof idVal === 'object' && idVal && 'id' in idVal ? (idVal as { id?: string }).id : idVal) ?? ''
-            return { value, label: p?.name ?? '' }
-          }).filter((p) => p.value)
+          const list: Array<{ value: string; label: string }> = data
+            .map((p) => ({ value: getIdString(p?.id), label: p?.name ?? '' }))
+            .filter((p) => p.value)
           setAssetProfileFilterOptions([{ value: 'all', label: t('energyDeviceConfig.all', 'All') }, ...list])
         })
         .catch(() => setAssetProfileFilterOptions([{ value: 'all', label: t('energyDeviceConfig.all', 'All') }]))
@@ -394,6 +402,7 @@ export default function EnergyDeviceConfigPage() {
         .catch(() => setEntityViewTypeOptions([{ value: '', label: t('energyDeviceConfig.all', 'All') }]))
     }
     if (activeSection === 'gateways') {
+      setGatewaysLoading(true)
       thingsBoardApi
         .getServerTime()
         .then((res) => {
@@ -404,6 +413,7 @@ export default function EnergyDeviceConfigPage() {
       setGateways([
         { id: '1', createdTime: Date.now() - 86400 * 2, name: 'Home Assistant', status: 'Active', enabledConnectors: 0, version: '' },
       ])
+      setGatewaysLoading(false)
     }
   }, [activeSection])
 
@@ -567,11 +577,9 @@ export default function EnergyDeviceConfigPage() {
       .getAssetProfileInfos({ pageSize: 50, page: 0, sortProperty: 'name', sortOrder: 'ASC' })
       .then((res: ThingsBoardAssetProfileInfosResponse) => {
         const data = res?.data ?? []
-        const list = data.map((p) => {
-          const idVal = p?.id
-          const id = (typeof idVal === 'object' && idVal && 'id' in idVal ? (idVal as { id?: string }).id : idVal) ?? ''
-          return { id, name: p?.name ?? '' }
-        }).filter((p) => p.id)
+        const list: Array<{ id: string; name: string }> = data
+          .map((p) => ({ id: getIdString(p?.id), name: p?.name ?? '' }))
+          .filter((p) => p.id)
         setAssetProfileList(list)
       })
       .catch(() => setAssetProfileList([]))
@@ -596,7 +604,6 @@ export default function EnergyDeviceConfigPage() {
     }
   }
 
-  const generateAccessToken = () => addDeviceForm.setFieldValue('accessToken', generateToken())
   const generateMqttClientId = () => addDeviceForm.setFieldValue('mqttClientId', generateToken(16))
   const generateMqttUsername = () => addDeviceForm.setFieldValue('mqttUserName', generateToken(12))
   const generateMqttPassword = () => addDeviceForm.setFieldValue('mqttPassword', generateToken(16))
@@ -791,14 +798,6 @@ export default function EnergyDeviceConfigPage() {
                               setProfileImageLink('')
                               setProfileOptions({ defaultRuleChain: [], mobileDashboard: [], queue: [], defaultEdgeRuleChain: [], assignedFirmware: [], assignedSoftware: [] })
                               setProfileOptionsLoaded({ defaultRuleChain: false, mobileDashboard: false, queue: false, defaultEdgeRuleChain: false, assignedFirmware: false, assignedSoftware: false })
-                              const refId = (v: unknown): string | undefined => {
-                                if (typeof v === 'string') return v || undefined
-                                const o = v as { id?: string | { id?: string } } | undefined
-                                const id = o?.id
-                                if (typeof id === 'string') return id
-                                if (id && typeof id === 'object' && typeof (id as { id?: string }).id === 'string') return (id as { id: string }).id
-                                return undefined
-                              }
                               thingsBoardApi
                                 .getDeviceProfile(profileId)
                                 .then((profileRes) => {
@@ -1740,7 +1739,6 @@ export default function EnergyDeviceConfigPage() {
             open={deviceCredentialsModalOpen}
             onCancel={() => {
               setDeviceCredentialsModalOpen(false)
-              setDeviceCredentialsDevice(null)
               setDeviceCredentialsType('accessToken')
               setDeviceCredAccessToken('')
               setDeviceCredX509('')
@@ -1749,7 +1747,7 @@ export default function EnergyDeviceConfigPage() {
               setDeviceCredPassword('')
             }}
             footer={[
-              <Button key="cancel" onClick={() => { setDeviceCredentialsModalOpen(false); setDeviceCredentialsDevice(null); setDeviceCredentialsType('accessToken'); setDeviceCredAccessToken(''); setDeviceCredX509(''); setDeviceCredClientId(''); setDeviceCredUserName(''); setDeviceCredPassword('') }}>{t('common.cancel', 'Cancel')}</Button>,
+              <Button key="cancel" onClick={() => { setDeviceCredentialsModalOpen(false); setDeviceCredentialsType('accessToken'); setDeviceCredAccessToken(''); setDeviceCredX509(''); setDeviceCredClientId(''); setDeviceCredUserName(''); setDeviceCredPassword('') }}>{t('common.cancel', 'Cancel')}</Button>,
               <Button
                 key="save"
                 type="primary"
@@ -1758,7 +1756,7 @@ export default function EnergyDeviceConfigPage() {
                   deviceCredentialsType === 'x509' ? !deviceCredX509?.trim() :
                   !(deviceCredClientId?.trim() || deviceCredUserName?.trim())
                 }
-                onClick={() => { message.info(t('common.saved')); setDeviceCredentialsModalOpen(false); setDeviceCredentialsDevice(null); fetchDeviceInfos(page, pageSize) }}
+                onClick={() => { message.info(t('common.saved')); setDeviceCredentialsModalOpen(false); fetchDeviceInfos(page, pageSize) }}
               >
                 {t('common.save', 'Save')}
               </Button>,
@@ -1847,17 +1845,17 @@ export default function EnergyDeviceConfigPage() {
           {selectedDeviceRowKeys.length > 0 && (
             <div className="energy-toolbar-bulk-actions flex flex-wrap items-center mb-3">
               <Button
-                disabled={devices.filter((d) => selectedDeviceRowKeys.includes((d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? '')).some(deviceHasCustomer)}
+                disabled={devices.filter((d) => selectedDeviceRowKeys.map(String).includes(getIdString(d.id))).some(deviceHasCustomer)}
                 onClick={() => setDeviceAssignModalOpen(true)}
               >
                 {t('energyDeviceConfig.assignToCustomer', 'Assign to customer')}
               </Button>
               <Button
-                disabled={selectedDeviceRowKeys.length > 0 && devices.filter((d) => selectedDeviceRowKeys.includes((d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? '')).every((d) => d.customerIsPublic)}
+                disabled={selectedDeviceRowKeys.length > 0 && devices.filter((d) => selectedDeviceRowKeys.map(String).includes(getIdString(d.id))).every((d) => d.customerIsPublic)}
                 onClick={() => {
                   const ids = selectedDeviceRowKeys.map((k) => String(k))
                   const firstId = ids[0]
-                  const firstDevice = devices.find((d) => (d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) === firstId)
+                  const firstDevice = devices.find((d) => getIdString(d.id) === firstId)
                   setDeviceMakePublicDeviceIds(ids)
                   setDeviceMakePublicDeviceName(firstDevice?.name ?? firstId ?? '—')
                   setDeviceMakePublicModalOpen(true)
@@ -1866,10 +1864,10 @@ export default function EnergyDeviceConfigPage() {
                 {t('energyDeviceConfig.makeDevicePublic', 'Make device public')}
               </Button>
               <Button
-                disabled={!devices.filter((d) => selectedDeviceRowKeys.includes((d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? '')).some((d) => d.customerIsPublic)}
+                disabled={!devices.filter((d) => selectedDeviceRowKeys.map(String).includes(getIdString(d.id))).some((d) => d.customerIsPublic)}
                 onClick={() => {
-                  const selectedDevs = devices.filter((d) => selectedDeviceRowKeys.includes((d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? ''))
-                  const publicIds = selectedDevs.filter((d) => d.customerIsPublic).map((d) => (d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? '')
+                  const selectedDevs = devices.filter((d) => selectedDeviceRowKeys.map(String).includes(getIdString(d.id)))
+                  const publicIds = selectedDevs.filter((d) => d.customerIsPublic).map((d) => getIdString(d.id)).filter(Boolean)
                   const first = selectedDevs.find((d) => d.customerIsPublic)
                   setDeviceMakePrivateDeviceIds(publicIds)
                   setDeviceMakePrivateDeviceName(first?.name ?? publicIds[0] ?? '—')
@@ -1883,11 +1881,11 @@ export default function EnergyDeviceConfigPage() {
                 type="text"
                 icon={<ShareAltOutlined />}
                 title={t('energyDeviceConfig.makeDevicePublic', 'Make device public')}
-                disabled={selectedDeviceRowKeys.length > 0 && devices.filter((d) => selectedDeviceRowKeys.includes((d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? '')).some((d) => d.customerIsPublic)}
+                disabled={selectedDeviceRowKeys.length > 0 && devices.filter((d) => selectedDeviceRowKeys.map(String).includes(getIdString(d.id))).some((d) => d.customerIsPublic)}
                 onClick={() => {
                   const ids = selectedDeviceRowKeys.map((k) => String(k))
                   const firstId = ids[0]
-                  const firstDevice = devices.find((d) => (d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) === firstId)
+                  const firstDevice = devices.find((d) => getIdString(d.id) === firstId)
                   setDeviceMakePublicDeviceIds(ids)
                   setDeviceMakePublicDeviceName(firstDevice?.name ?? firstId ?? '—')
                   setDeviceMakePublicModalOpen(true)
@@ -1897,24 +1895,24 @@ export default function EnergyDeviceConfigPage() {
                 type="text"
                 icon={<UserOutlined />}
                 title={t('energyDeviceConfig.assignToCustomer', 'Assign to customer')}
-                disabled={devices.filter((d) => selectedDeviceRowKeys.includes((d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? '')).some(deviceHasCustomer)}
+                disabled={devices.filter((d) => selectedDeviceRowKeys.map(String).includes(getIdString(d.id))).some(deviceHasCustomer)}
                 onClick={() => setDeviceAssignModalOpen(true)}
               />
                 <Button
                 type="text"
                 icon={<ExportOutlined />}
                 title={t('energyDeviceConfig.unassignFromCustomer', 'Unassign from customer')}
-                disabled={!devices.filter((d) => selectedDeviceRowKeys.includes((d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? '')).some((d) => deviceHasCustomer(d) && !d.customerIsPublic && !!(d.customerTitle && String(d.customerTitle).trim()))}
+                disabled={!devices.filter((d) => selectedDeviceRowKeys.map(String).includes(getIdString(d.id))).some((d) => deviceHasCustomer(d) && !d.customerIsPublic && !!(d.customerTitle && String(d.customerTitle).trim()))}
                 onClick={() => setDeviceUnassignModalOpen(true)}
               />
                 <Button
                 type="text"
                 icon={<LockOutlined />}
                 title={t('energyDeviceConfig.makeDevicePrivate', 'Make device private')}
-                disabled={!devices.filter((d) => selectedDeviceRowKeys.includes((d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? '')).some((d) => d.customerIsPublic)}
+                disabled={!devices.filter((d) => selectedDeviceRowKeys.map(String).includes(getIdString(d.id))).some((d) => d.customerIsPublic)}
                 onClick={() => {
-                  const selectedDevs = devices.filter((d) => selectedDeviceRowKeys.includes((d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? ''))
-                  const publicIds = selectedDevs.filter((d) => d.customerIsPublic).map((d) => (d.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id: string }).id : (d.id as string)) ?? '')
+                  const selectedDevs = devices.filter((d) => selectedDeviceRowKeys.map(String).includes(getIdString(d.id)))
+                  const publicIds = selectedDevs.filter((d) => d.customerIsPublic).map((d) => getIdString(d.id)).filter(Boolean)
                   const first = selectedDevs.find((d) => d.customerIsPublic)
                   setDeviceMakePrivateDeviceIds(publicIds)
                   setDeviceMakePrivateDeviceName(first?.name ?? publicIds[0] ?? '—')
@@ -1940,7 +1938,7 @@ export default function EnergyDeviceConfigPage() {
             </div>
           )}
           <Table<ThingsBoardDeviceInfo>
-            rowKey={(r) => r.id?.id ?? String(Math.random())}
+            rowKey={(r) => getIdString(r.id) || r.name || String(Math.random())}
             loading={loading}
             dataSource={devices}
             rowSelection={{
@@ -2028,7 +2026,7 @@ export default function EnergyDeviceConfigPage() {
                 width: 220,
                 fixed: 'right' as const,
                 render: (_, record) => {
-                  const deviceId = record?.id && typeof record.id === 'object' && 'id' in record ? (record.id as { id: string }).id : (record?.id as string)
+                  const deviceId = getIdString(record?.id)
                   const deviceName = record?.name ?? ''
                   const isPublic = !!record?.customerIsPublic
                   const cid = record?.customerId
@@ -2086,7 +2084,6 @@ export default function EnergyDeviceConfigPage() {
                       icon={<SafetyCertificateOutlined />}
                       title={t('energyDeviceConfig.manageCredentials', 'Manage credentials')}
                       onClick={() => {
-                        setDeviceCredentialsDevice(record)
                         setDeviceCredentialsType('accessToken')
                         setDeviceCredAccessToken('')
                         setDeviceCredX509('')
@@ -2096,7 +2093,7 @@ export default function EnergyDeviceConfigPage() {
                         setDeviceCredentialsModalOpen(true)
                       }}
                     />
-                      <Button type="text" danger icon={<DeleteOutlined />} title={t('energyDeviceConfig.delete', 'Delete')} onClick={() => { setSelectedDeviceRowKeys([deviceId]); setDeviceDeleteDeviceName(deviceName); setDeviceDeleteModalOpen(true) }} />
+                      <Button type="text" danger icon={<DeleteOutlined />} title={t('energyDeviceConfig.delete', 'Delete')} onClick={() => { setSelectedDeviceRowKeys([deviceId].filter(Boolean)); setDeviceDeleteDeviceName(deviceName); setDeviceDeleteModalOpen(true) }} />
                     </Space>
                   )
                 },
@@ -2173,16 +2170,16 @@ export default function EnergyDeviceConfigPage() {
           {selectedAssetRowKeys.length > 0 && (
             <div className="energy-toolbar-bulk-actions flex flex-wrap items-center mb-3">
               <Button
-                disabled={assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key)).some(assetHasCustomer)}
+                disabled={assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id))).some(assetHasCustomer)}
                 onClick={() => setAssetAssignModalOpen(true)}
               >
                 {t('energyDeviceConfig.assignToCustomer', 'Assign to customer')}
               </Button>
               <Button
-                disabled={assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key)).every((a) => a.customerIsPublic)}
+                disabled={assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id))).every((a) => a.customerIsPublic)}
                 onClick={() => {
-                  const selected = assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key))
-                  const ids = selected.map((a) => (a.id?.id ?? (a.id as string) ?? '')).filter(Boolean)
+                  const selected = assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id)))
+                  const ids = selected.map((a) => getIdString(a.id)).filter(Boolean)
                   setAssetMakePublicIds(ids)
                   setAssetMakePublicName(selected[0]?.name ?? ids[0] ?? '—')
                   setAssetMakePublicModalOpen(true)
@@ -2191,10 +2188,10 @@ export default function EnergyDeviceConfigPage() {
                 {t('energyDeviceConfig.makeDevicePublic', 'Make device public')}
               </Button>
               <Button
-                disabled={!assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key)).some((a) => a.customerIsPublic)}
+                disabled={!assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id))).some((a) => a.customerIsPublic)}
                 onClick={() => {
-                  const selected = assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key))
-                  const publicIds = selected.filter((a) => a.customerIsPublic).map((a) => (a.id?.id ?? (a.id as string) ?? '')).filter(Boolean)
+                  const selected = assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id)))
+                  const publicIds = selected.filter((a) => a.customerIsPublic).map((a) => getIdString(a.id)).filter(Boolean)
                   setAssetMakePrivateIds(publicIds)
                   setAssetMakePrivateName(selected.find((a) => a.customerIsPublic)?.name ?? publicIds[0] ?? '—')
                   setAssetMakePrivateModalOpen(true)
@@ -2207,10 +2204,10 @@ export default function EnergyDeviceConfigPage() {
                   type="text"
                   icon={<ShareAltOutlined />}
                   title={t('energyDeviceConfig.makeDevicePublic', 'Make device public')}
-                  disabled={assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key)).every((a) => a.customerIsPublic)}
+                  disabled={assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id))).every((a) => a.customerIsPublic)}
                   onClick={() => {
-                    const selected = assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key))
-                    setAssetMakePublicIds(selected.map((a) => (a.id?.id ?? (a.id as string) ?? '')).filter(Boolean))
+                    const selected = assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id)))
+                    setAssetMakePublicIds(selected.map((a) => getIdString(a.id)).filter(Boolean))
                     setAssetMakePublicName(selected[0]?.name ?? '—')
                     setAssetMakePublicModalOpen(true)
                   }}
@@ -2219,24 +2216,24 @@ export default function EnergyDeviceConfigPage() {
                   type="text"
                   icon={<UserOutlined />}
                   title={t('energyDeviceConfig.assignToCustomer', 'Assign to customer')}
-                  disabled={assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key)).some(assetHasCustomer)}
+                  disabled={assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id))).some(assetHasCustomer)}
                   onClick={() => setAssetAssignModalOpen(true)}
                 />
                 <Button
                   type="text"
                   icon={<ExportOutlined />}
                   title={t('energyDeviceConfig.unassignFromCustomer', 'Unassign from customer')}
-                  disabled={!assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key)).some((a) => assetHasCustomer(a) && !a.customerIsPublic && !!(a.customerTitle && String(a.customerTitle).trim()))}
+                  disabled={!assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id))).some((a) => assetHasCustomer(a) && !a.customerIsPublic && !!(a.customerTitle && String(a.customerTitle).trim()))}
                   onClick={() => setAssetUnassignModalOpen(true)}
                 />
                 <Button
                   type="text"
                   icon={<LockOutlined />}
                   title={t('energyDeviceConfig.makeDevicePrivate', 'Make device private')}
-                  disabled={!assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key)).some((a) => a.customerIsPublic)}
+                  disabled={!assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id))).some((a) => a.customerIsPublic)}
                   onClick={() => {
-                    const selected = assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key))
-                    const publicIds = selected.filter((a) => a.customerIsPublic).map((a) => (a.id?.id ?? (a.id as string) ?? '')).filter(Boolean)
+                    const selected = assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id)))
+                    const publicIds = selected.filter((a) => a.customerIsPublic).map((a) => getIdString(a.id)).filter(Boolean)
                     setAssetMakePrivateIds(publicIds)
                     setAssetMakePrivateName(selected.find((a) => a.customerIsPublic)?.name ?? '—')
                     setAssetMakePrivateModalOpen(true)
@@ -2248,7 +2245,7 @@ export default function EnergyDeviceConfigPage() {
                   icon={<DeleteOutlined />}
                   title={t('energyDeviceConfig.delete', 'Delete')}
                   onClick={() => {
-                    const selected = assets.filter((a) => selectedAssetRowKeys.includes((a.id?.id ?? (a.id as string) ?? '') as React.Key))
+                    const selected = assets.filter((a) => selectedAssetRowKeys.map(String).includes(getIdString(a.id)))
                     setAssetDeleteName(selected.length === 1 ? (selected[0]?.name ?? '—') : `${selected.length} assets`)
                     setAssetDeleteModalOpen(true)
                   }}
@@ -2257,7 +2254,7 @@ export default function EnergyDeviceConfigPage() {
             </div>
           )}
           <Table<ThingsBoardAssetInfo>
-            rowKey={(r) => r.id?.id ?? (typeof r.id === 'string' ? r.id : '') ?? String(Math.random())}
+            rowKey={(r) => getIdString(r.id) || r.name || String(Math.random())}
             loading={assetsLoading}
             dataSource={assets}
             rowSelection={{
@@ -2325,7 +2322,7 @@ export default function EnergyDeviceConfigPage() {
                 width: 220,
                 fixed: 'right' as const,
                 render: (_, record: ThingsBoardAssetInfo) => {
-                  const assetId = (record?.id && typeof record.id === 'object' && 'id' in record ? (record.id as { id: string }).id : (record?.id as string)) ?? ''
+                  const assetId = getIdString(record?.id)
                   const assetName = record?.name ?? ''
                   const isPublic = !!record?.customerIsPublic
                   const hasCustomer = assetHasCustomer(record)
@@ -2338,21 +2335,21 @@ export default function EnergyDeviceConfigPage() {
                         icon={<ShareAltOutlined />}
                         title={t('energyDeviceConfig.makeDevicePublic', 'Make device public')}
                         disabled={isPublic}
-                        onClick={() => { setSelectedAssetRowKeys([assetId]); setAssetMakePublicIds([assetId]); setAssetMakePublicName(assetName); setAssetMakePublicModalOpen(true) }}
+                        onClick={() => { setSelectedAssetRowKeys([assetId].filter(Boolean)); setAssetMakePublicIds([assetId].filter(Boolean)); setAssetMakePublicName(assetName); setAssetMakePublicModalOpen(true) }}
                       />
                       <Button
                         type="text"
                         icon={<UserOutlined />}
                         title={t('energyDeviceConfig.assignToCustomer', 'Assign to customer')}
                         disabled={hasCustomer}
-                        onClick={() => { setSelectedAssetRowKeys([assetId]); setAssetAssignModalOpen(true) }}
+                        onClick={() => { setSelectedAssetRowKeys([assetId].filter(Boolean)); setAssetAssignModalOpen(true) }}
                       />
                       <Button
                         type="text"
                         icon={<ExportOutlined />}
                         title={t('energyDeviceConfig.unassignFromCustomer', 'Unassign from customer')}
                         disabled={disableUnassign}
-                        onClick={() => { if (disableUnassign) return; setSelectedAssetRowKeys([assetId]); setAssetUnassignModalOpen(true) }}
+                        onClick={() => { if (disableUnassign) return; setSelectedAssetRowKeys([assetId].filter(Boolean)); setAssetUnassignModalOpen(true) }}
                       />
                       <Button
                         type="text"
@@ -2366,7 +2363,7 @@ export default function EnergyDeviceConfigPage() {
                         danger
                         icon={<DeleteOutlined />}
                         title={t('energyDeviceConfig.delete', 'Delete')}
-                        onClick={() => { setSelectedAssetRowKeys([assetId]); setAssetDeleteName(assetName); setAssetDeleteModalOpen(true) }}
+                        onClick={() => { setSelectedAssetRowKeys([assetId].filter(Boolean)); setAssetDeleteName(assetName); setAssetDeleteModalOpen(true) }}
                       />
                     </Space>
                   )
@@ -2634,16 +2631,16 @@ export default function EnergyDeviceConfigPage() {
           {selectedEntityViewRowKeys.length > 0 && (
             <div className="energy-toolbar-bulk-actions flex flex-wrap items-center mb-3">
               <Button
-                disabled={entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key)).some(entityViewHasCustomer)}
+                disabled={entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id))).some(entityViewHasCustomer)}
                 onClick={() => setEntityViewAssignModalOpen(true)}
               >
                 {t('energyDeviceConfig.assignToCustomer', 'Assign to customer')}
               </Button>
               <Button
-                disabled={entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key)).every((e) => e.customerIsPublic)}
+                disabled={entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id))).every((e) => e.customerIsPublic)}
                 onClick={() => {
-                  const selected = entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key))
-                  const ids = selected.map((e) => (e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '').filter(Boolean)
+                  const selected = entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id)))
+                  const ids = selected.map((e) => getIdString(e.id)).filter(Boolean)
                   setEntityViewMakePublicIds(ids)
                   setEntityViewMakePublicName(selected[0]?.name ?? ids[0] ?? '—')
                   setEntityViewMakePublicModalOpen(true)
@@ -2652,10 +2649,10 @@ export default function EnergyDeviceConfigPage() {
                 {t('energyDeviceConfig.makeDevicePublic', 'Make device public')}
               </Button>
               <Button
-                disabled={!entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key)).some((e) => e.customerIsPublic)}
+                disabled={!entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id))).some((e) => e.customerIsPublic)}
                 onClick={() => {
-                  const selected = entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key))
-                  const publicIds = selected.filter((e) => e.customerIsPublic).map((e) => (e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '').filter(Boolean)
+                  const selected = entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id)))
+                  const publicIds = selected.filter((e) => e.customerIsPublic).map((e) => getIdString(e.id)).filter(Boolean)
                   setEntityViewMakePrivateIds(publicIds)
                   setEntityViewMakePrivateName(selected.find((e) => e.customerIsPublic)?.name ?? publicIds[0] ?? '—')
                   setEntityViewMakePrivateModalOpen(true)
@@ -2668,10 +2665,10 @@ export default function EnergyDeviceConfigPage() {
                   type="text"
                   icon={<ShareAltOutlined />}
                   title={t('energyDeviceConfig.makeDevicePublic', 'Make device public')}
-                  disabled={entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key)).every((e) => e.customerIsPublic)}
+                  disabled={entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id))).every((e) => e.customerIsPublic)}
                   onClick={() => {
-                    const selected = entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key))
-                    setEntityViewMakePublicIds(selected.map((e) => (e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '').filter(Boolean))
+                    const selected = entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id)))
+                    setEntityViewMakePublicIds(selected.map((e) => getIdString(e.id)).filter(Boolean))
                     setEntityViewMakePublicName(selected[0]?.name ?? '—')
                     setEntityViewMakePublicModalOpen(true)
                   }}
@@ -2680,24 +2677,24 @@ export default function EnergyDeviceConfigPage() {
                   type="text"
                   icon={<UserOutlined />}
                   title={t('energyDeviceConfig.assignToCustomer', 'Assign to customer')}
-                  disabled={entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key)).some(entityViewHasCustomer)}
+                  disabled={entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id))).some(entityViewHasCustomer)}
                   onClick={() => setEntityViewAssignModalOpen(true)}
                 />
                 <Button
                   type="text"
                   icon={<ExportOutlined />}
                   title={t('energyDeviceConfig.unassignFromCustomer', 'Unassign from customer')}
-                  disabled={!entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key)).some((e) => entityViewHasCustomer(e) && !e.customerIsPublic && !!(e.customerTitle && String(e.customerTitle).trim()))}
+                  disabled={!entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id))).some((e) => entityViewHasCustomer(e) && !e.customerIsPublic && !!(e.customerTitle && String(e.customerTitle).trim()))}
                   onClick={() => setEntityViewUnassignModalOpen(true)}
                 />
                 <Button
                   type="text"
                   icon={<LockOutlined />}
                   title={t('energyDeviceConfig.makeDevicePrivate', 'Make device private')}
-                  disabled={!entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key)).some((e) => e.customerIsPublic)}
+                  disabled={!entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id))).some((e) => e.customerIsPublic)}
                   onClick={() => {
-                    const selected = entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key))
-                    const publicIds = selected.filter((e) => e.customerIsPublic).map((e) => (e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '').filter(Boolean)
+                    const selected = entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id)))
+                    const publicIds = selected.filter((e) => e.customerIsPublic).map((e) => getIdString(e.id)).filter(Boolean)
                     setEntityViewMakePrivateIds(publicIds)
                     setEntityViewMakePrivateName(selected.find((e) => e.customerIsPublic)?.name ?? '—')
                     setEntityViewMakePrivateModalOpen(true)
@@ -2709,7 +2706,7 @@ export default function EnergyDeviceConfigPage() {
                   icon={<DeleteOutlined />}
                   title={t('energyDeviceConfig.delete', 'Delete')}
                   onClick={() => {
-                    const selected = entityViews.filter((e) => selectedEntityViewRowKeys.includes(((e.id?.id ?? (typeof e.id === 'string' ? e.id : '')) ?? '') as React.Key))
+                    const selected = entityViews.filter((e) => selectedEntityViewRowKeys.map(String).includes(getIdString(e.id)))
                     setEntityViewDeleteName(selected.length === 1 ? (selected[0]?.name ?? '—') : `${selected.length} entity views`)
                     setEntityViewDeleteModalOpen(true)
                   }}
@@ -2718,7 +2715,7 @@ export default function EnergyDeviceConfigPage() {
             </div>
           )}
           <Table<ThingsBoardEntityViewInfo>
-            rowKey={(r) => r.id?.id ?? (typeof r.id === 'string' ? r.id : '') ?? String(Math.random())}
+            rowKey={(r) => getIdString(r.id) || r.name || String(Math.random())}
             loading={entityViewsLoading}
             dataSource={entityViews}
             rowSelection={{
@@ -2999,8 +2996,8 @@ export default function EnergyDeviceConfigPage() {
                               .then((res) => {
                                 const data = res?.data ?? []
                                 const list = data.map((d) => {
-                                  const id = d?.id && typeof d.id === 'object' && 'id' in d ? (d.id as { id?: string }).id : (d?.id as string)
-                                  return { value: id ?? '', label: d?.name ?? id ?? '—' }
+                                  const id = getIdString(d?.id)
+                                  return { value: id, label: d?.name ?? id ?? '—' }
                                 }).filter((o) => o.value)
                                 setAddEntityViewTargetDeviceOptions(list)
                               })
@@ -3031,8 +3028,8 @@ export default function EnergyDeviceConfigPage() {
                               .then((res) => {
                                 const data = res?.data ?? []
                                 const list = data.map((a) => {
-                                  const id = a?.id && typeof a.id === 'object' && 'id' in a ? (a.id as { id?: string }).id : (a?.id as string)
-                                  return { value: id ?? '', label: a?.name ?? id ?? '—' }
+                                  const id = getIdString(a?.id)
+                                  return { value: id, label: a?.name ?? id ?? '—' }
                                 }).filter((o) => o.value)
                                 setAddEntityViewTargetAssetOptions(list)
                               })
@@ -3289,6 +3286,7 @@ export default function EnergyDeviceConfigPage() {
             title={
               <Space>
                 {t('energyDeviceConfig.launchCommand', 'Launch command')}
+                {!!launchCommandGateway?.name && <Text type="secondary">({launchCommandGateway.name})</Text>}
                 <Button type="text" size="small" icon={<QuestionCircleOutlined />} aria-label={t('common.help', 'Help')} />
               </Space>
             }
@@ -3327,7 +3325,10 @@ export default function EnergyDeviceConfigPage() {
           <Modal
             title={
               <div className="flex items-center justify-between w-full pr-6">
-                <span>{t('energyDeviceConfig.generalConfiguration', 'General Configuration')}</span>
+                <span>
+                  {t('energyDeviceConfig.generalConfiguration', 'General Configuration')}
+                  {!!generalConfigGateway?.name && <Text type="secondary"> ({generalConfigGateway.name})</Text>}
+                </span>
                 <Space>
                   <Segmented
                     size="small"

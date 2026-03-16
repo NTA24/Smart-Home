@@ -212,8 +212,8 @@ export default function EnergyDeviceDashboardPage() {
     setAssignModalOpen(true)
     thingsBoardApi
       .getCustomers({ pageSize: 100 })
-      .then((res: { data?: Array<{ id?: { id?: string }; title?: string }> }) => {
-        const list = (res?.data ?? []) as Array<{ id?: { id?: string }; title?: string }>
+      .then((res: any) => {
+        const list = (res?.data ?? []) as Array<{ id?: { id?: string }; title?: string; name?: string }>
         setCustomerOptions(
           list.map((c) => ({
             value: (c.id && typeof c.id === 'object' && 'id' in c ? (c.id as { id?: string }).id : String(c.id)) ?? '',

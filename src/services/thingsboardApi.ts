@@ -52,7 +52,7 @@ client.interceptors.request.use(
 )
 
 client.interceptors.response.use(
-  (response) => response.data as unknown,
+  (response) => response,
   (error) => Promise.reject(error)
 )
 
@@ -126,7 +126,7 @@ export async function thingsBoardRequest<T = unknown>(
   if (params && Object.keys(params).length > 0) config.params = params
   if (data !== undefined) config.data = data
   const result = await client.request(config)
-  return result as T
+  return result.data as T
 }
 
 // --- Device Infos (tenant) ---

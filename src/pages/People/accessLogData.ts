@@ -75,7 +75,8 @@ const statusMap: Record<AccessLogEntry['status'], VisitorFromLog['status']> = {
 /** Chuyển nhật ký ra vào thành danh sách khách (cho Quản lý khách ra vào). */
 export function getVisitorsFromAccessLogs(entries = ACCESS_LOG_ENTRIES): VisitorFromLog[] {
   const withFace = getAccessLogsWithFace()
-  return withFace.map((r) => ({
+  const faceByKey = new Map(withFace.map((r) => [r.key, r.face]))
+  return entries.map((r) => ({
     key: r.key,
     name: r.name,
     email: '-',
@@ -86,7 +87,7 @@ export function getVisitorsFromAccessLogs(entries = ACCESS_LOG_ENTRIES): Visitor
     type: r.subText,
     qrCode: r.credentialId?.startsWith('QR') ? r.credentialId : `QR${r.key}`,
     status: statusMap[r.status],
-    face: r.face,
+    face: faceByKey.get(r.key) ?? '',
     isVip: isVipByName(r.name),
   }))
 }
