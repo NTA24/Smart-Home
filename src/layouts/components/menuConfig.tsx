@@ -141,9 +141,8 @@ export const menuConfig: MenuEntry[] = [
     key: 'energy-management',
     icon: <ThunderboltOutlined />,
     labelKey: 'menu.energyManagement',
-    defaultRoute: '/energy-device-dashboard-home',
+    defaultRoute: '/energy-monitoring',
     children: [
-      { key: '/energy-device-dashboard-home', labelKey: 'menu.deviceDashboardHome' },
       { key: '/energy-device-dashboard', labelKey: 'menu.deviceDashboard' },
       { key: '/energy-data-center', labelKey: 'menu.energyDataCenter' },
       { key: '/alarm-statistics', labelKey: 'menu.alarmStatistics' },

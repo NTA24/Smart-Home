@@ -58,7 +58,6 @@ const EnergyMvPage = lazy(() => import('@/pages/Energy/EnergyMvPage'))
 const EnergyDeviceManagement = lazy(() => import('@/pages/Energy/EnergyDeviceManagement'))
 const EnergyDeviceDashboardPage = lazy(() => import('@/pages/Energy/EnergyDeviceDashboardPage'))
 const EnergyDeviceDashboardViewPage = lazy(() => import('@/pages/Energy/EnergyDeviceDashboardViewPage'))
-const EnergyDeviceDashboardHomePage = lazy(() => import('@/pages/Energy/EnergyDeviceDashboardHomePage'))
 
 // Elevator
 const ElevatorDashboard = lazy(() => import('@/pages/Elevator/ElevatorDashboard'))
@@ -403,12 +402,6 @@ export const routes: RouteConfig[] = [
     labelKey: 'energyDeviceManagement.configTitle',
     parentKey: 'energy-management',
     element: <EnergyDeviceManagement />,
-  },
-  {
-    path: 'energy-device-dashboard-home',
-    labelKey: 'energyDeviceDashboard.homeTitle',
-    parentKey: 'energy-management',
-    element: <EnergyDeviceDashboardHomePage />,
   },
   {
     path: 'energy-device-dashboard',

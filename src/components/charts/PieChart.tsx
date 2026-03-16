@@ -32,7 +32,7 @@ export default function PieChart({
     legend: showLegend
       ? {
           orient: 'vertical',
-          right: 10,
+          right: 4,
           top: 'center',
           itemWidth: 10,
           itemHeight: 10,
@@ -45,7 +45,8 @@ export default function PieChart({
       {
         type: 'pie',
         radius: [innerRadius, outerRadius],
-        center: showLegend ? ['35%', '50%'] : ['50%', '50%'],
+        // Khi có legend bên phải, đẩy chart lệch trái một chút để text không chạm vào vòng tròn
+        center: showLegend ? ['32%', '50%'] : ['50%', '50%'],
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 4,
