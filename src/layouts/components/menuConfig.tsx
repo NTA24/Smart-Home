@@ -47,6 +47,20 @@ export const menuConfig: MenuEntry[] = [
     labelKey: 'menu.home',
   },
 
+  // ── Camera / Security ────────────────────────────────────────────────────
+  {
+    key: 'security-camera',
+    icon: <VideoCameraOutlined />,
+    labelKey: 'menu.securityCamera',
+    defaultRoute: '/security-monitoring',
+    children: [
+      { key: '/security-monitoring', labelKey: 'menu.securityCenter' },
+      { key: '/camera-live', labelKey: 'menu.cameraLive' },
+      { key: '/camera-playback', labelKey: 'menu.cameraPlayback' },
+      { key: '/camera-config', labelKey: 'menu.cameraConfig' },
+    ],
+  },
+
   // ── People (Con người) ────────────────────────────────────────────────────
   {
     key: 'people-control',
@@ -91,20 +105,6 @@ export const menuConfig: MenuEntry[] = [
       { key: '/parking-subscription', labelKey: 'menu.parkingSubscription' },
       { key: '/parking-devices', labelKey: 'menu.parkingDevices' },
       { key: '/vehicle-config', labelKey: 'menu.vehicleConfig' },
-    ],
-  },
-
-  // ── Security ──────────────────────────────────────────────────────────────
-  {
-    key: 'security-camera',
-    icon: <VideoCameraOutlined />,
-    labelKey: 'menu.securityCamera',
-    defaultRoute: '/security-monitoring',
-    children: [
-      { key: '/security-monitoring', labelKey: 'menu.securityCenter' },
-      { key: '/camera-live', labelKey: 'menu.cameraLive' },
-      { key: '/camera-playback', labelKey: 'menu.cameraPlayback' },
-      { key: '/camera-config', labelKey: 'menu.cameraConfig' },
     ],
   },
 
