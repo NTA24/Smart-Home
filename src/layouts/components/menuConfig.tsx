@@ -46,37 +46,38 @@ export const menuConfig: MenuEntry[] = [
     icon: <HomeOutlined />,
     labelKey: 'menu.home',
   },
+
+  // ── People (Con người) ────────────────────────────────────────────────────
   {
-    key: 'fire-alarm',
-    icon: <SafetyCertificateOutlined />,
-    labelKey: 'menu.fireAlarmManagement',
-    defaultRoute: '/fire-alarm-dashboard',
+    key: 'people-control',
+    icon: <TeamOutlined />,
+    labelKey: 'menu.peopleControl',
+    defaultRoute: '/people-report-overview',
     children: [
-      { key: '/fire-alarm-dashboard', labelKey: 'fireAlarm.tab1' },
-      { key: '/fire-alarm-events', labelKey: 'fireAlarm.tab2' },
-      { key: '/fire-alarm-devices', labelKey: 'fireAlarm.tab3' },
-      { key: '/fire-alarm-roles', labelKey: 'fireAlarm.tab4' },
-      { key: '/fire-alarm-reports', labelKey: 'fireAlarm.tab5' },
-      { key: '/fire-alarm-notifications', labelKey: 'fireAlarm.tab6' },
-      { key: '/fire-alarm-maintenance', labelKey: 'fireAlarm.tab7' },
+      { key: '/people-report-overview', labelKey: 'menu.peopleReportOverview' },
+      { key: '/people-visitors', labelKey: 'menu.peopleVisitors' },
+      { key: '/people-access-logs', labelKey: 'menu.peopleAccessLogs' },
+      { key: '/people-alerts', labelKey: 'menu.peopleAlerts' },
+      { key: '/people-admin-audit', labelKey: 'menu.peopleAdminAudit' },
     ],
   },
 
-  // ── Security ──────────────────────────────────────────────────────────────
+  // ── Energy (Năng lượng) ───────────────────────────────────────────────────
   {
-    key: 'security-camera',
-    icon: <VideoCameraOutlined />,
-    labelKey: 'menu.securityCamera',
-    defaultRoute: '/security-monitoring',
+    key: 'energy-management',
+    icon: <ThunderboltOutlined />,
+    labelKey: 'menu.energyManagement',
+    defaultRoute: '/energy-monitoring',
     children: [
-      { key: '/security-monitoring', labelKey: 'menu.securityCenter' },
-      { key: '/camera-live', labelKey: 'menu.cameraLive' },
-      { key: '/camera-playback', labelKey: 'menu.cameraPlayback' },
-      { key: '/camera-config', labelKey: 'menu.cameraConfig' },
+      { key: '/energy-device-dashboard', labelKey: 'menu.deviceDashboard' },
+      { key: '/energy-data-center', labelKey: 'menu.energyDataCenter' },
+      { key: '/alarm-statistics', labelKey: 'menu.alarmStatistics' },
+      { key: '/energy-monitoring', labelKey: 'menu.energyMonitoring' },
+      { key: '/energy-device-management', labelKey: 'menu.energyDeviceManagement' },
     ],
   },
 
-  // ── Vehicle ───────────────────────────────────────────────────────────────
+  // ── Vehicle (Bãi đỗ xe) ───────────────────────────────────────────────────
   {
     key: 'vehicle-control',
     icon: <CarOutlined />,
@@ -93,18 +94,17 @@ export const menuConfig: MenuEntry[] = [
     ],
   },
 
-  // ── People ────────────────────────────────────────────────────────────────
+  // ── Security ──────────────────────────────────────────────────────────────
   {
-    key: 'people-control',
-    icon: <TeamOutlined />,
-    labelKey: 'menu.peopleControl',
-    defaultRoute: '/people-report-overview',
+    key: 'security-camera',
+    icon: <VideoCameraOutlined />,
+    labelKey: 'menu.securityCamera',
+    defaultRoute: '/security-monitoring',
     children: [
-      { key: '/people-report-overview', labelKey: 'menu.peopleReportOverview' },
-      { key: '/people-visitors', labelKey: 'menu.peopleVisitors' },
-      { key: '/people-access-logs', labelKey: 'menu.peopleAccessLogs' },
-      { key: '/people-alerts', labelKey: 'menu.peopleAlerts' },
-      { key: '/people-admin-audit', labelKey: 'menu.peopleAdminAudit' },
+      { key: '/security-monitoring', labelKey: 'menu.securityCenter' },
+      { key: '/camera-live', labelKey: 'menu.cameraLive' },
+      { key: '/camera-playback', labelKey: 'menu.cameraPlayback' },
+      { key: '/camera-config', labelKey: 'menu.cameraConfig' },
     ],
   },
 
@@ -133,21 +133,6 @@ export const menuConfig: MenuEntry[] = [
     children: [
       { key: '/item-control', labelKey: 'menu.itemControlDashboard' },
       { key: '/locker-map', labelKey: 'menu.lockerMap' },
-    ],
-  },
-
-  // ── Energy ────────────────────────────────────────────────────────────────
-  {
-    key: 'energy-management',
-    icon: <ThunderboltOutlined />,
-    labelKey: 'menu.energyManagement',
-    defaultRoute: '/energy-monitoring',
-    children: [
-      { key: '/energy-device-dashboard', labelKey: 'menu.deviceDashboard' },
-      { key: '/energy-data-center', labelKey: 'menu.energyDataCenter' },
-      { key: '/alarm-statistics', labelKey: 'menu.alarmStatistics' },
-      { key: '/energy-monitoring', labelKey: 'menu.energyMonitoring' },
-      { key: '/energy-device-management', labelKey: 'menu.energyDeviceManagement' },
     ],
   },
 
@@ -213,6 +198,23 @@ export const menuConfig: MenuEntry[] = [
       { key: '/smart-meeting-room/kiosk', labelKey: 'menu.kiosk' },
       { key: '/smart-meeting-room/report-issue', labelKey: 'menu.reportIssue' },
       { key: '/smart-meeting-room/issue-tickets', labelKey: 'menu.issueTickets' },
+    ],
+  },
+
+  // ── Fire Alarm (Quản lý thiết bị báo cháy) ────────────────────────────────
+  {
+    key: 'fire-alarm',
+    icon: <SafetyCertificateOutlined />,
+    labelKey: 'menu.fireAlarmManagement',
+    defaultRoute: '/fire-alarm-dashboard',
+    children: [
+      { key: '/fire-alarm-dashboard', labelKey: 'fireAlarm.tab1' },
+      { key: '/fire-alarm-events', labelKey: 'fireAlarm.tab2' },
+      { key: '/fire-alarm-devices', labelKey: 'fireAlarm.tab3' },
+      { key: '/fire-alarm-roles', labelKey: 'fireAlarm.tab4' },
+      { key: '/fire-alarm-reports', labelKey: 'fireAlarm.tab5' },
+      { key: '/fire-alarm-notifications', labelKey: 'fireAlarm.tab6' },
+      { key: '/fire-alarm-maintenance', labelKey: 'fireAlarm.tab7' },
     ],
   },
 ]
