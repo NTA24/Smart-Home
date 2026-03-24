@@ -1,5 +1,5 @@
 /**
- * Service gọi API ThingsBoard tại https://things.iot-platform.io.vn/
+ * Service gọi API ThingsBoard tại https://newgen.iot-platform.io.vn/
  * Docs: https://thingsboard.io/docs/reference/rest-api/
  * Auth: API Key (X-Authorization: ApiKey <key>) hoặc JWT (X-Authorization: Bearer <token>)
  */
@@ -8,7 +8,7 @@ import axios, { type AxiosInstance } from 'axios'
 
 const THINGSBOARD_BASE_URL =
   (import.meta.env.VITE_THINGSBOARD_URL as string | undefined)?.replace(/\/$/, '') ||
-  'https://things.iot-platform.io.vn'
+  'https://newgen.iot-platform.io.vn'
 
 const TOKEN_STORAGE_KEY = 'thingsboard_token'
 const REFRESH_TOKEN_STORAGE_KEY = 'thingsboard_refresh_token'

@@ -3371,7 +3371,7 @@ export default function EnergyDeviceConfigPage() {
                 </Space>
                 <Input.TextArea
                   rows={14}
-                  value={JSON.stringify({ thingsboard: { host: 'things.iot-platform.io.vn', port: 1883, remoteShell: false, remoteConfiguration: true }, security: { type: 'usernamePassword', clientId: '', username: '', password: '' }, storage: { type: 'memory' } }, null, 2)}
+                  value={JSON.stringify({ thingsboard: { host: 'newgen.iot-platform.io.vn', port: 1883, remoteShell: false, remoteConfiguration: true }, security: { type: 'usernamePassword', clientId: '', username: '', password: '' }, storage: { type: 'memory' } }, null, 2)}
                   readOnly
                   className="font-mono text-sm"
                 />
@@ -3387,7 +3387,7 @@ export default function EnergyDeviceConfigPage() {
                         <div className="flex items-center justify-between"><span>{t('energyDeviceConfig.remoteShell', 'Remote shell')}</span><Switch /></div>
                         <Form layout="vertical" className="mt-2">
                           <Form.Item label={t('energyDeviceConfig.platformHost', 'Platform host') + ' *'}>
-                            <Input defaultValue="things.iot-platform.io.vn" />
+                            <Input defaultValue="newgen.iot-platform.io.vn" />
                           </Form.Item>
                           <Form.Item label={t('energyDeviceConfig.platformPort', 'Platform port') + ' *'}>
                             <Input defaultValue="1883" />
