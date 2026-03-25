@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { Spin, Button, message, Modal, DatePicker, Select, Input, Table, Tabs } from 'antd'
+import { Spin, Button, message, Modal, DatePicker, Select, Input, Table, Tabs, Typography } from 'antd'
 import type { Dayjs } from 'dayjs'
 import {
   ArrowLeftOutlined,
@@ -207,6 +207,31 @@ export default function EnergyDeviceDashboardViewPage() {
   const isSoftwareDashboard = dashboardId === SOFTWARE_DASHBOARD_ID
   const isTasmotaEnergyDashboard = dashboardId === TASMOTA_ENERGY_DASHBOARD_ID
   const isSoftwareLikeDashboard = isSoftwareDashboard || deviceTitle === 'Software' || deviceTitle === 'Firmware'
+
+  /** Mỗi lần đổi dashboard: reset UI để không giữ trạng thái (power, hẹn giờ…) của thiết bị trước. */
+  useEffect(() => {
+    setPowerOn(false)
+    setPowerLoading(false)
+    setContinuousToggle(false)
+    setScheduleModalOpen(false)
+    setScheduleOffModalOpen(false)
+    setScheduledAt(null)
+    setScheduledOffAt(null)
+    setTasmotaGaugeFullScreen(null)
+    setSensorEditMode(false)
+    if (continuousIntervalRef.current) {
+      clearInterval(continuousIntervalRef.current)
+      continuousIntervalRef.current = null
+    }
+    if (scheduleTimeoutRef.current) {
+      clearTimeout(scheduleTimeoutRef.current)
+      scheduleTimeoutRef.current = null
+    }
+    if (scheduleOffTimeoutRef.current) {
+      clearTimeout(scheduleOffTimeoutRef.current)
+      scheduleOffTimeoutRef.current = null
+    }
+  }, [dashboardId])
 
   useEffect(() => {
     if (!dashboardId) {
@@ -975,11 +1000,16 @@ export default function EnergyDeviceDashboardViewPage() {
             </div>
           </div>
         ) : (
-        /* Ổ cắm điện: title + card */
+        /* Mặc định: giao diện điều khiển ổ cắm — mọi dashboard không khớp UUID tùy chỉnh ở trên đều dùng chung layout này (chỉ khác tiêu đề / device id từ API). */
         <div className="energy-outlet-wrap">
           <div className="energy-device-view-title-bar">
             {deviceTitle || t('energyDeviceDashboard.dashboardView', 'Bảng điều khiển thiết bị')}
           </div>
+          {dashboardId && (
+            <Typography.Text type="secondary" className="block mb-3 text-xs" copyable={{ text: dashboardId }}>
+              {t('energyDeviceDashboard.dashboardIdLabel')}: {dashboardId}
+            </Typography.Text>
+          )}
           <div className="energy-device-view-card">
             <div className="energy-device-view-card-label">{t('energyDeviceDashboard.power', 'Power')}</div>
             <div className="energy-device-view-controls">

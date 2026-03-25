@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { dashboardService } from "../../../../core/http/dashboardService";
 import type { DashboardInfo } from "../../../../shared/models/dashboard.models";
 import type { EntityTableConfig } from "../../components/entity/EntitiesTable";
@@ -30,7 +30,7 @@ export function useDashboardsTableConfig(): EntityTableConfig<DashboardInfo> {
         return { data: result.data, totalElements: result.totalElements };
       },
       onRowClick: (entity) => {
-        navigate(`/dashboards/${entity.id.id}`);
+        navigate(`/energy-device-dashboard/${entity.id.id}`);
       },
     }),
     [navigate]

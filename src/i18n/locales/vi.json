@@ -31,7 +31,11 @@
     "save": "Lưu",
     "previous": "Trước",
     "clear": "Xóa",
-    "saved": "Đã lưu"
+    "saved": "Đã lưu",
+    "loading": "Đang tải…",
+    "yes": "Có",
+    "no": "Không",
+    "loadFailed": "Không tải được dữ liệu"
   },
   "menu": {
     "home": "Bảng điều khiển",
@@ -1264,6 +1268,8 @@
     "critical": "Nghiêm trọng",
     "assignedToMe": "Gán cho tôi",
     "homeDashboards": "Bảng điều khiển",
+    "customerDashboards": "Bảng điều khiển khách hàng",
+    "edgeDashboards": "Bảng điều khiển Edge",
     "addDashboard": "Thêm bảng điều khiển",
     "never": "Chưa xem",
     "noDashboards": "Không có bảng điều khiển",
@@ -1316,6 +1322,7 @@
     "uploadNewVersion": "Tải lên phiên bản mới",
     "manageAssignedCustomers": "Quản lý khách hàng được gán",
     "copyDashboardId": "Copy id thiết bị",
+    "dashboardIdLabel": "Mã dashboard",
     "fieldTitle": "Title",
     "description": "Description",
     "mobileAppSettings": "Cài đặt ứng dụng di động",

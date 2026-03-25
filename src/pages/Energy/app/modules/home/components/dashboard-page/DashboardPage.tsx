@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { dashboardService } from "../../../../core/http/dashboardService";
 import type { Dashboard } from "../../../../shared/models/dashboard.models";
 

@@ -31,7 +31,11 @@
     "save": "Save",
     "previous": "Previous",
     "clear": "Clear",
-    "saved": "Saved"
+    "saved": "Saved",
+    "loading": "Loading…",
+    "yes": "Yes",
+    "no": "No",
+    "loadFailed": "Failed to load data"
   },
   "menu": {
     "home": "Home",
@@ -1234,6 +1238,8 @@
     "critical": "Critical",
     "assignedToMe": "Assigned to me",
     "homeDashboards": "Dashboards",
+    "customerDashboards": "Customer dashboards",
+    "edgeDashboards": "Edge dashboards",
     "addDashboard": "Add dashboard",
     "never": "Never",
     "noDashboards": "No dashboards found",
@@ -1286,6 +1292,7 @@
     "uploadNewVersion": "Upload new version",
     "manageAssignedCustomers": "Manage assigned customers",
     "copyDashboardId": "Copy device id",
+    "dashboardIdLabel": "Dashboard ID",
     "fieldTitle": "Title",
     "description": "Description",
     "mobileAppSettings": "Mobile Application Settings",
