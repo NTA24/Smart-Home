@@ -1,6 +1,7 @@
 export {
   default as api,
   CHAT_WITH_AI_URL,
+  postChatWithAi,
   dashboardApi,
   parkingApi,
   parkingDashboardApi,
@@ -13,6 +14,7 @@ export {
   deviceApi,
   energyApi,
 } from './api'
+export type { ChatWithAiResponse } from './chatApi'
 export type {
   ParkingDashboardStats,
   ParkingDashboardTraffic,
@@ -44,7 +46,7 @@ export type {
   ParkingPricingUpsertBody,
   ParkingPricingListResponse,
   AccessControlRecentItem,
-} from './api'
+} from './types/parking.api.types'
 export { tenantApi } from './tenantApi'
 export { campusApi } from './campusApi'
 export { buildingApi } from './buildingApi'
@@ -89,4 +91,15 @@ export type {
   ThingsBoardEntityViewInfosResponse,
 } from './thingsboardApi'
 export { buildEntitiesQueryFindPayload } from './thingsboardApi'
+export {
+  logout,
+  AuthErrorCode,
+  ApiAuthError,
+  normalizeAxiosAuthError,
+  isApiAuthError,
+  getAuthStrategy,
+  setAccessToken,
+  getAccessToken,
+} from '@/lib/auth'
+export type { AuthErrorCodeValue } from '@/lib/auth'
 export * from './types'

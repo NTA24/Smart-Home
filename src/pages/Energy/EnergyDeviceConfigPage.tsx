@@ -36,6 +36,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { PageContainer, ContentCard } from '@/components'
 import { thingsBoardApi, type ThingsBoardDeviceInfo, type ThingsBoardAssetInfo, type ThingsBoardAssetProfileInfosResponse, type ThingsBoardEntityViewInfo, type SaveDeviceBody } from '@/services'
+import { errorMessageFromUnknown } from '@/utils/crudErrors'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
 
@@ -566,7 +567,9 @@ export default function EnergyDeviceConfigPage() {
         const id = typeof idObj?.id === 'string' ? idObj.id : (info?.id as string)
         if (id) addAssetForm.setFieldValue('assetProfileId', id)
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        console.error('[EnergyDeviceConfig] getAssetProfileInfo(default)', errorMessageFromUnknown(err))
+      })
     setAddAssetModalOpen(true)
   }
 
@@ -3588,7 +3591,9 @@ export default function EnergyDeviceConfigPage() {
                               serverScope: typeof serverScope === 'object' && serverScope !== null ? (serverScope as Record<string, unknown>) : undefined,
                               sharedScope: typeof sharedScope === 'object' && sharedScope !== null ? (sharedScope as Record<string, unknown>) : undefined,
                             })
-                          }).catch(() => {})
+                          }).catch((err: unknown) => {
+                            message.error(errorMessageFromUnknown(err) || t('common.loadFailed', 'Tải thất bại'))
+                          })
                         }
                       })
                       .catch((err) => message.error(err?.response?.data?.message ?? err?.message ?? t('common.saveFailed')))

@@ -210,8 +210,8 @@ export default function ApiTest() {
               {t('apiTest.subtitle')}
             </Text>
             <div className="test_tag-row">
-              <Tag color="blue">Base URL: {import.meta.env.VITE_API_URL || '/api'}</Tag>
-              <Tag color="cyan">Swagger: campus.iot-platform.io.vn</Tag>
+              <Tag color="blue">Base URL: {import.meta.env.VITE_API_URL}</Tag>
+              <Tag color="cyan">API docs: your deployed backend / Swagger</Tag>
             </div>
           </>
         }

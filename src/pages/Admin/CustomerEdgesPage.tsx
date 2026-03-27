@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router'
 import dayjs from 'dayjs'
 import { thingsBoardApi } from '@/services'
+import { errorMessageFromUnknown } from '@/utils/crudErrors'
 
 function getEdgeId(item: { id?: { id?: string } | string }): string {
   const id = item.id
@@ -91,7 +92,9 @@ export default function CustomerEdgesPage() {
         ]
         setEdgeTypeOptions(opts)
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        message.error(errorMessageFromUnknown(err) || t('common.loadFailed', 'Tải thất bại'))
+      })
   }, [t])
 
   const onSearch = () => {

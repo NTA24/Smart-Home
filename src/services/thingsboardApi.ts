@@ -1,29 +1,23 @@
 /**
- * Service gọi API ThingsBoard tại https://newgen.iot-platform.io.vn/
+ * Service gọi API ThingsBoard.
  * Docs: https://thingsboard.io/docs/reference/rest-api/
  * Auth: API Key (X-Authorization: ApiKey <key>) hoặc JWT (X-Authorization: Bearer <token>)
  */
 
 import axios, { type AxiosInstance } from 'axios'
-
-const THINGSBOARD_BASE_URL =
-  (import.meta.env.VITE_THINGSBOARD_URL as string | undefined)?.replace(/\/$/, '') ||
-  'https://newgen.iot-platform.io.vn'
+import { THINGSBOARD_BASE_URL } from '@/lib/config/appEnv'
 
 const TOKEN_STORAGE_KEY = 'thingsboard_token'
 const REFRESH_TOKEN_STORAGE_KEY = 'thingsboard_refresh_token'
 const API_KEY_STORAGE_KEY = 'thingsboard_api_key'
 
-/** API Key mặc định (fallback khi chưa set .env). Ưu tiên: .env > localStorage > default. */
-const DEFAULT_THINGSBOARD_API_KEY = 'tb_D77pvSxqVNDwV-OpNoULfhBb318X-u-EnazZd2XcO-l6YkPRo77LIHsJ3pXzCYVuFr8sc-2JzOxisUByuK01dw'
-
-/** API Key từ env (ưu tiên) > localStorage > default. Đặt trong .env: VITE_THINGSBOARD_API_KEY=tb_xxx */
+/** API Key từ env > localStorage. Không hardcode key trong source. */
 function getApiKey(): string | null {
   const fromEnv = import.meta.env.VITE_THINGSBOARD_API_KEY as string | undefined
   if (fromEnv && fromEnv.trim()) return fromEnv.trim()
   const fromStorage = localStorage.getItem(API_KEY_STORAGE_KEY)
   if (fromStorage && fromStorage.trim()) return fromStorage.trim()
-  return DEFAULT_THINGSBOARD_API_KEY
+  return null
 }
 
 const client: AxiosInstance = axios.create({

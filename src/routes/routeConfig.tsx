@@ -1,4 +1,5 @@
 import { lazy } from 'react'
+import { devRoutes, devRedirects } from './devRoutes'
 
 // ─── Lazy imports ────────────────────────────────────────────────────────────
 
@@ -111,10 +112,25 @@ const CustomerEdgesPage = lazy(() => import('@/pages/Admin/CustomerEdgesPage'))
 const EquipmentOperation = lazy(() => import('@/pages/Other/EquipmentOperation'))
 const EnergyMonitor = lazy(() => import('@/pages/Other/EnergyMonitor'))
 
-// Dev/Test — chỉ dùng trong development
-const ApiTest = lazy(() => import('@/pages/Test/ApiTest'))
-const CampusTest = lazy(() => import('@/pages/Test/CampusTest'))
-const BuildingTest = lazy(() => import('@/pages/Test/BuildingTest'))
+// ─── Home wizard (tenant → campus → building): cùng component, khác URL ─────
+
+/**
+ * Các segment route cho flow chọn tòa nhà. Giữ đồng bộ với các entry `routes` bên dưới.
+ */
+export const HOME_BUILDING_FLOW_SEGMENTS = ['home/tenant', 'home/campus', 'home/building'] as const
+
+/** Path đầy đủ tương ứng, ví dụ `/home/tenant` */
+export const HOME_BUILDING_FLOW_PATHS = HOME_BUILDING_FLOW_SEGMENTS.map((s) => `/${s}`) as readonly string[]
+
+/** Đích mặc định cho `/` và redirect alias `home` */
+export const DEFAULT_HOME_PATH = HOME_BUILDING_FLOW_PATHS[0]
+
+/** Từng bước URL của flow Home — thay cho chuỗi `/home/tenant` … rải rác trong code */
+export const HOME_PATH = {
+  tenant: HOME_BUILDING_FLOW_PATHS[0],
+  campus: HOME_BUILDING_FLOW_PATHS[1],
+  building: HOME_BUILDING_FLOW_PATHS[2],
+} as const
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -127,8 +143,6 @@ export interface RouteConfig {
   parentKey?: string
   /** Component lazy-loaded */
   element: React.ReactNode
-  /** Nếu true, route chỉ được render khi import.meta.env.DEV === true */
-  devOnly?: boolean
 }
 
 // ─── Route definitions ────────────────────────────────────────────────────────
@@ -136,18 +150,27 @@ export interface RouteConfig {
 /**
  * SINGLE SOURCE OF TRUTH cho toàn bộ routes của app.
  *
- * Khi thêm route mới, chỉ cần thêm vào đây — KHÔNG cần sửa App.tsx, useTabStore,
- * hay routeToParentKey trong MainLayout.
+ * Khi thêm route mới, chỉ cần thêm vào đây — App.tsx chỉ bọc Suspense và đọc
+ * `routes` + `redirects` + `DEFAULT_HOME_PATH` (không hardcode thêm path).
+ *
+ * Dev/test routes nằm riêng trong `devRoutes.tsx`, được merge có điều kiện
+ * qua `import.meta.env.DEV` — không xuất hiện trong production build.
+ *
+ * **Đăng nhập:** `/login` không nằm trong `routes` này; được khai báo trong `App.tsx`
+ * (cùng cấp `MainLayout` dưới `AuthNavigationRoot`). Đường dẫn chuẩn: `LOGIN_PATH` từ `@/lib/auth/paths`.
+ *
+ * Flow Home (tenant / campus / building): dùng `HOME_BUILDING_FLOW_SEGMENTS` + các
+ * entry được spread vào `routes` bên dưới.
  *
  * Các derived maps (routeToLabelKey, routeToParentKey) được tạo tự động bên dưới.
  */
 export const routes: RouteConfig[] = [
   // ── Home & Dashboard ──────────────────────────────────────────────────────
-  {
-    path: 'home',
+  ...HOME_BUILDING_FLOW_SEGMENTS.map((path) => ({
+    path,
     labelKey: 'menu.home',
     element: <Home />,
-  },
+  })),
   {
     path: 'dashboard',
     labelKey: 'menu.dashboard',
@@ -703,26 +726,8 @@ export const routes: RouteConfig[] = [
     element: <EnergyMonitor />,
   },
 
-  // ── Dev / Test ────────────────────────────────────────────────────────────
-  // devOnly: true → sẽ bị loại khỏi production build
-  {
-    path: 'test-api',
-    labelKey: 'menu.apiTest',
-    element: <ApiTest />,
-    devOnly: true,
-  },
-  {
-    path: 'test-api/campuses/:tenantId',
-    labelKey: 'menu.apiTest',
-    element: <CampusTest />,
-    devOnly: true,
-  },
-  {
-    path: 'test-api/buildings/:campusId',
-    labelKey: 'menu.apiTest',
-    element: <BuildingTest />,
-    devOnly: true,
-  },
+  // ── Dev / Test (merged conditionally from devRoutes.tsx) ──────────────────
+  ...(import.meta.env.DEV ? devRoutes : []),
 ]
 
 // ─── Derived maps (tự động từ routes — không cần cập nhật thủ công) ──────────
@@ -754,8 +759,12 @@ export const routeToParentKey: Record<string, string> = Object.fromEntries(
  * Tách riêng khỏi routes để không bị đưa vào routeToLabelKey.
  */
 export const redirects: Array<{ from: string; to: string }> = [
+  { from: 'home', to: DEFAULT_HOME_PATH },
   { from: 'fire-alarm', to: '/fire-alarm-dashboard' },
   { from: 'live-entrance', to: '/vehicle-access-control' },
   { from: 'live-exit', to: '/vehicle-access-control' },
-  { from: 'api-test', to: '/test-api' },
+  ...(import.meta.env.DEV ? devRedirects : []),
 ]
+
+/** Re-export — canonical definition in `@/lib/auth/paths` (must match `App.tsx` `path="login"`). */
+export { LOGIN_PATH } from '@/lib/auth/paths'

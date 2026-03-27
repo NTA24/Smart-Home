@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Row, Col, Typography } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { EnvironmentOutlined, ArrowUpOutlined } from '@ant-design/icons'
@@ -7,9 +8,9 @@ import { useNavigate } from 'react-router'
 
 const { Text, Title } = Typography
 
-export default function Dashboard() {
+function Dashboard() {
   const { t } = useTranslation()
-  const { selectedBuilding } = useBuildingStore()
+  const selectedBuilding = useBuildingStore((s) => s.selectedBuilding)
   const navigate = useNavigate()
 
   return (
@@ -246,3 +247,4 @@ export default function Dashboard() {
   )
 }
 
+export default memo(Dashboard)

@@ -35,7 +35,7 @@ import {
 } from '@ant-design/icons'
 import { PageContainer, PageHeader, ContentCard } from '@/components'
 import { useBuildingStore } from '@/stores'
-import { api, CHAT_WITH_AI_URL } from '@/services'
+import { postChatWithAi } from '@/services'
 
 const { Text } = Typography
 
@@ -104,7 +104,7 @@ export default function CameraPlayback() {
     setAiLoading(true)
     setAiResult(null)
     try {
-      const res = await api.post(`${CHAT_WITH_AI_URL}/api/chat-with-ai/chat`, { text, model: 'gpt-4o-mini' }) as unknown as { result?: string }
+      const res = await postChatWithAi(text, 'gpt-4o-mini')
       const result = res?.result != null ? String(res.result) : (typeof res === 'string' ? res : '')
       setAiResult(result || t('cameraPlayback.aiNoResult', 'Không có kết quả'))
     } catch (err: unknown) {

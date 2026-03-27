@@ -1,18 +1,5 @@
 {
-    "buildCommand": "npm run build:vercel",
-    "outputDirectory": "dist",
-    "rewrites": [
-        {
-            "source": "/api/:path*",
-            "destination": "https://campus.iot-platform.io.vn/api/:path*"
-        },
-        {
-            "source": "/camera-stream/:path*",
-            "destination": "https://camera.iot-platform.io.vn/:path*"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
-    ]
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

@@ -14,8 +14,7 @@ import securityBg from '../../assets/security-bg-2.png'
 import alertIcon from '../../assets/alert-icon.png'
 import cameraIcon from '../../assets/camera-icon.png'
 import cameraPreview from '../../assets/camera-preview.png'
-import Hls from 'hls.js'
-import mpegts from 'mpegts.js'
+import { attachStreamToVideoElement } from '@/lib/stream/attachStreamToVideoElement'
 import { getWebPlayableStreamCandidates, getYoutubeEmbedUrl, isYoutubeUrl, resolveCameraStreamUrl } from '@/utils/streamUrl'
 
 const { Text } = Typography
@@ -103,111 +102,22 @@ const CameraVideoModal: React.FC<{
       return
     }
 
-    let hls: Hls | null = null
-    let player: mpegts.Player | null = null
     let disposed = false
-    const cleanupCurrent = () => {
-      if (hls) hls.destroy()
-      hls = null
-      if (player) {
-        player.pause()
-        player.unload()
-        player.detachMediaElement()
-        player.destroy()
-      }
-      player = null
-      videoEl.removeAttribute('src')
-      videoEl.load()
-    }
+    let disposePlayback: (() => void) | undefined
 
-    const trySourceAt = (index: number) => {
-      if (disposed) return
-      if (index >= playableCandidates.length) {
-        setStreamError(true)
-        return
-      }
-      const source = playableCandidates[index]
-      cleanupCurrent()
-
-      const isHlsStream = source.includes('.m3u8')
-      const isWsStream = source.startsWith('ws://') || source.startsWith('wss://')
-      const isMp4Stream = source.includes('.mp4')
-
-      if (isHlsStream) {
-        if (Hls.isSupported()) {
-          hls = new Hls({ enableWorker: true, lowLatencyMode: true })
-          hls.loadSource(source)
-          hls.attachMedia(videoEl)
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            const playResult = videoEl.play()
-            if (playResult && typeof playResult.then === 'function') {
-              playResult.catch(() => {})
-            }
-          })
-          hls.on(Hls.Events.ERROR, (_, data) => {
-            if (!data?.fatal) return
-            cleanupCurrent()
-            trySourceAt(index + 1)
-          })
-          return
-        }
-
-        if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-          videoEl.src = source
-          const playResult = videoEl.play()
-          if (playResult && typeof playResult.then === 'function') {
-            playResult.catch(() => trySourceAt(index + 1))
-          }
-          return
-        }
-
-        trySourceAt(index + 1)
-        return
-      }
-
-      if (isWsStream && mpegts.isSupported()) {
-        player = mpegts.createPlayer(
-          { type: 'flv', url: source, isLive: true, hasAudio: false },
-          { enableWorker: true, lazyLoad: false },
-        )
-        player.attachMediaElement(videoEl)
-        player.load()
-        const playResult = player.play()
-        if (playResult && typeof playResult.then === 'function') {
-          playResult.catch(() => trySourceAt(index + 1))
-        }
-        player.on(mpegts.Events.ERROR, () => {
-          cleanupCurrent()
-          trySourceAt(index + 1)
-        })
-        return
-      }
-
-      if (isMp4Stream) {
-        videoEl.src = source
-        const playResult = videoEl.play()
-        if (playResult && typeof playResult.then === 'function') {
-          playResult.catch(() => trySourceAt(index + 1))
-        }
-        videoEl.onerror = () => {
-          videoEl.onerror = null
-          trySourceAt(index + 1)
-        }
-        return
-      }
-
-      trySourceAt(index + 1)
-    }
-
-    try {
-      trySourceAt(0)
-    } catch {
-      setStreamError(true)
-    }
+    void attachStreamToVideoElement(
+      videoEl,
+      playableCandidates,
+      () => disposed,
+      () => setStreamError(true),
+    ).then((dispose) => {
+      if (disposed) dispose()
+      else disposePlayback = dispose
+    })
 
     return () => {
       disposed = true
-      cleanupCurrent()
+      disposePlayback?.()
     }
   }, [visible, streamUrl])
 
@@ -330,113 +240,22 @@ const CameraThumbnail: React.FC<{
       return
     }
 
-    let hls: Hls | null = null
-    let player: mpegts.Player | null = null
     let disposed = false
-    const cleanupCurrent = () => {
-      if (hls) {
-        hls.destroy()
-      }
-      hls = null
-      if (player) {
-        player.pause()
-        player.unload()
-        player.detachMediaElement()
-        player.destroy()
-      }
-      player = null
-      videoEl.removeAttribute('src')
-      videoEl.load()
-    }
+    let disposePlayback: (() => void) | undefined
 
-    const trySourceAt = (index: number) => {
-      if (disposed) return
-      if (index >= playableCandidates.length) {
-        setStreamError(true)
-        return
-      }
-      const source = playableCandidates[index]
-      cleanupCurrent()
-
-      const isHlsStream = source.includes('.m3u8')
-      const isWsStream = source.startsWith('ws://') || source.startsWith('wss://')
-      const isMp4Stream = source.includes('.mp4')
-
-      if (isHlsStream) {
-        if (Hls.isSupported()) {
-          hls = new Hls({ enableWorker: true, lowLatencyMode: true })
-          hls.loadSource(source)
-          hls.attachMedia(videoEl)
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            const playResult = videoEl.play()
-            if (playResult && typeof playResult.then === 'function') {
-              playResult.catch(() => {})
-            }
-          })
-          hls.on(Hls.Events.ERROR, (_, data) => {
-            if (!data?.fatal) return
-            cleanupCurrent()
-            trySourceAt(index + 1)
-          })
-          return
-        }
-
-        if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-          videoEl.src = source
-          const playResult = videoEl.play()
-          if (playResult && typeof playResult.then === 'function') {
-            playResult.catch(() => trySourceAt(index + 1))
-          }
-          return
-        }
-
-        trySourceAt(index + 1)
-        return
-      }
-
-      if (isWsStream && mpegts.isSupported()) {
-        player = mpegts.createPlayer(
-          { type: 'flv', url: source, isLive: true, hasAudio: false },
-          { enableWorker: true, lazyLoad: false },
-        )
-        player.attachMediaElement(videoEl)
-        player.load()
-        const playResult = player.play()
-        if (playResult && typeof playResult.then === 'function') {
-          playResult.catch(() => trySourceAt(index + 1))
-        }
-        player.on(mpegts.Events.ERROR, () => {
-          cleanupCurrent()
-          trySourceAt(index + 1)
-        })
-        return
-      }
-
-      if (isMp4Stream) {
-        videoEl.src = source
-        const playResult = videoEl.play()
-        if (playResult && typeof playResult.then === 'function') {
-          playResult.catch(() => trySourceAt(index + 1))
-        }
-        videoEl.onerror = () => {
-          videoEl.onerror = null
-          trySourceAt(index + 1)
-        }
-        return
-      }
-
-      trySourceAt(index + 1)
-    }
-
-    try {
-      trySourceAt(0)
-    } catch {
-      setStreamError(true)
-    }
+    void attachStreamToVideoElement(
+      videoEl,
+      playableCandidates,
+      () => disposed,
+      () => setStreamError(true),
+    ).then((dispose) => {
+      if (disposed) dispose()
+      else disposePlayback = dispose
+    })
 
     return () => {
       disposed = true
-      cleanupCurrent()
+      disposePlayback?.()
     }
   }, [streamUrl])
 
@@ -572,100 +391,22 @@ const SnapshotVideo: React.FC<{
       return
     }
 
-    let hls: Hls | null = null
-    let player: mpegts.Player | null = null
     let disposed = false
-    const cleanupCurrent = () => {
-      if (hls) hls.destroy()
-      hls = null
-      if (player) {
-        player.pause()
-        player.unload()
-        player.detachMediaElement()
-        player.destroy()
-      }
-      player = null
-      videoEl.removeAttribute('src')
-      videoEl.load()
-    }
+    let disposePlayback: (() => void) | undefined
 
-    const trySourceAt = (index: number) => {
-      if (disposed) return
-      if (index >= playableCandidates.length) {
-        setStreamError(true)
-        return
-      }
-      const source = playableCandidates[index]
-      cleanupCurrent()
+    void attachStreamToVideoElement(
+      videoEl,
+      playableCandidates,
+      () => disposed,
+      () => setStreamError(true),
+    ).then((dispose) => {
+      if (disposed) dispose()
+      else disposePlayback = dispose
+    })
 
-      const isHlsStream = source.includes('.m3u8')
-      const isWsStream = source.startsWith('ws://') || source.startsWith('wss://')
-      const isMp4Stream = source.includes('.mp4')
-
-      if (isHlsStream) {
-        if (Hls.isSupported()) {
-          hls = new Hls({ enableWorker: true, lowLatencyMode: true })
-          hls.loadSource(source)
-          hls.attachMedia(videoEl)
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            const playResult = videoEl.play()
-            if (playResult && typeof playResult.then === 'function') playResult.catch(() => {})
-          })
-          hls.on(Hls.Events.ERROR, (_, data) => {
-            if (!data?.fatal) return
-            cleanupCurrent()
-            trySourceAt(index + 1)
-          })
-          return
-        }
-        if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-          videoEl.src = source
-          const playResult = videoEl.play()
-          if (playResult && typeof playResult.then === 'function') playResult.catch(() => trySourceAt(index + 1))
-          return
-        }
-        trySourceAt(index + 1)
-        return
-      }
-
-      if (isWsStream && mpegts.isSupported()) {
-        player = mpegts.createPlayer(
-          { type: 'flv', url: source, isLive: true, hasAudio: false },
-          { enableWorker: true, lazyLoad: false },
-        )
-        player.attachMediaElement(videoEl)
-        player.load()
-        const playResult = player.play()
-        if (playResult && typeof playResult.then === 'function') playResult.catch(() => trySourceAt(index + 1))
-        player.on(mpegts.Events.ERROR, () => {
-          cleanupCurrent()
-          trySourceAt(index + 1)
-        })
-        return
-      }
-
-      if (isMp4Stream) {
-        videoEl.src = source
-        const playResult = videoEl.play()
-        if (playResult && typeof playResult.then === 'function') playResult.catch(() => trySourceAt(index + 1))
-        videoEl.onerror = () => {
-          videoEl.onerror = null
-          trySourceAt(index + 1)
-        }
-        return
-      }
-
-      trySourceAt(index + 1)
-    }
-
-    try {
-      trySourceAt(0)
-    } catch {
-      setStreamError(true)
-    }
     return () => {
       disposed = true
-      cleanupCurrent()
+      disposePlayback?.()
     }
   }, [streamUrl])
 

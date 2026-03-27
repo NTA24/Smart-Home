@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import {
   createBrowserRouter,
   RouterProvider,
@@ -11,60 +11,43 @@ import enUS from 'antd/locale/en_US'
 import viVN from 'antd/locale/vi_VN'
 import { useTranslation } from 'react-i18next'
 
+import AuthNavigationRoot from './layouts/AuthNavigationRoot'
 import MainLayout from './layouts/MainLayout'
-import DevOnly from './components/DevOnly'
 import PageLoading from './components/PageLoading'
-import { routes, redirects } from './routes/routeConfig'
+import { routes, redirects, DEFAULT_HOME_PATH } from './routes/routeConfig'
+
+const LoginPage = lazy(() => import('./pages/Auth/LoginPage'))
 
 const locales = { en: enUS, vi: viVN }
 
-const Home = lazy(() => import('@/pages/Dashboard/Home'))
-
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<MainLayout />}>
-      <Route index element={<Navigate to="/home/tenant" replace />} />
-      <Route path="home" element={<Navigate to="/home/tenant" replace />} />
+    <Route path="/" element={<AuthNavigationRoot />}>
       <Route
-        path="home/tenant"
+        path="login"
         element={
           <Suspense fallback={<PageLoading />}>
-            <Home />
+            <LoginPage />
           </Suspense>
         }
       />
-      <Route
-        path="home/campus"
-        element={
-          <Suspense fallback={<PageLoading />}>
-            <Home />
-          </Suspense>
-        }
-      />
-      <Route
-        path="home/building"
-        element={
-          <Suspense fallback={<PageLoading />}>
-            <Home />
-          </Suspense>
-        }
-      />
-      {routes
-        .filter((r) => r.path !== 'home')
-        .map(({ path, element, devOnly }) => (
+      <Route element={<MainLayout />}>
+        <Route index element={<Navigate to={DEFAULT_HOME_PATH} replace />} />
+        {routes.map(({ path, element }) => (
           <Route
             key={path}
             path={path}
             element={
               <Suspense fallback={<PageLoading />}>
-                {devOnly ? <DevOnly>{element}</DevOnly> : element}
+                {element}
               </Suspense>
             }
           />
         ))}
-      {redirects.map(({ from, to }) => (
-        <Route key={from} path={from} element={<Navigate to={to} replace />} />
-      ))}
+        {redirects.map(({ from, to }) => (
+          <Route key={from} path={from} element={<Navigate to={to} replace />} />
+        ))}
+      </Route>
     </Route>
   )
 )

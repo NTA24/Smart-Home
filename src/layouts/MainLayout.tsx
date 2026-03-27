@@ -4,23 +4,22 @@ import { Outlet, useLocation } from 'react-router'
 import { AiChatFab, AppFooter, AppHeader, LeftNav, MiddleSidebar, LEFT_NAV_WIDTH, LEFT_NAV_WIDTH_COLLAPSED, MIDDLE_SIDEBAR_WIDTH } from './components'
 import { useHomeNavigationStore } from '@/stores'
 import { useMediaQuery, MOBILE_BREAKPOINT } from '@/hooks'
+import { HOME_BUILDING_FLOW_PATHS, HOME_PATH } from '@/routes/routeConfig'
 
 const { Content } = Layout
-
-const HOME_PATHS = ['/home/tenant', '/home/campus', '/home/building'] as const
 
 export default function MainLayout() {
   const { token } = theme.useToken()
   const location = useLocation()
   const setStep = useHomeNavigationStore((s) => s.setStep)
-  const isHomePage = location.pathname === '/home' || HOME_PATHS.some((p) => location.pathname === p)
+  const isHomePage = HOME_BUILDING_FLOW_PATHS.some((p) => location.pathname === p)
   const isMobile = useMediaQuery(MOBILE_BREAKPOINT)
 
-  // Đồng bộ step với URL: /home/tenant -> tenants, /home/campus -> campuses, /home/building -> buildings
+  // Đồng bộ step với URL (HOME_PATH)
   useEffect(() => {
-    if (location.pathname === '/home/tenant') setStep('tenants')
-    else if (location.pathname === '/home/campus') setStep('campuses')
-    else if (location.pathname === '/home/building') setStep('buildings')
+    if (location.pathname === HOME_PATH.tenant) setStep('tenants')
+    else if (location.pathname === HOME_PATH.campus) setStep('campuses')
+    else if (location.pathname === HOME_PATH.building) setStep('buildings')
   }, [location.pathname, setStep])
 
   // ── Logo state ──────────────────────────────────────────────────────────────

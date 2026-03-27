@@ -37,6 +37,13 @@
     "no": "Không",
     "loadFailed": "Không tải được dữ liệu"
   },
+  "auth": {
+    "login": {
+      "title": "Đăng nhập",
+      "subtitle": "Giao diện đăng nhập chưa nối API. Khi tích hợp backend, nên dùng cookie httpOnly hoặc BFF thay vì lưu token trong localStorage nếu có thể.",
+      "continueHome": "Về trang chủ"
+    }
+  },
   "menu": {
     "home": "Bảng điều khiển",
     "buildingList": "Danh sách tòa nhà",
@@ -2475,7 +2482,7 @@
   },
   "apiTest": {
     "title": "Kiểm thử API",
-    "subtitle": "Kiểm thử các endpoint API Khách thuê & Khu viên (Swagger: campus.iot-platform.io.vn)",
+    "subtitle": "Kiểm thử các endpoint API Khách thuê & Khu viên (xem Swagger / tài liệu API của môi trường bạn deploy).",
     "tenantManagement": "Quản lý Khách thuê",
     "campusManagement": "Quản lý Khu viên",
     "loadData": "Làm mới dữ liệu",

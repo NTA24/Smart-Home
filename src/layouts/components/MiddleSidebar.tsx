@@ -16,7 +16,7 @@ import {
   useHomeNavigationStore,
 } from '@/stores'
 import type { Tab } from '@/stores'
-import { routeToParentKey, routeToLabelKey } from '@/routes/routeConfig'
+import { routeToParentKey, routeToLabelKey, HOME_PATH } from '@/routes/routeConfig'
 import { menuConfig, accountSidebarConfig, ADMIN1_HIDDEN_GROUP_KEYS } from './menuConfig'
 import type { MenuGroup } from './menuConfig'
 
@@ -196,7 +196,7 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
       <div className="mid-dropdown_footer">
         <a
           className="mid-dropdown_link"
-          onClick={() => { setBuildingDropdownOpen(false); navigate('/home/tenant') }}
+          onClick={() => { setBuildingDropdownOpen(false); navigate(HOME_PATH.tenant) }}
         >
           {t('menu.viewAll')} →
         </a>

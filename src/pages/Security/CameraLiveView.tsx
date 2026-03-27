@@ -26,8 +26,7 @@ import {
 } from '@ant-design/icons'
 import { ContentCard } from '@/components'
 import { useBuildingStore } from '@/stores'
-import mpegts from 'mpegts.js'
-import Hls from 'hls.js'
+import { attachStreamToVideoElement } from '@/lib/stream/attachStreamToVideoElement'
 import { getWebPlayableStreamCandidates, getYoutubeEmbedUrl } from '@/utils/streamUrl'
 import { DEMO_CAMERAS } from './cameraConfig'
 
@@ -161,143 +160,31 @@ function CameraStreamPlayer({
     setStreamError(null)
     onStreamError?.(false)
     setActiveSource('')
-    let player: mpegts.Player | null = null
-    let hls: Hls | null = null
+
     let disposed = false
-    let loadTimeout: ReturnType<typeof setTimeout> | null = null
+    let disposePlayback: (() => void) | undefined
 
-    const clearLoadTimeout = () => {
-      if (loadTimeout) {
-        clearTimeout(loadTimeout)
-        loadTimeout = null
-      }
-    }
-
-    const cleanupCurrent = () => {
-      if (hls) {
-        hls.destroy()
-        hls = null
-      }
-      if (player) {
-        player.pause()
-        player.unload()
-        player.detachMediaElement()
-        player.destroy()
-        player = null
-      }
-      videoEl.removeAttribute('src')
-      videoEl.load()
-    }
-
-    const trySourceAt = (index: number) => {
-      if (disposed) return
-      if (index >= playableCandidates.length) {
+    void attachStreamToVideoElement(
+      videoEl,
+      playableCandidates,
+      () => disposed,
+      () => {
         setStreamError(t('cameraLive.lostConnection', 'Mất kết nối'))
         onStreamError?.(true)
-        return
-      }
-
-      const source = playableCandidates[index]
-      setActiveSource(source)
-      cleanupCurrent()
-
-      const isHlsStream = source.includes('.m3u8')
-      const isWsStream = source.startsWith('ws://') || source.startsWith('wss://')
-      const isMp4Stream = source.includes('.mp4')
-
-      if (isHlsStream) {
-        if (Hls.isSupported()) {
-          hls = new Hls({ enableWorker: true, lowLatencyMode: true })
-          hls.loadSource(source)
-          hls.attachMedia(videoEl)
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            clearLoadTimeout()
-            const playResult = videoEl.play()
-            if (playResult && typeof playResult.then === 'function') {
-              playResult.catch(() => {})
-            }
-          })
-          hls.on(Hls.Events.ERROR, (_, data) => {
-            if (!data?.fatal) return
-            cleanupCurrent()
-            trySourceAt(index + 1)
-          })
-          return
-        }
-
-        if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
-          videoEl.src = source
-          const playResult = videoEl.play()
-          if (playResult && typeof playResult.then === 'function') {
-            playResult.catch(() => trySourceAt(index + 1))
-          }
-          return
-        }
-
-        trySourceAt(index + 1)
-        return
-      }
-
-      if (isWsStream) {
-        if (!mpegts.isSupported()) {
-          trySourceAt(index + 1)
-          return
-        }
-
-        player = mpegts.createPlayer(
-          { type: 'flv', url: source, isLive: true, hasAudio: false },
-          { enableWorker: true, lazyLoad: false, stashInitialSize: 128 },
-        )
-        player.attachMediaElement(videoEl)
-        player.load()
-        const playResult = player.play()
-        if (playResult && typeof playResult.then === 'function') {
-          playResult.then(() => clearLoadTimeout()).catch(() => trySourceAt(index + 1))
-        }
-        player.on(mpegts.Events.ERROR, () => {
-          clearLoadTimeout()
-          cleanupCurrent()
-          trySourceAt(index + 1)
-        })
-        return
-      }
-
-      if (isMp4Stream) {
-        videoEl.src = source
-        const playResult = videoEl.play()
-        if (playResult && typeof playResult.then === 'function') {
-          playResult.catch(() => trySourceAt(index + 1))
-        }
-        videoEl.onerror = () => {
-          videoEl.onerror = null
-          trySourceAt(index + 1)
-        }
-        return
-      }
-
-      trySourceAt(index + 1)
-    }
-
-    loadTimeout = setTimeout(() => {
-      if (disposed) return
-      clearLoadTimeout()
-      setStreamError(t('cameraLive.lostConnection', 'Mất kết nối'))
-      onStreamError?.(true)
-      cleanupCurrent()
-    }, 12000)
-
-    try {
-      trySourceAt(0)
-    } catch {
-      clearLoadTimeout()
-      setStreamError(t('cameraLive.lostConnection', 'Mất kết nối'))
-      onStreamError?.(true)
-    }
+      },
+      {
+        loadTimeoutMs: 12000,
+        mpegtsPlayerConfig: { stashInitialSize: 128 },
+        onPlayableSource: setActiveSource,
+      },
+    ).then((dispose) => {
+      if (disposed) dispose()
+      else disposePlayback = dispose
+    })
 
     return () => {
       disposed = true
-      clearLoadTimeout()
-      cleanupCurrent()
+      disposePlayback?.()
     }
   }, [streamUrl, t, youtubeEmbed, onStreamError])
 

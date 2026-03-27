@@ -37,6 +37,13 @@
     "no": "No",
     "loadFailed": "Failed to load data"
   },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Authentication UI is not wired to the API yet. After backend login is integrated, store tokens via httpOnly cookies or a secure BFF instead of localStorage when possible.",
+      "continueHome": "Continue to home"
+    }
+  },
   "menu": {
     "home": "Home",
     "buildingList": "Building List",
@@ -2445,7 +2452,7 @@
   },
   "apiTest": {
     "title": "API Testing",
-    "subtitle": "Test Tenant & Campus API endpoints (Swagger: campus.iot-platform.io.vn)",
+    "subtitle": "Test Tenant & Campus API endpoints (see your environment’s API docs / Swagger URL).",
     "tenantManagement": "Tenant Management",
     "campusManagement": "Campus Management",
     "loadData": "Load Data",

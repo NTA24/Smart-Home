@@ -3,7 +3,7 @@ import { Button, Drawer, Dropdown, Input, Spin, message, Popover } from 'antd'
 import type { MenuProps } from 'antd'
 import { CommentOutlined, SendOutlined } from '@ant-design/icons'
 import { useTranslation } from 'react-i18next'
-import { api, CHAT_WITH_AI_URL } from '@/services'
+import { postChatWithAi } from '@/services'
 import './AiChatFab.css'
 
 const AI_MODELS = [
@@ -63,7 +63,7 @@ export default function AiChatFab() {
     setLoading(true)
 
     try {
-      const res = await api.post(`${CHAT_WITH_AI_URL}/api/chat-with-ai/chat`, { text, model: selectedModel }) as unknown as { result?: string }
+      const res = await postChatWithAi(text, selectedModel)
       const result = res?.result != null ? String(res.result) : (typeof res === 'string' ? res : '')
       const assistantMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,

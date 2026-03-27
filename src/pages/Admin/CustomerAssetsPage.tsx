@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate } from 'react-router'
 import dayjs from 'dayjs'
 import { thingsBoardApi } from '@/services'
+import { errorMessageFromUnknown } from '@/utils/crudErrors'
 import type { ThingsBoardAssetInfo } from '@/services'
 
 function getAssetId(item: ThingsBoardAssetInfo): string {
@@ -97,7 +98,9 @@ export default function CustomerAssetsPage() {
         ]
         setAssetProfileOptions(opts)
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        message.error(errorMessageFromUnknown(err) || t('common.loadFailed', 'Tải thất bại'))
+      })
   }, [t])
 
   const columns: ColumnsType<AssetRow> = [

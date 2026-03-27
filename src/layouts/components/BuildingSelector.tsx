@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Dropdown, Tag, Typography } from 'antd'
+import { Dropdown, Tag, Typography, message } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import {
@@ -9,7 +9,9 @@ import {
 } from '@ant-design/icons'
 import { useHomeNavigationStore, useBuildingStore, useTabStore } from '@/stores'
 import type { Tab } from '@/stores'
-import { tenantApi, campusApi, buildingApi } from '@/services'
+import { campusApi, buildingApi } from '@/services'
+import { errorMessageFromUnknown } from '@/utils/crudErrors'
+import { HOME_PATH } from '@/routes/routeConfig'
 
 const { Text } = Typography
 
@@ -67,13 +69,17 @@ export default function BuildingSelector({ triggerClassName, onClose }: Building
       navStore.setSelectedTenant(tenant)
       navStore.setStep('campuses')
       try {
-        const res = await tenantApi.getList({ limit: 50, offset: 0 })
         const campuses = await campusApi.getListByTenantId(tenant.id)
         const list = Array.isArray(campuses) ? campuses : (campuses?.items ?? [])
-        navStore.setCampuses(list)
-        void res // suppress unused
-      } catch { /* ignore */ }
-      navigate('/home/campus')
+        navStore.setCampuses(list.map((c) => ({ ...c, status: 'ACTIVE' })))
+        navigate(HOME_PATH.campus)
+      } catch (err: unknown) {
+        message.error(`${t('apiTest.fetchError')}: ${errorMessageFromUnknown(err)}`)
+        navStore.setStep('tenants')
+        navStore.setSelectedTenant(null)
+        navStore.setCampuses([])
+        navigate(HOME_PATH.tenant)
+      }
 
     } else if (navStore.step === 'campuses') {
       const campus = navStore.campuses.find(c => c.id === id)
@@ -83,9 +89,15 @@ export default function BuildingSelector({ triggerClassName, onClose }: Building
       try {
         const res = await buildingApi.getListByCampusId(campus.id)
         const list = Array.isArray(res) ? res : (res?.items ?? [])
-        navStore.setBuildings(list)
-      } catch { /* ignore */ }
-      navigate('/home/building')
+        navStore.setBuildings(list.map((b) => ({ ...b, status: 'ACTIVE' })))
+        navigate(HOME_PATH.building)
+      } catch (err: unknown) {
+        message.error(`${t('apiTest.fetchError')}: ${errorMessageFromUnknown(err)}`)
+        navStore.setStep('campuses')
+        navStore.setSelectedCampus(null)
+        navStore.setBuildings([])
+        navigate(HOME_PATH.campus)
+      }
 
     } else {
       // Chọn building → điều hướng vào dashboard
@@ -147,7 +159,7 @@ export default function BuildingSelector({ triggerClassName, onClose }: Building
       <div className="nav-dropdown_footer">
         <a
           className="nav-dropdown_link"
-          onClick={() => { handleClose(); navigate('/home/tenant') }}
+          onClick={() => { handleClose(); navigate(HOME_PATH.tenant) }}
         >
           {t('menu.viewAll')} →
         </a>

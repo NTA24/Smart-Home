@@ -1,4 +1,4 @@
-import api from './api'
+import api from '@/lib/http/client'
 
 // ========================
 // Energy Materialized Views API

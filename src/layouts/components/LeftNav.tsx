@@ -3,6 +3,7 @@ import { HomeOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/
 import viettelLogo from '@/assets/viettel-logo.png'
 import newgenLogo from '@/assets/newgen-logo.png'
 import BuildingSelector from './BuildingSelector.tsx'
+import { DEFAULT_HOME_PATH, HOME_BUILDING_FLOW_PATHS } from '@/routes/routeConfig'
 
 export const LEFT_NAV_WIDTH = 200
 export const LEFT_NAV_WIDTH_COLLAPSED = 64
@@ -20,14 +21,14 @@ interface LeftNavProps {
 export default function LeftNav({ useNewgenLogo, onLogoClick, onCloseDrawer, collapsed, onToggleCollapse }: LeftNavProps) {
   const navigate = useNavigate()
   const location = useLocation()
-  const isHome = location.pathname === '/home/tenant' || location.pathname === '/home/campus' || location.pathname === '/home/building'
+  const isHome = HOME_BUILDING_FLOW_PATHS.some((p) => location.pathname === p)
 
   const currentLogo = useNewgenLogo ? newgenLogo : viettelLogo
   const width = collapsed ? LEFT_NAV_WIDTH_COLLAPSED : LEFT_NAV_WIDTH
 
   const goHome = () => {
     onCloseDrawer?.()
-    navigate('/home/tenant')
+    navigate(DEFAULT_HOME_PATH)
   }
 
   return (

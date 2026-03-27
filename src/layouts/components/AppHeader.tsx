@@ -14,6 +14,7 @@ import {
   BankOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router'
+import { HOME_PATH } from '@/routes/routeConfig'
 import { useHomeNavigationStore, useUserStore, useBuildingStore } from '@/stores'
 import type { UserRole } from '@/stores'
 
@@ -169,7 +170,7 @@ function Breadcrumb() {
         <span
           className="breadcrumb_link"
           style={linkStyle}
-          onClick={() => { navStore.reset(); navigate('/home/tenant') }}
+          onClick={() => { navStore.reset(); navigate(HOME_PATH.tenant) }}
           onMouseEnter={hoverIn}
           onMouseLeave={hoverOut}
         >
@@ -184,7 +185,7 @@ function Breadcrumb() {
           <span
             className="breadcrumb_link"
             style={linkStyle}
-            onClick={() => { navStore.setStep('campuses'); navigate('/home/campus') }}
+            onClick={() => { navStore.setStep('campuses'); navigate(HOME_PATH.campus) }}
             onMouseEnter={hoverIn}
             onMouseLeave={hoverOut}
           >
