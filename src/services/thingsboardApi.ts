@@ -10,6 +10,7 @@ import { THINGSBOARD_BASE_URL } from '@/lib/config/appEnv'
 const TOKEN_STORAGE_KEY = 'thingsboard_token'
 const REFRESH_TOKEN_STORAGE_KEY = 'thingsboard_refresh_token'
 const API_KEY_STORAGE_KEY = 'thingsboard_api_key'
+const TB_REFRESH_PATH = '/api/auth/token'
 
 /** API Key từ env > localStorage. Không hardcode key trong source. */
 function getApiKey(): string | null {
@@ -45,9 +46,53 @@ client.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+let tbRefreshInFlight: Promise<string | null> | null = null
+
+async function refreshThingsBoardToken(): Promise<string | null> {
+  if (tbRefreshInFlight) return tbRefreshInFlight
+  tbRefreshInFlight = (async () => {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)
+    if (!refreshToken) return null
+    try {
+      const raw = await axios.post<{ token?: string; refreshToken?: string }>(
+        `${THINGSBOARD_BASE_URL}${TB_REFRESH_PATH}`,
+        { refreshToken },
+        { headers: { 'Content-Type': 'application/json' }, timeout: 15000 }
+      )
+      const nextToken = raw.data?.token?.trim() || null
+      const nextRefresh = raw.data?.refreshToken?.trim() || null
+      if (nextToken) setThingsBoardToken(nextToken)
+      if (nextRefresh) setThingsBoardRefreshToken(nextRefresh)
+      return nextToken
+    } catch {
+      clearThingsBoardAuth()
+      return null
+    } finally {
+      tbRefreshInFlight = null
+    }
+  })()
+  return tbRefreshInFlight
+}
+
 client.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(error)
+  async (error) => {
+    const status = error?.response?.status as number | undefined
+    const originalRequest = error?.config as (typeof error.config & { _tbRetry?: boolean }) | undefined
+
+    // If using API key, token refresh is irrelevant.
+    if (status !== 401 || getApiKey() || !originalRequest || originalRequest._tbRetry) {
+      return Promise.reject(error)
+    }
+
+    originalRequest._tbRetry = true
+    const token = await refreshThingsBoardToken()
+    if (!token) return Promise.reject(error)
+
+    originalRequest.headers = originalRequest.headers ?? {}
+    originalRequest.headers['X-Authorization'] = `Bearer ${token}`
+    return client.request(originalRequest)
+  }
 )
 
 // --- Auth ---

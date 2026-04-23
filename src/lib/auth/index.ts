@@ -1,4 +1,10 @@
-export { getAuthStrategy, shouldSendCredentials, shouldAttachBearerHeader, getAuthRefreshPath } from './authConfig'
+export {
+  getAuthStrategy,
+  shouldSendCredentials,
+  shouldAttachBearerHeader,
+  getAuthRefreshPath,
+  getAuthLogoutPath,
+} from './authConfig'
 export type { AuthStrategy } from './authConfig'
 export { getMemoryAccessToken, setMemoryAccessToken } from './accessTokenMemory'
 export { getAccessToken, setAccessToken, clearAccessToken } from './tokenStorage'

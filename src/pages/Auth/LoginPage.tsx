@@ -1,10 +1,23 @@
-import { Button, Card, Typography } from 'antd'
+import { Button, Card, Typography, message } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
+import { useNavigate } from 'react-router'
 import { DEFAULT_HOME_PATH } from '@/routes/routeConfig'
+import { getAuthStrategy, tryRefreshAccessToken } from '@/lib/auth'
 
 export default function LoginPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+
+  const handleContinue = async () => {
+    if (getAuthStrategy() === 'bearer_memory') {
+      const ok = await tryRefreshAccessToken()
+      if (!ok) {
+        message.error(t('auth.login.failed', 'Không thể xác thực phiên đăng nhập. Vui lòng đăng nhập lại.'))
+        return
+      }
+    }
+    navigate(DEFAULT_HOME_PATH)
+  }
 
   return (
     <div
@@ -22,11 +35,9 @@ export default function LoginPage() {
           {t('auth.login.title')}
         </Typography.Title>
         <Typography.Paragraph type="secondary">{t('auth.login.subtitle')}</Typography.Paragraph>
-        <Link to={DEFAULT_HOME_PATH}>
-          <Button type="primary" block>
-            {t('auth.login.continueHome')}
-          </Button>
-        </Link>
+        <Button type="primary" block onClick={() => void handleContinue()}>
+          {t('auth.login.continueHome')}
+        </Button>
       </Card>
     </div>
   )

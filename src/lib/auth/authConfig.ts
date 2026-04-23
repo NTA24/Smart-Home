@@ -22,7 +22,16 @@ export function shouldSendCredentials(): boolean {
 /** POST path (relative to `VITE_API_URL`) để đổi refresh cookie lấy access token mới (chỉ `bearer_memory`). */
 export function getAuthRefreshPath(): string | null {
   const p = (import.meta.env.VITE_AUTH_REFRESH_PATH as string | undefined)?.trim()
-  return p ? p.replace(/^\//, '') : null
+  if (p) return p.replace(/^\//, '')
+  // Safe default for common backend convention.
+  return getAuthStrategy() === 'bearer_memory' ? 'auth/refresh' : null
+}
+
+/** POST path (relative to `VITE_API_URL`) to invalidate refresh/session cookie on logout. */
+export function getAuthLogoutPath(): string | null {
+  const p = (import.meta.env.VITE_AUTH_LOGOUT_PATH as string | undefined)?.trim()
+  if (p) return p.replace(/^\//, '')
+  return 'auth/logout'
 }
 
 export function shouldAttachBearerHeader(): boolean {
