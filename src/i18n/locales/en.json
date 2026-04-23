@@ -44,6 +44,10 @@
       "continueHome": "Continue to home"
     }
   },
+  "placeholder": {
+    "title": "Feature in development",
+    "description": "Content for this section has not been implemented yet."
+  },
   "menu": {
     "home": "Home",
     "buildingList": "Building List",
@@ -166,7 +170,19 @@
     "energy": "Energy",
     "comfort": "Comfort",
     "safety": "Safety",
-    "operations": "Operations"
+    "operations": "Operations",
+    "system": "System",
+    "operationsCenter": "Operations center",
+    "operationsAlerts": "Alerts & incidents",
+    "operationsTasks": "Processing tasks",
+    "operationsBuildingMap": "Building map",
+    "operationsLogbook": "Operations logbook",
+    "operationsShiftHandover": "Shift handover",
+    "governance": "Governance",
+    "governanceReports": "Reports",
+    "governanceSystemLog": "System log",
+    "governanceUsersPermissions": "Users & permissions",
+    "governanceSystemConfig": "System configuration"
   },
   "header": {
     "notifications": "Notifications",

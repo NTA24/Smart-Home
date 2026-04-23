@@ -20,6 +20,26 @@ const LoginPage = lazy(() => import('./pages/Auth/LoginPage'))
 
 const locales = { en: enUS, vi: viVN }
 
+function shouldCreateSystemAlias(path: string): boolean {
+  return (
+    !path.startsWith('system/') &&
+    !path.startsWith('operations/') &&
+    !path.startsWith('governance/') &&
+    !path.startsWith('home/') &&
+    !path.startsWith('account-settings/') &&
+    path !== 'account-settings' &&
+    path !== 'user-management' &&
+    !path.startsWith('test-api')
+  )
+}
+
+const allRenderableRoutes = [
+  ...routes,
+  ...routes
+    .filter((r) => shouldCreateSystemAlias(r.path))
+    .map((r) => ({ ...r, path: `system/${r.path}` })),
+]
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<AuthNavigationRoot />}>
@@ -33,7 +53,7 @@ const router = createBrowserRouter(
       />
       <Route element={<MainLayout />}>
         <Route index element={<Navigate to={DEFAULT_HOME_PATH} replace />} />
-        {routes.map(({ path, element }) => (
+        {allRenderableRoutes.map(({ path, element }) => (
           <Route
             key={path}
             path={path}

@@ -44,6 +44,10 @@
       "continueHome": "Về trang chủ"
     }
   },
+  "placeholder": {
+    "title": "Tính năng đang phát triển",
+    "description": "Nội dung cho mục này chưa được triển khai."
+  },
   "menu": {
     "home": "Bảng điều khiển",
     "buildingList": "Danh sách tòa nhà",
@@ -166,7 +170,19 @@
     "energy": "Năng lượng",
     "comfort": "Tiện nghi",
     "safety": "An toàn",
-    "operations": "Vận hành"
+    "operations": "Vận hành",
+    "system": "Hệ thống",
+    "operationsCenter": "Trung tâm vận hành",
+    "operationsAlerts": "Cảnh báo & sự cố",
+    "operationsTasks": "Công việc xử lý",
+    "operationsBuildingMap": "Bản đồ tòa nhà",
+    "operationsLogbook": "Nhật ký vận hành",
+    "operationsShiftHandover": "Bàn giao ca",
+    "governance": "Quản trị",
+    "governanceReports": "Báo cáo",
+    "governanceSystemLog": "Nhật ký hệ thống",
+    "governanceUsersPermissions": "Người dùng & phân quyền",
+    "governanceSystemConfig": "Cấu hình hệ thống"
   },
   "header": {
     "notifications": "Thông báo",

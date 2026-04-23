@@ -8,6 +8,14 @@ import {
   BuildOutlined,
   AppstoreOutlined,
   HomeOutlined,
+  BarChartOutlined,
+  WarningOutlined,
+  SnippetsOutlined,
+  FileTextOutlined,
+  TeamOutlined,
+  UserOutlined,
+  SettingOutlined,
+  EnvironmentOutlined,
 } from '@ant-design/icons'
 import {
   useTabStore,
@@ -27,6 +35,11 @@ const { Sider } = Layout
 const { Text } = Typography
 
 export const MIDDLE_SIDEBAR_WIDTH = 260
+
+function toSystemPath(path: string): string {
+  if (path.startsWith('/system/')) return path
+  return `/system${path}`
+}
 
 interface MiddleSidebarProps {
   collapsed: boolean
@@ -92,11 +105,45 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
       ? menuConfig.filter(item => !ADMIN1_HIDDEN_GROUP_KEYS.has(item.key))
       : menuConfig
 
+  const operationMenuItems: MenuProps['items'] = [
+    { key: '/operations/center', icon: <AppstoreOutlined />, label: t('menu.operationsCenter') },
+    {
+      key: '/operations/alerts',
+      icon: <WarningOutlined />,
+      label: (
+        <span className="sidebar-ops-item">
+          <span>{t('menu.operationsAlerts')}</span>
+          <span className="sidebar-ops-badge sidebar-ops-badge--danger">12</span>
+        </span>
+      ),
+    },
+    {
+      key: '/operations/tasks',
+      icon: <SnippetsOutlined />,
+      label: (
+        <span className="sidebar-ops-item">
+          <span>{t('menu.operationsTasks')}</span>
+          <span className="sidebar-ops-badge sidebar-ops-badge--warning">5</span>
+        </span>
+      ),
+    },
+    { key: '/operations/building-map', icon: <EnvironmentOutlined />, label: t('menu.operationsBuildingMap') },
+    { key: '/operations/logbook', icon: <FileTextOutlined />, label: t('menu.operationsLogbook') },
+    { key: '/operations/shift-handover', icon: <TeamOutlined />, label: t('menu.operationsShiftHandover') },
+  ]
+  const governanceMenuItems: MenuProps['items'] = [
+    { key: '/governance/reports', icon: <BarChartOutlined />, label: t('menu.governanceReports') },
+    { key: '/governance/system-log', icon: <FileTextOutlined />, label: t('menu.governanceSystemLog') },
+    { key: '/governance/users-permissions', icon: <UserOutlined />, label: t('menu.governanceUsersPermissions') },
+    { key: '/governance/system-config', icon: <SettingOutlined />, label: t('menu.governanceSystemConfig') },
+  ]
+
   const menuItems: MenuProps['items'] = baseConfig.map(entry => {
     if ('type' in entry && entry.type === 'item') {
       const isDashboard = entry.key === '/dashboard'
+      const routeKey = !isAccountSection ? toSystemPath(entry.key) : entry.key
       return {
-        key: entry.key,
+        key: routeKey,
         icon: entry.icon,
         label: isDashboard ? (
           <span className="middle-sidebar-menu_dashboard-label">{t(entry.labelKey)}</span>
@@ -109,6 +156,7 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
     // Group với children
     const group = entry as MenuGroup
     const isGroupDisabled = DISABLED_MENU_GROUP_KEYS.has(group.key)
+    const groupDefaultRoute = !isAccountSection ? toSystemPath(group.defaultRoute) : group.defaultRoute
     const groupLabel = (
       <span
         onClick={e => {
@@ -119,7 +167,7 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
           }
           e.stopPropagation()
           const currentGroupKey = routeToParentKey[location.pathname]
-          if (currentGroupKey !== group.key) navigate(group.defaultRoute)
+          if (currentGroupKey !== group.key) navigate(groupDefaultRoute)
         }}
         style={isGroupDisabled ? { cursor: 'not-allowed', opacity: 0.65 } : undefined}
       >
@@ -133,7 +181,7 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
       label: groupLabel,
       disabled: isGroupDisabled,
       children: group.children.map(child => ({
-        key: child.key,
+        key: !isAccountSection ? toSystemPath(child.key) : child.key,
         label: t(child.labelKey),
         disabled: child.disabled ?? isGroupDisabled,
       })),
@@ -237,7 +285,7 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
         className="building-selector-wrap"
         style={{
           padding: '12px 14px',
-          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+          borderBottom: 'none',
           background: token.colorBgContainer,
         }}
       >
@@ -292,6 +340,22 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
       </div>
 
       {/* Navigation menu */}
+      {!isAccountSection && (
+        <>
+          <div className="middle-sidebar-section-title middle-sidebar-section-title--first">
+            {t('menu.operations', 'Vận hành')}
+          </div>
+          <Menu
+            className="middle-sidebar-menu"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={operationMenuItems}
+            onClick={handleMenuClick}
+            style={{ border: 'none', marginTop: 8 }}
+          />
+          <div className="middle-sidebar-section-title">{t('menu.system', 'Hệ thống')}</div>
+        </>
+      )}
       <Menu
         className="middle-sidebar-menu"
         mode="inline"
@@ -302,6 +366,19 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
         onClick={handleMenuClick}
         style={{ border: 'none', marginTop: 8 }}
       />
+      {!isAccountSection && (
+        <>
+          <div className="middle-sidebar-section-title">{t('menu.governance', 'Quản trị')}</div>
+          <Menu
+            className="middle-sidebar-menu"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={governanceMenuItems}
+            onClick={handleMenuClick}
+            style={{ border: 'none', marginTop: 8 }}
+          />
+        </>
+      )}
 
       {/* Khi ở trang tài khoản: nút quay lại bảng điều khiển */}
       {isAccountSection && (

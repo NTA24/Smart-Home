@@ -666,6 +666,51 @@
   font-weight: 500;
 }
 
+.middle-sidebar-section-title {
+  margin: 10px 12px 6px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+  color: #8f8f8f;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.middle-sidebar-section-title--first {
+  border-top: none;
+  padding-top: 0;
+}
+
+.sidebar-ops-item {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sidebar-ops-badge {
+  min-width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  padding: 0 6px;
+  color: #fff;
+  font-size: 11px;
+  line-height: 20px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.sidebar-ops-badge--danger {
+  background: #f5222d;
+}
+
+.sidebar-ops-badge--warning {
+  background: #fa8c16;
+}
+
 /* ── Sidebar submenu group headers – bolder text ── */
 .ant-menu-submenu > .ant-menu-submenu-title {
   font-weight: 600 !important;

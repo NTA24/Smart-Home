@@ -111,6 +111,7 @@ const CustomerEdgesPage = lazy(() => import('@/pages/Admin/CustomerEdgesPage'))
 // Other
 const EquipmentOperation = lazy(() => import('@/pages/Other/EquipmentOperation'))
 const EnergyMonitor = lazy(() => import('@/pages/Other/EnergyMonitor'))
+const SectionPlaceholderPage = lazy(() => import('@/pages/Common/SectionPlaceholderPage'))
 
 // ─── Home wizard (tenant → campus → building): cùng component, khác URL ─────
 
@@ -721,6 +722,56 @@ export const routes: RouteConfig[] = [
     element: <EquipmentOperation />,
   },
   {
+    path: 'operations/center',
+    labelKey: 'menu.operationsCenter',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'operations/alerts',
+    labelKey: 'menu.operationsAlerts',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'operations/tasks',
+    labelKey: 'menu.operationsTasks',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'operations/building-map',
+    labelKey: 'menu.operationsBuildingMap',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'operations/logbook',
+    labelKey: 'menu.operationsLogbook',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'operations/shift-handover',
+    labelKey: 'menu.operationsShiftHandover',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/reports',
+    labelKey: 'menu.governanceReports',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/system-log',
+    labelKey: 'menu.governanceSystemLog',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/users-permissions',
+    labelKey: 'menu.governanceUsersPermissions',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/system-config',
+    labelKey: 'menu.governanceSystemConfig',
+    element: <SectionPlaceholderPage />,
+  },
+  {
     path: 'energy',
     labelKey: 'menu.energyMonitor',
     element: <EnergyMonitor />,
@@ -730,6 +781,19 @@ export const routes: RouteConfig[] = [
   ...(import.meta.env.DEV ? devRoutes : []),
 ]
 
+function shouldCreateSystemAlias(path: string): boolean {
+  return (
+    !path.startsWith('system/') &&
+    !path.startsWith('operations/') &&
+    !path.startsWith('governance/') &&
+    !path.startsWith('home/') &&
+    !path.startsWith('account-settings/') &&
+    path !== 'account-settings' &&
+    path !== 'user-management' &&
+    !path.startsWith('test-api')
+  )
+}
+
 // ─── Derived maps (tự động từ routes — không cần cập nhật thủ công) ──────────
 
 /**
@@ -738,7 +802,13 @@ export const routes: RouteConfig[] = [
  * Ví dụ: '/camera-live' → 'menu.cameraLive'
  */
 export const routeToLabelKey: Record<string, string> = Object.fromEntries(
-  routes.map(r => [`/${r.path}`, r.labelKey])
+  routes.flatMap((r) => {
+    const entries: Array<[string, string]> = [[`/${r.path}`, r.labelKey]]
+    if (shouldCreateSystemAlias(r.path)) {
+      entries.push([`/system/${r.path}`, r.labelKey])
+    }
+    return entries
+  })
 )
 
 /**
@@ -749,7 +819,13 @@ export const routeToLabelKey: Record<string, string> = Object.fromEntries(
 export const routeToParentKey: Record<string, string> = Object.fromEntries(
   routes
     .filter(r => r.parentKey)
-    .map(r => [`/${r.path}`, r.parentKey!])
+    .flatMap((r) => {
+      const entries: Array<[string, string]> = [[`/${r.path}`, r.parentKey!]]
+      if (shouldCreateSystemAlias(r.path)) {
+        entries.push([`/system/${r.path}`, r.parentKey!])
+      }
+      return entries
+    })
 )
 
 // ─── Redirect aliases ─────────────────────────────────────────────────────────
