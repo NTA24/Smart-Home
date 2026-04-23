@@ -14,9 +14,14 @@ export function getAuthStrategy(): AuthStrategy {
 
 /** Gửi cookie (SameSite session / refresh) với request same-site hoặc CORS đã cấu hình credentials. */
 export function shouldSendCredentials(): boolean {
-  if (import.meta.env.VITE_API_WITH_CREDENTIALS === 'true') return true
+  const explicit = import.meta.env.VITE_API_WITH_CREDENTIALS
+  if (explicit === 'true') return true
+  if (explicit === 'false') return false
   const s = getAuthStrategy()
-  return s === 'cookie' || s === 'bearer_memory'
+  // Safe default:
+  // - cookie strategy needs credentials to send session cookie
+  // - bearer_memory should not force credentials (avoids CORS wildcard+credentials conflicts)
+  return s === 'cookie'
 }
 
 /** POST path (relative to `VITE_API_URL`) để đổi refresh cookie lấy access token mới (chỉ `bearer_memory`). */
