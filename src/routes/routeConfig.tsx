@@ -1,5 +1,11 @@
 import { lazy } from 'react'
 import { devRoutes, devRedirects } from './devRoutes'
+import {
+  operationsNavFlow,
+  governanceNavFlow,
+  collectRouteParentKeys,
+  resolveSystemMenuKey,
+} from '@/layouts/components/navSplitMenu'
 
 // ─── Lazy imports ────────────────────────────────────────────────────────────
 
@@ -772,6 +778,90 @@ export const routes: RouteConfig[] = [
     element: <SectionPlaceholderPage />,
   },
   {
+    path: 'operations/incidents/open',
+    labelKey: 'nav.ops.incidentsOpen',
+    parentKey: 'ops-incidents',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'operations/incidents/resolved',
+    labelKey: 'nav.ops.incidentsResolved',
+    parentKey: 'ops-incidents',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'operations/work/todo',
+    labelKey: 'nav.ops.workTodo',
+    parentKey: 'ops-work',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'operations/work/in-progress',
+    labelKey: 'nav.ops.workInProgress',
+    parentKey: 'ops-work',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/users/roles',
+    labelKey: 'nav.gov.roles',
+    parentKey: 'gov-users',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/devices/connection',
+    labelKey: 'nav.gov.connectionStatus',
+    parentKey: 'gov-devices',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/config/modules',
+    labelKey: 'nav.gov.moduleConfig',
+    parentKey: 'gov-config',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/config/thresholds',
+    labelKey: 'nav.gov.alarmThresholds',
+    parentKey: 'gov-config',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/services/pricing',
+    labelKey: 'nav.gov.feeSchedule',
+    parentKey: 'gov-services',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/services/payment',
+    labelKey: 'nav.gov.payment',
+    parentKey: 'gov-services',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/maintenance/schedule',
+    labelKey: 'nav.gov.maintenanceSchedule',
+    parentKey: 'gov-maintenance',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/maintenance/due',
+    labelKey: 'nav.gov.devicesDue',
+    parentKey: 'gov-maintenance',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/reports/kpi',
+    labelKey: 'nav.gov.kpi',
+    parentKey: 'gov-reports',
+    element: <SectionPlaceholderPage />,
+  },
+  {
+    path: 'governance/logs/activity',
+    labelKey: 'nav.gov.operationHistory',
+    parentKey: 'gov-logs',
+    element: <SectionPlaceholderPage />,
+  },
+  {
     path: 'energy',
     labelKey: 'menu.energyMonitor',
     element: <EnergyMonitor />,
@@ -816,7 +906,7 @@ export const routeToLabelKey: Record<string, string> = Object.fromEntries(
  * Dùng trong MiddleSidebar để auto-expand đúng menu khi navigate đến một trang.
  * Ví dụ: '/camera-live' → 'security-camera'
  */
-export const routeToParentKey: Record<string, string> = Object.fromEntries(
+const routeToParentKeyFromRoutes: Record<string, string> = Object.fromEntries(
   routes
     .filter(r => r.parentKey)
     .flatMap((r) => {
@@ -827,6 +917,17 @@ export const routeToParentKey: Record<string, string> = Object.fromEntries(
       return entries
     })
 )
+
+/** Override: sidebar Vận hành / Quản trị dùng nhóm cha theo mockup MENU ĐIỀU HƯỚNG */
+const navFlowParentKeyExtras: Record<string, string> = {
+  ...collectRouteParentKeys(operationsNavFlow, resolveSystemMenuKey),
+  ...collectRouteParentKeys(governanceNavFlow, resolveSystemMenuKey),
+}
+
+export const routeToParentKey: Record<string, string> = {
+  ...routeToParentKeyFromRoutes,
+  ...navFlowParentKeyExtras,
+}
 
 // ─── Redirect aliases ─────────────────────────────────────────────────────────
 

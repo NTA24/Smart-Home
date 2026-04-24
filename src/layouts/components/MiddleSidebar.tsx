@@ -8,28 +8,23 @@ import {
   BuildOutlined,
   AppstoreOutlined,
   HomeOutlined,
-  BarChartOutlined,
-  WarningOutlined,
-  SnippetsOutlined,
-  FileTextOutlined,
-  TeamOutlined,
-  UserOutlined,
-  SettingOutlined,
-  EnvironmentOutlined,
+  SlidersOutlined,
+  SecurityScanOutlined,
 } from '@ant-design/icons'
 import {
   useTabStore,
   useBuildingStore,
-  useUserStore,
   useHomeNavigationStore,
 } from '@/stores'
 import type { Tab } from '@/stores'
 import { routeToParentKey, routeToLabelKey, HOME_PATH } from '@/routes/routeConfig'
-import { menuConfig, accountSidebarConfig, ADMIN1_HIDDEN_GROUP_KEYS } from './menuConfig'
-import type { MenuGroup } from './menuConfig'
-
-/** Menu group keys that are disabled (not clickable, no expand). */
-const DISABLED_MENU_GROUP_KEYS = new Set<string>(['fire-alarm'])
+import { accountSidebarConfig } from './menuConfig'
+import {
+  operationsNavFlow,
+  governanceNavFlow,
+  buildFlowMenuItems,
+  resolveSystemMenuKey,
+} from './navSplitMenu'
 
 const { Sider } = Layout
 const { Text } = Typography
@@ -37,8 +32,7 @@ const { Text } = Typography
 export const MIDDLE_SIDEBAR_WIDTH = 260
 
 function toSystemPath(path: string): string {
-  if (path.startsWith('/system/')) return path
-  return `/system${path}`
+  return resolveSystemMenuKey(path.startsWith('/') ? path : `/${path}`)
 }
 
 interface MiddleSidebarProps {
@@ -58,12 +52,11 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
 
   const { addTab } = useTabStore()
   const { selectedBuilding, setSelectedBuilding, selectBuildingById } = useBuildingStore()
-  const { currentUser } = useUserStore()
   const navStore = useHomeNavigationStore()
 
   const [openKeys, setOpenKeys] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem('menu-open-keys')
-    return saved ? JSON.parse(saved) : ['home']
+    const saved = sessionStorage.getItem('menu-flow-open-keys')
+    return saved ? JSON.parse(saved) : []
   })
 
   const [buildingDropdownOpen, setBuildingDropdownOpen] = useState(false)
@@ -74,21 +67,24 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
     if (parentKey && !openKeys.includes(parentKey)) {
       const next = [...openKeys, parentKey]
       setOpenKeys(next)
-      sessionStorage.setItem('menu-open-keys', JSON.stringify(next))
+      sessionStorage.setItem('menu-flow-open-keys', JSON.stringify(next))
     }
   }, [location.pathname])
 
   const handleOpenChange = (keys: string[]) => {
-    const filtered = keys.filter(k => !DISABLED_MENU_GROUP_KEYS.has(k))
-    setOpenKeys(filtered)
-    sessionStorage.setItem('menu-open-keys', JSON.stringify(filtered))
+    setOpenKeys(keys)
+    sessionStorage.setItem('menu-flow-open-keys', JSON.stringify(keys))
   }
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     const labelKey = routeToLabelKey[key]
     if (labelKey) {
       onCloseDrawer?.()
-      const tab: Tab = { key, labelKey, closable: key !== '/dashboard' }
+      const tab: Tab = {
+        key,
+        labelKey,
+        closable: key !== '/dashboard' && key !== '/system/dashboard',
+      }
       addTab(tab)
       navigate(key)
     }
@@ -99,94 +95,19 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
     location.pathname === '/account-settings' ||
     location.pathname === '/user-management' ||
     location.pathname.startsWith('/account-settings/')
-  const baseConfig = isAccountSection
-    ? accountSidebarConfig
-    : currentUser === 'admin1'
-      ? menuConfig.filter(item => !ADMIN1_HIDDEN_GROUP_KEYS.has(item.key))
-      : menuConfig
-
-  const operationMenuItems: MenuProps['items'] = [
-    { key: '/operations/center', icon: <AppstoreOutlined />, label: t('menu.operationsCenter') },
-    {
-      key: '/operations/alerts',
-      icon: <WarningOutlined />,
-      label: (
-        <span className="sidebar-ops-item">
-          <span>{t('menu.operationsAlerts')}</span>
-          <span className="sidebar-ops-badge sidebar-ops-badge--danger">12</span>
-        </span>
-      ),
-    },
-    {
-      key: '/operations/tasks',
-      icon: <SnippetsOutlined />,
-      label: (
-        <span className="sidebar-ops-item">
-          <span>{t('menu.operationsTasks')}</span>
-          <span className="sidebar-ops-badge sidebar-ops-badge--warning">5</span>
-        </span>
-      ),
-    },
-    { key: '/operations/building-map', icon: <EnvironmentOutlined />, label: t('menu.operationsBuildingMap') },
-    { key: '/operations/logbook', icon: <FileTextOutlined />, label: t('menu.operationsLogbook') },
-    { key: '/operations/shift-handover', icon: <TeamOutlined />, label: t('menu.operationsShiftHandover') },
-  ]
-  const governanceMenuItems: MenuProps['items'] = [
-    { key: '/governance/reports', icon: <BarChartOutlined />, label: t('menu.governanceReports') },
-    { key: '/governance/system-log', icon: <FileTextOutlined />, label: t('menu.governanceSystemLog') },
-    { key: '/governance/users-permissions', icon: <UserOutlined />, label: t('menu.governanceUsersPermissions') },
-    { key: '/governance/system-config', icon: <SettingOutlined />, label: t('menu.governanceSystemConfig') },
-  ]
-
-  const menuItems: MenuProps['items'] = baseConfig.map(entry => {
+  const accountMenuItems: MenuProps['items'] = accountSidebarConfig.map(entry => {
     if ('type' in entry && entry.type === 'item') {
-      const isDashboard = entry.key === '/dashboard'
-      const routeKey = !isAccountSection ? toSystemPath(entry.key) : entry.key
       return {
-        key: routeKey,
+        key: entry.key,
         icon: entry.icon,
-        label: isDashboard ? (
-          <span className="middle-sidebar-menu_dashboard-label">{t(entry.labelKey)}</span>
-        ) : (
-          t(entry.labelKey)
-        ),
+        label: t(entry.labelKey),
       }
     }
+    return null
+  }).filter(Boolean) as MenuProps['items']
 
-    // Group với children
-    const group = entry as MenuGroup
-    const isGroupDisabled = DISABLED_MENU_GROUP_KEYS.has(group.key)
-    const groupDefaultRoute = !isAccountSection ? toSystemPath(group.defaultRoute) : group.defaultRoute
-    const groupLabel = (
-      <span
-        onClick={e => {
-          if (isGroupDisabled) {
-            e.preventDefault()
-            e.stopPropagation()
-            return
-          }
-          e.stopPropagation()
-          const currentGroupKey = routeToParentKey[location.pathname]
-          if (currentGroupKey !== group.key) navigate(groupDefaultRoute)
-        }}
-        style={isGroupDisabled ? { cursor: 'not-allowed', opacity: 0.65 } : undefined}
-      >
-        {t(group.labelKey)}
-      </span>
-    )
-
-    return {
-      key: group.key,
-      icon: group.icon,
-      label: groupLabel,
-      disabled: isGroupDisabled,
-      children: group.children.map(child => ({
-        key: !isAccountSection ? toSystemPath(child.key) : child.key,
-        label: t(child.labelKey),
-        disabled: child.disabled ?? isGroupDisabled,
-      })),
-    }
-  })
+  const operationMenuItems: MenuProps['items'] = buildFlowMenuItems(operationsNavFlow, t, toSystemPath)
+  const governanceMenuItems: MenuProps['items'] = buildFlowMenuItems(governanceNavFlow, t, toSystemPath)
 
   const handleBuildingSelect = (buildingId: string) => {
     onCloseDrawer?.()
@@ -341,43 +262,54 @@ export default function MiddleSidebar({ collapsed, leftNavWidth, inDrawer, onClo
 
       {/* Navigation menu */}
       {!isAccountSection && (
-        <>
-          <div className="middle-sidebar-section-title middle-sidebar-section-title--first">
-            {t('menu.operations', 'Vận hành')}
+        <div className="middle-sidebar-nav-block middle-sidebar-nav-block--operations">
+          <div className="middle-sidebar-section-title middle-sidebar-section-title--first middle-sidebar-section-title--operations">
+            <span className="middle-sidebar-section-title__icon" aria-hidden>
+              <SlidersOutlined />
+            </span>
+            <span className="middle-sidebar-section-title__text">{t('menu.operations', 'Vận hành')}</span>
           </div>
           <Menu
-            className="middle-sidebar-menu"
+            className="middle-sidebar-menu middle-sidebar-menu--operations"
             mode="inline"
             selectedKeys={[location.pathname]}
+            openKeys={collapsed ? [] : openKeys}
+            onOpenChange={handleOpenChange}
             items={operationMenuItems}
             onClick={handleMenuClick}
-            style={{ border: 'none', marginTop: 8 }}
+            style={{ border: 'none', marginTop: 4 }}
           />
-          <div className="middle-sidebar-section-title">{t('menu.system', 'Hệ thống')}</div>
-        </>
+        </div>
       )}
-      <Menu
-        className="middle-sidebar-menu"
-        mode="inline"
-        selectedKeys={[location.pathname]}
-        openKeys={collapsed ? [] : openKeys}
-        onOpenChange={handleOpenChange}
-        items={menuItems}
-        onClick={handleMenuClick}
-        style={{ border: 'none', marginTop: 8 }}
-      />
+      {isAccountSection && (
+        <Menu
+          className="middle-sidebar-menu"
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={accountMenuItems}
+          onClick={handleMenuClick}
+          style={{ border: 'none', marginTop: 8 }}
+        />
+      )}
       {!isAccountSection && (
-        <>
-          <div className="middle-sidebar-section-title">{t('menu.governance', 'Quản trị')}</div>
+        <div className="middle-sidebar-nav-block middle-sidebar-nav-block--governance">
+          <div className="middle-sidebar-section-title middle-sidebar-section-title--governance">
+            <span className="middle-sidebar-section-title__icon" aria-hidden>
+              <SecurityScanOutlined />
+            </span>
+            <span className="middle-sidebar-section-title__text">{t('menu.governance', 'Quản trị')}</span>
+          </div>
           <Menu
-            className="middle-sidebar-menu"
+            className="middle-sidebar-menu middle-sidebar-menu--governance"
             mode="inline"
             selectedKeys={[location.pathname]}
+            openKeys={collapsed ? [] : openKeys}
+            onOpenChange={handleOpenChange}
             items={governanceMenuItems}
             onClick={handleMenuClick}
-            style={{ border: 'none', marginTop: 8 }}
+            style={{ border: 'none', marginTop: 4 }}
           />
-        </>
+        </div>
       )}
 
       {/* Khi ở trang tài khoản: nút quay lại bảng điều khiển */}
